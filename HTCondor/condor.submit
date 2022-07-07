@@ -1,0 +1,34 @@
+#Universe must be docker
+universe                 = docker
+
+#Docker image are pulled from the JEODPP registry
+docker_image             = jeoreg.cidsn.jrc.it:5000/jeodpp-htcondor/ml4cast-htcondor:v0.7
+
+
+#We strongly suggest to start the workflow with bash script
+executable               = ./ml4cast_run.sh
+
+#arguments of the workflow script
+arguments                = $(Cluster) $(Process) $(task)
+
+#Resources required by the application
+request_cpus             = 4
+request_memory           = 10GB
+
+#We suggest to transfer the workflow script and aux-files to the container instead to read directly from EOS
+transfer_input_files     = /eos/jeodpp/data/projects/ML4CAST/condor/ml4cast-be-ml/HTCondor/ml4cast_run.sh
+
+should_transfer_files    = YES
+##when_to_transfer_output  = ON_EXIT
+
+
+#Location of the *.log must be in /eos/jeodpp/htcondor/processing_logs/[USE-CASE]
+output                   = /eos/jeodpp/data/projects/ML4CAST/condor/processing_logs/job_$(Process).out
+error                    = /eos/jeodpp/data/projects/ML4CAST/condor/processing_logs/job_$(Process).err
+log                      = /eos/jeodpp/data/projects/ML4CAST/condor/processing_logs/job_$(Process).log
+
+#Tag for the job in the queue
+batch_name               = "ml4cast"
+
+#Cmd to submit
+queue id,task from /eos/jeodpp/data/projects/ML4CAST/condor/ML1_data_output/ZAsummer/task_arguments.txt

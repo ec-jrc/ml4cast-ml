@@ -1,0 +1,7 @@
+.idea
+*.pyc
+src/local_constants.py
+dynamic_masking/test_values_map_SA_wheat.py
+dynamic_masking/timeOfMaxNDVI.py
+dynamic_masking/dm_local_constants.py
+preprocess/BF_data_preprocess.py

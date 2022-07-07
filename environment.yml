@@ -1,0 +1,21 @@
+name: yieldML
+channels:
+    - conda-forge
+    - defaults
+dependencies:
+    - python=3.8.5
+    - geopandas
+    - gdal
+    - rasterio
+    - pandas
+    - scikit-learn
+    - scikit-optimize
+    - matplotlib
+    - seaborn
+    - python-ternary
+    - pandasql
+    - pymannkendall
+    - ITMO_FS
+    - pip
+    - pip:
+        - autorank
