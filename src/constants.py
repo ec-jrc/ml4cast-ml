@@ -80,8 +80,20 @@ feature_groups2labels = {
     'met_sm_reduced': 'SM&Met-'
 }
 
+# model configuration settings to be tested
+time_samplings = ['M'] #["M"]  # ['P', 'M']
+# y variables to be predicted
+yvars = ['Yield'] # ['Yield', 'Production']
+# Admin unit IDs OHE types to be tested
+doOHEs = ['none', 'AU_level']  # ['none', 'AU_level', 'Cluster_level']
+addYieldTrend = [True, False]
+# Feature selection
+feature_selections = ['none', 'MRMR']
 # percentage of features to be selected (as grid to be tested)
 feature_prct_grid = [5, 10, 25, 50, 75, 100]
+# Data reduction with PCA
+dataReduction = ['none', 'PCA']
+PCAprctVar2keep = 90
 
 # Hyperparameters grid space
 hyperparopt = 'grid'

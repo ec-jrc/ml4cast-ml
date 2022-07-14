@@ -28,6 +28,7 @@ import ast
 import src.constants as cst
 import ml.modeller as modeller
 
+#TODO: there is no trend and pCA in this version
 def model_setup_as_pickle(filename, uset):
     with open(filename, 'wb') as handle:
         pickle.dump(uset, handle, protocol=4)
@@ -156,6 +157,11 @@ def nrt_model_manager(target, forecast_month, current_year):
 
 if __name__ == '__main__':
     current_year = 2022
-    nrt_model_manager(target='Algeria', forecast_month='May', current_year=current_year)
+    print('**********************************************')
+    print('Trend and PCA are not yet implemented')
+    print('**********************************************')
+    res = input('Do you want to proceed anyhow? (Y/N)')
+    if res == 'Y':
+        nrt_model_manager(target='Algeria', forecast_month='May', current_year=current_year)
 
 

@@ -28,6 +28,7 @@ def launcher(pckl_fn):
                                           uset['yvar'],
                                           uset['feature_set'],
                                           uset['feature_selection'],
+                                          uset['data_reduction'],
                                           uset['prct_features2select_grid'],
                                           uset['n_features2select_grid'],
                                           uset['doOHE'],

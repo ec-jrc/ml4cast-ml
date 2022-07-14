@@ -11,7 +11,11 @@ from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.linear_model import Lasso
 from sklearn import linear_model
+from sklearn.decomposition import PCA
 from scipy import stats
+import re
+#TODO reove next
+import matplotlib.pyplot as plt
 
 import src.constants as cst
 import preprocess.b1000_preprocess_utilities as b1000_preprocess_utilities
@@ -114,7 +118,7 @@ class YieldHindcaster(object):
     Yield hindcasting pipeline
     """
 
-    def __init__(self, run_id, aoi, crop, algo, yvar, feature_set, feature_selection,
+    def __init__(self, run_id, aoi, crop, algo, yvar, feature_set, feature_selection, data_reduction,
                  prct_features2select_grid, n_features2select_grid, doOHE, forecast_time, yieldTrend, time_sampling):
         """Instantiates the class with metadata"""
         self.useTrend = yieldTrend
@@ -142,6 +146,8 @@ class YieldHindcaster(object):
         self.metric = cst.scoringMetric
         self.feature_group = cst.feature_groups[feature_set]
         self.feature_selection = feature_selection
+        self.data_reduction = data_reduction
+        self.PCAprctVar2keep = cst.PCAprctVar2keep
         self.feature_fn = None
         self.model_fn = None
         stamp_id = run_id.split('_')[0]
@@ -211,8 +217,7 @@ class YieldHindcaster(object):
                 y = labels[self.yvar].to_numpy()
             else:  # ML models and Lasso
                 y = labels[self.yvar].to_numpy()
-                # remove not needed features (remove P pheno sampling when M month sampling requested, and VICE versa)
-                #_features = [s + f'M' for s in self.feature_group]
+                # remove not needed features
                 _features = [s + self.time_sampling for s in self.feature_group]
                 if self.useTrend == True:
                     list2keep = [str(i) + '(?!\D+)' for i in _features] + ['YieldFromTrend']
@@ -221,7 +226,6 @@ class YieldHindcaster(object):
 
                 X = yxDatac.filter(regex='|'.join(list2keep)).to_numpy()
                 feature_names = list(yxDatac.filter(regex='|'.join(list2keep)).columns)
-                #print('deb')
 
             # Preprocessing of input variables using z-score
             if self.model_name not in cst.benchmarks:
@@ -245,7 +249,64 @@ class YieldHindcaster(object):
                 else:
                     print(f'data scaling non implemented:  {cst.dataScaling}')
                     exit()
-
+            # Perform data reduction if requested
+            # Only on NDVI, RAD, Temp (precipitation is excluded)
+            if self.data_reduction == 'PCA':
+                # first: - no request of PCA on one single month should arrive here (skipped in b100)
+                #        - z scaling is done already above
+                # second: operate PCA on all var of group except RainSum [ 0-9]
+                # get list of feature type in feauture group and exclude RainSum
+                feature2PCA = [s for s in self.feature_group if s != 'RainSum'] #[f(x) for x in sequence if condition]
+                for var2PCA in feature2PCA:
+                    # print(var2PCA)
+                    # print('shape in', X.shape)
+                    # print('varin', feature_names)
+                    idx2PCAlist = [i for i, item in enumerate(feature_names) if re.search(var2PCA+self.time_sampling + '[0-9]+', item)]
+                    var2PCAlist = list(np.array(feature_names)[idx2PCAlist])
+                    v = X[:,idx2PCAlist]
+                    #perform PCA and keep the required variance fraction
+                    n_comp = len(var2PCAlist)-1 #at least one dimension less
+                    pca = PCA(n_components=n_comp, svd_solver='full')
+                    Xpca = pca.fit_transform(v)
+                    # retain components up to PCAprctVar2keep, if this is never reached take all
+                    if np.cumsum(pca.explained_variance_ratio_)[-1] <= cst.PCAprctVar2keep/100:
+                        indexComp2retain = n_comp-1
+                    else:
+                        indexComp2retain = np.argwhere(np.cumsum(pca.explained_variance_ratio_)>cst.PCAprctVar2keep/100)[0][0]
+                        # print(pca.explained_variance_ratio_)
+                    # print(indexComp2retain)
+                    Xpca = Xpca[:,0:indexComp2retain+1]
+                    # now replace original columns with PCAs
+                    new_features_names = [var2PCA+'_PCA'+str(s) for s in range(1,indexComp2retain+1+1)]
+                    X =np.delete(X, idx2PCAlist, 1)
+                    feature_names = list(np.delete(np.array(feature_names),idx2PCAlist))
+                    feature_names = feature_names + new_features_names
+                    X = np.concatenate((X, Xpca), axis=1)
+                    # print('shape out', X.shape)
+                    # print('varout', feature_names)
+                    # print()
+                # now adjust n feature to be secelted in case feature selction is required
+                if self.feature_selection != 'none':
+                    if len(feature_names) == 1:
+                        #PCA has reduced to 1 feature, no feature selection possible
+                        self.feature_selection = 'none'
+                    else:
+                        # print(self.prct_features2select_grid)
+                        # print(self.n_features2select_grid)
+                        n_features = len(feature_names)
+                        prct_grid = cst.feature_prct_grid
+                        n_features2select_grid = n_features * np.array(prct_grid) / 100
+                        n_features2select_grid = np.round_(n_features2select_grid, decimals=0, out=None)
+                        # keep those with at least 1 feature
+                        idx2retain = [idx for idx, value in enumerate(n_features2select_grid) if value >= 1]
+                        prct_features2select_grid = np.array(prct_grid)[idx2retain]
+                        n_features2select_grid = n_features2select_grid[idx2retain]
+                        # drop possible duplicate in n, and if the same number of ft referes to multiple %, take the largest (this explain the np.flip)
+                        n_features2select_grid, idx2retain = np.unique(np.flip(np.array(n_features2select_grid)),
+                                                                       return_index=True)
+                        prct_features2select_grid = np.flip(prct_features2select_grid)[idx2retain]
+                        self.prct_features2select_grid = prct_features2select_grid
+                        self.n_features2select_grid = n_features2select_grid
             # Perform One-Hot Encoding for AU if requested
             if self.doOHE == 'AU_level':
                 OHE = pd.get_dummies(AU_codes, columns=['AU_code'], prefix='OHE_AU')
@@ -343,6 +404,7 @@ class YieldHindcaster(object):
                    'forecast_time': self.leadtime,
                    'N_features': str(len(featureNames)) if self.model_name not in cst.benchmarks else '',
                    'N_OHE': str(self.nOHE),
+                   'Data_reduction': str(self.data_reduction),
                    'Features': [featureNames],
                    'Ft_selection' : self.feature_selection,
                    'N_selected_fit': n_selected,
@@ -404,13 +466,14 @@ class YieldHindcaster(object):
                f'Crop type              : {self.crop}\n' \
                f'Algorithm              : {self.model_name}\n' \
                f'Dependent variable     : {self.yvar}\n' \
-               f'Feature set            : {self.feature_group}\n' \
-               f'One hot Encoding       : {self.doOHE}\n' \
-               f'Lead time of forecast  : {self.leadtime}\n' \
+               f'Time of forecast       : {self.leadtime}\n' \
                f'Time for sampling      : {self.time_sampling} \n' \
                f'Metric to optimise     : {self.metric} \n' \
+               f'Feature set            : {self.feature_group}\n' \
+               f'One hot Encoding       : {self.doOHE}\n' \
                f'Use trend              : {self.useTrend } \n' \
-               f'' \
+               f'Ft selection           : {self.feature_selection} \n' \
+               f'Data reduction         : {self.data_reduction} \n' \
                f'Path to model inputs   : {self.feature_fn}\n' \
                f'Path to model          : {self.model_fn}\n' \
                f'------------------------'

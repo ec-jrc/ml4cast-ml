@@ -71,24 +71,32 @@ def usetting_and_model_manager(target):
 
     # loop on time sampling type, type of crop, target y variable and forecast time
 
+    #### Configuration setting from constant
     # Time sampling
-    time_samplings = ['P'] #["M"]  # ['P', 'M']
+    time_samplings = cst.time_samplings
     # y variables to be predicted
-    yvars = ['Yield'] # ['Yield', 'Production']
+    yvars = cst.yvars
     # Admin unit IDs OHE types to be tested
-    doOHEs = ['none', 'AU_level']  # ['none', 'AU_level', 'Cluster_level']
+    doOHEs = cst.doOHEs
     # Feature sets
     feature_sets = list(cst.feature_groups.keys()) # this is default, take all, but Edit to specify less['rs_met', 'rs_met_reduced', 'rs', 'rs_reduced', 'met', 'met_reduced']
     # Add a yield estimated with trend feature
-    addYieldTrend = [True, False]
+    addYieldTrend = cst.addYieldTrend
     # Algorithms to be testes
     algos = list(cst.benchmarks) + list(cst.hyperGrid.keys()) # Defaults: test all the defined models
-    algos = ['GPR1', 'GPR2']
-    # Edit as below if you want less
-    # algos =['Null_model', 'PeakNDVI', 'Trend'] # ['Null_model', 'PeakNDVI', 'Trend', 'Lasso', 'RandomForest', 'SVR_rbf', 'SVR_linear', 'MLP', 'GBR']
     # Feature selection
-    feature_selections = ['none', 'MRMR']
+    feature_selections = cst.feature_selections
+    # Data reduction
+    dataReduction = cst.dataReduction
 
+    # //// debug
+    # Edit as below if you want less
+    algos = ['Lasso']
+    #monthly_forecast_times = [3]
+    dataReduction =['PCA']
+    addYieldTrend = [False]
+    feature_sets = ['rs_reduced']
+    #feature_selections=['MRMR']
     for time_sampling in time_samplings:
         # prediction times
         if time_sampling == 'M':
@@ -99,12 +107,15 @@ def usetting_and_model_manager(target):
             print('Time sampling not defined')
 
         # Make the list of list
-        a = [crop_IDs, yvars, [time_sampling], doOHEs, algos, feature_sets, feature_selections, forecast_times, addYieldTrend]
+        a = [crop_IDs, yvars, [time_sampling], doOHEs, algos, feature_sets, feature_selections, dataReduction, forecast_times, addYieldTrend]
         combs = list(itertools.product(*a))
         # And loop over
-        for crop_id, yvar, tsampling, doOHE, algo, feature_set, ft_sel, forecast_time, yieldTrend in combs:
+        for crop_id, yvar, tsampling, doOHE, algo, feature_set, ft_sel, data_redct, forecast_time, yieldTrend in combs:
             skip = False # always false except when feature selection is requested but the length of the grid
                          # of feature numbers results to be 1, meaning that it was 1 already so no fetaure selection possible
+            # skip it if PCA is requested but we only have one month
+            if forecast_time == 1 and data_redct == 'PCA':
+                skip = True
             n_features2select_grid = 0
             prct_features2select_grid = 0
 
@@ -129,6 +140,7 @@ def usetting_and_model_manager(target):
                     # drop possible duplicate in n, and if the same number of ft referes to multiple %, take the largest (this explain the np.flip)
                     n_features2select_grid, idx2retain = np.unique(np.flip(np.array(n_features2select_grid)), return_index=True)
                     prct_features2select_grid = np.flip(prct_features2select_grid)[idx2retain]
+                    # Note: in case PCA selected, the number of feature is recomputed on selected PCA
                     if (len(n_features2select_grid) == 1):
                         skip = True
 
@@ -140,6 +152,7 @@ def usetting_and_model_manager(target):
                         'yvar': yvar,
                         'feature_set': feature_set,
                         'feature_selection': ft_sel,
+                        'data_reduction': data_redct,
                         'prct_features2select_grid': prct_features2select_grid,
                         'n_features2select_grid': n_features2select_grid,
                         'doOHE': doOHE,
