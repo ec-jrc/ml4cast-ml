@@ -91,11 +91,11 @@ def usetting_and_model_manager(target):
 
     # //// debug
     # Edit as below if you want less
-    algos = ['Lasso']
+    #algos = ['Lasso']
     #monthly_forecast_times = [3]
-    dataReduction =['PCA']
-    addYieldTrend = [False]
-    feature_sets = ['rs_reduced']
+    # dataReduction =['PCA']
+    # addYieldTrend = [False]
+    # feature_sets = ['rs_reduced']
     #feature_selections=['MRMR']
     for time_sampling in time_samplings:
         # prediction times
