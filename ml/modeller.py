@@ -152,8 +152,14 @@ class YieldHindcaster(object):
         self.model_fn = None
         stamp_id = run_id.split('_')[0]
         self.output_dir = os.path.join(cst.odir, self.aoi, 'Model', stamp_id)
+        self.output_dir_mres = os.path.join(self.output_dir, 'mres')
+        self.output_dir_yx_preprocData = os.path.join(self.output_dir, 'yx_preprocData')
+        self.output_dir_output = os.path.join(self.output_dir, 'output')
+        self.figure_dir = os.path.join(self.output_dir, 'figures')
         Path(self.output_dir).mkdir(parents=True, exist_ok=True)
-        self.figure_dir = os.path.join(cst.odir, self.aoi, 'figures')
+        Path(self.output_dir_mres).mkdir(parents=True, exist_ok=True)
+        Path(self.output_dir_yx_preprocData).mkdir(parents=True, exist_ok=True)
+        Path(self.output_dir_output).mkdir(parents=True, exist_ok=True)
         Path(self.figure_dir).mkdir(parents=True, exist_ok=True)
 
     def preprocess(self, save_to_csv=True):
@@ -340,7 +346,7 @@ class YieldHindcaster(object):
             np.concatenate([AU_codes.reshape((-1, 1)), groups.reshape((-1, 1)), y.reshape((-1, 1)), X], axis=1),
             columns=['AU_code', 'year', self.yvar] + feature_names)
         if save_to_csv:
-            data.to_csv(os.path.join(self.output_dir, f'ID_{self.id}_crop_{self.crop}_{self.yvar}_{self.model_name}_yx_preprocData.csv'))
+            data.to_csv(os.path.join(self.output_dir_yx_preprocData, f'ID_{self.id}_crop_{self.crop}_{self.yvar}_{self.model_name}_yx_preprocData.csv'))
         return X, y, groups, feature_names, AU_codes
 
     def fit(self, X, y, groups, feature_names, AU_codes, save_output):
@@ -356,7 +362,7 @@ class YieldHindcaster(object):
                                    prct_features2select_grid=self.prct_features2select_grid,
                                    n_fetures2select_grid=self.n_features2select_grid)
         if save_output:
-            strFn = os.path.join(self.output_dir, f'ID_{self.id}_crop_{self.crop}_{self.yvar}_{self.model_name}_mRes.csv')
+            strFn = os.path.join(self.output_dir_mres, f'ID_{self.id}_crop_{self.crop}_{self.yvar}_{self.model_name}_mRes.csv')
             mRes = mRes.astype(np.float32)
             mRes.to_csv(strFn.replace(" ", ""))
         return hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, nPegged, selected_features_names,  prct_selected, n_selected, avg_scoring_metric_on_val
@@ -439,7 +445,7 @@ class YieldHindcaster(object):
         }
         res_df = pd.DataFrame.from_dict(outdict)
         if save_file:
-            self.model_fn = os.path.join(self.output_dir, f'ID_{self.id}_crop_{self.crop}_{self.yvar}_{self.model_name}_output.csv')
+            self.model_fn = os.path.join(self.output_dir_output, f'ID_{self.id}_crop_{self.crop}_{self.yvar}_{self.model_name}_output.csv')
             res_df.to_csv(self.model_fn, index=False)
 
         # plot

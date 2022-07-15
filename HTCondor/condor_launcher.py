@@ -36,7 +36,7 @@ def launcher(pckl_fn):
                                           uset['yieldTrend'],
                                           uset['time_sampling'])
     print(forecaster)
-    if not os.path.exists(os.path.join(forecaster.output_dir, f'*{forecaster.id}*_output.csv')):
+    if not os.path.exists(os.path.join(forecaster.output_dir_output, f'*{forecaster.id}*_output.csv')):
         X, y, groups, feature_names, AU_codes = forecaster.preprocess(save_to_csv=True)
         tic = time.time()
         hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, nPegged, selected_features_names, \

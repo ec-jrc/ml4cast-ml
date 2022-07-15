@@ -9,7 +9,7 @@ import src.constants as cst
 # from preprocess import b32_trend_analysis
 # from preprocess import b40_plots_and_pheno
 # from preprocess import b60_build_features
-# from preprocess import b65_check_data
+from preprocess import b65_check_data
 # from preprocess import b70_data_exploration
 import b100_usetting_and_mod_manager
 #from postprocess_analysis import b200_gather_output
@@ -29,7 +29,7 @@ if (True):
      #b32_trend_analysis.trend_analysis(target)
     # b40_plots_and_pheno.plots_and_pheno(target)
     # b60_build_features.build_features(target)
-    # b65_check_data.check(target)
+    #b65_check_data.check(target)
     # b70_data_exploration.explore(target)
     b100_usetting_and_mod_manager.usetting_and_model_manager(target)
 

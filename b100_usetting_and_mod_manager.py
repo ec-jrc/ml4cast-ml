@@ -108,13 +108,17 @@ def usetting_and_model_manager(target):
 
         # Make the list of list
         a = [crop_IDs, yvars, [time_sampling], doOHEs, algos, feature_sets, feature_selections, dataReduction, forecast_times, addYieldTrend]
+        #a = [crop_IDs, yvars, [time_sampling], doOHEs, algos, feature_sets, feature_selections, forecast_times, addYieldTrend]
         combs = list(itertools.product(*a))
         # And loop over
         for crop_id, yvar, tsampling, doOHE, algo, feature_set, ft_sel, data_redct, forecast_time, yieldTrend in combs:
+        #for crop_id, yvar, tsampling, doOHE, algo, feature_set, ft_sel, forecast_time, yieldTrend in combs:
             skip = False # always false except when feature selection is requested but the length of the grid
                          # of feature numbers results to be 1, meaning that it was 1 already so no fetaure selection possible
             # skip it if PCA is requested but we only have one month
             if forecast_time == 1 and data_redct == 'PCA':
+                skip = True
+            if algo in cst.benchmarks and data_redct == 'PCA':
                 skip = True
             n_features2select_grid = 0
             prct_features2select_grid = 0
