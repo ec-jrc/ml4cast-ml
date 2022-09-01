@@ -14,8 +14,6 @@ from sklearn import linear_model
 from sklearn.decomposition import PCA
 from scipy import stats
 import re
-#TODO reove next
-import matplotlib.pyplot as plt
 
 import src.constants as cst
 import preprocess.b1000_preprocess_utilities as b1000_preprocess_utilities

@@ -61,7 +61,7 @@ def gather_output(dir, isAlgeriaPaperRun=False):
         correct_output = False
     print('correct is ', correct_output)
     run_res = list(pathlib.Path(dir).glob('ID*_output.csv'))
-    print('N files =' +str(len(run_res)))
+    print('N files = ' + str(len(run_res)))
     print('Missing files are printed (no warning issued if they are files that were supposed to be skipped (ft sel asked on 1 var)')
     print('Warnings issued for all other cases, and list at the end')
     list_unkown = []
@@ -70,46 +70,54 @@ def gather_output(dir, isAlgeriaPaperRun=False):
         for file_obj in run_res:
             #print(file_obj, cc)
             cc = cc + 1
-            df = pd.read_csv(file_obj)
-            run_id = int(df['runID'][0].split('_')[1])
-            date_id = str(df['runID'][0].split('_')[0])
-            # adjust stats
-            if correct_output:
-            # add a column for rRMSE_p
-                df.insert(28, 'rRMSE_p', np.NAN)
-                # add a column for rRMSE_p FQ_rRMSE_p at country level
-                df.insert(36, 'Country_rRMSE_p', np.NAN)
-                df.insert(38, 'Country_FQ_rRMSE_p', np.NAN)
-                df.insert(39, 'Country_2008_RMSE_p', np.NAN)
-                df.insert(40, 'Country_2008_rRMSE_p', np.NAN)
-                df_updated = add_error_stats_as_AVG_of_CV_fold(df, dir)
+            try:
+                df = pd.read_csv(file_obj)
+            except:
+                print('Empty file ' + str(file_obj))
             else:
-                df_updated = df
-            if file_obj == run_res[0]:
-                #it is the first, save with hddr
-                df_updated.to_csv(file_obj.parent / 'all_model_output.csv', mode='w', header=True, index=False)
-            else:
-                #it is not first, withou hdr
-                df_updated.to_csv(file_obj.parent / 'all_model_output.csv', mode='a', header=False, index=False)
-                # print if something is missing
-                if run_id > run_id0:
-                    if (run_id != run_id0 + 1):
-                        for i in range(run_id0 + 1, run_id):
-                            print(date_id + ',' + str(i))
-                            # # check that the issue is with ft selection requested on 1 var
-                            # # open the pkl
-                            # myID = f'{date_id}_{i:06d}'
-                            # pckl_fn = 'myID + '_uset.pkl'
-                            # with open(pckl_fn, 'rb') as f:
-                            #     uset = pickle.load(f)
-                            #     if not(uset['feature_selection'] == 'MRMR' and len(uset['prct_features2select_grid']) == 1):
-                            #         print('Unkown issue with ' + myID + '_uset.pkl')
-                            #         print(uset)
-                            #         list_unkown.append(myID + '_uset.pkl')
-                            #         #print('debug')
+                try:
+                    run_id = int(df['runID'][0].split('_')[1])
+                except:
+                    print('Error in the file ' + str(file_obj))
                 else:
-                    print('Date changed?', date_id, 'new run id', run_id0)
-            run_id0 = run_id
+                    date_id = str(df['runID'][0].split('_')[0])
+                     # adjust stats
+                    if correct_output:
+                    # add a column for rRMSE_p
+                        df.insert(28, 'rRMSE_p', np.NAN)
+                        # add a column for rRMSE_p FQ_rRMSE_p at country level
+                        df.insert(36, 'Country_rRMSE_p', np.NAN)
+                        df.insert(38, 'Country_FQ_rRMSE_p', np.NAN)
+                        df.insert(39, 'Country_2008_RMSE_p', np.NAN)
+                        df.insert(40, 'Country_2008_rRMSE_p', np.NAN)
+                        df_updated = add_error_stats_as_AVG_of_CV_fold(df, dir)
+                    else:
+                        df_updated = df
+                    if file_obj == run_res[0]:
+                        #it is the first, save with hddr
+                        df_updated.to_csv(file_obj.parent / 'all_model_output.csv', mode='w', header=True, index=False)
+                    else:
+                        #it is not first, without hdr
+                        df_updated.to_csv(file_obj.parent / 'all_model_output.csv', mode='a', header=False, index=False)
+                        # print if something is missing
+                        if run_id > run_id0:
+                            if (run_id != run_id0 + 1):
+                                for i in range(run_id0 + 1, run_id):
+                                    print('Non consececutive runid' + date_id + ',' + str(i))
+                                    # # check that the issue is with ft selection requested on 1 var
+                                    # # open the pkl
+                                    # myID = f'{date_id}_{i:06d}'
+                                    # pckl_fn = 'myID + '_uset.pkl'
+                                    # with open(pckl_fn, 'rb') as f:
+                                    #     uset = pickle.load(f)
+                                    #     if not(uset['feature_selection'] == 'MRMR' and len(uset['prct_features2select_grid']) == 1):
+                                    #         print('Unkown issue with ' + myID + '_uset.pkl')
+                                    #         print(uset)
+                                    #         list_unkown.append(myID + '_uset.pkl')
+                                    #         #print('debug')
+                        else:
+                            print('Date changed?', date_id, 'new run id', run_id0)
+                    run_id0 = run_id
     else:
         print('There is no a single output file')
 
@@ -131,4 +139,5 @@ def gather_output(dir, isAlgeriaPaperRun=False):
     #             next_file_df.to_csv(run_res[0].parent / 'all_model_output.csv', mode='a', header=False, index=False)
     # else:
     #     print('There is no a single output file')
-res = gather_output(cst.folder_b200_gather_output, isAlgeriaPaperRun=False)
+
+#res = gather_output(cst.folder_b200_gather_output, isAlgeriaPaperRun=False)

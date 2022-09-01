@@ -13,6 +13,7 @@ import pathlib
 
 def compare_outputs (dir, target):
     includeTrendModel = True   #for Algeria run ther is no trend model
+    addCECmodel = True #only for South Africa
     ylim_rRMSE_p = [0,30]
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', 400)  # width is = 400
@@ -243,11 +244,20 @@ def compare_outputs (dir, target):
                 # get unique
                 varsList = list(set(varsList))
                 bm_set = 'set not defined'
-                if crop_name == 'Soybeans' and x == 6:
-                    print()
+                # check if PCA was activated
+                PCA_activated = False
+                if any(['_PC' in x for x in varsList]) == True:
+                    # remove _PC to allow assigning the feature set
+                    varsList = [x.replace('_PC','') for x in varsList]
+                    PCA_activated = True
+
                 for key in varSetDict.keys():
                     if set(varSetDict[key]) == set(varsList):
                         bm_set = key
+                if PCA_activated == True:
+                    bm_set = 'PCA_' + bm_set
+                # if bm_set == 'set not defined':
+                #     print('debug PCA')
                 best_model_VarSet.append(bm_set)
                 # varSetDict = {
                 #     'full': [['ND', 'NDmax', 'Rad', 'RainSum', 'T', 'Tmin', 'Tmax'], 'RS&Met'],
@@ -337,16 +347,17 @@ def compare_outputs (dir, target):
                 yoff4ModelNameSecondLine = -37.5
             elif metric2use == 'rRMSE_p':
                 axs.set_ylim(ylim_rRMSE_p)
-                yoff4PeakMetric = 7.5
+                yoff4PeakMetric = 5 #7.5
                 yoff4ModelName = -25
                 yoff4ModelNameSecondLine = -37.5
 
             # Plot the null
-            xoff = 20
+            xoff = 0 #20
             axs.plot(up2Date, null_model_stat, color='grey', linewidth=1, marker='o', label='Null model')
             axs.annotate(round(null_model_stat[-1], 2), (up2Date[-1], null_model_stat[-1]), color='grey',
                          ha='center', fontsize=8, fontweight='bold',
                          textcoords="offset points", xytext=(xoff, yoff4PeakMetric))
+
             # Plot the trend
             if target != 'Algeria':
                 axs.plot(up2Date, trend_model_stat, color='green', linewidth=1, marker='o', label='Trend model')
@@ -377,6 +388,8 @@ def compare_outputs (dir, target):
                 axs.annotate(round(peak_model_stat[i], 2), (up2Date[i], peak_model_stat[i]), color='red',
                              ha='center', fontsize=9, fontweight='bold',
                              textcoords="offset points", xytext=(0, yoff4PeakMetric))
+
+
 
             # Plot the best model config
             axs.plot(up2Date, best_model_stat, color='blue', linewidth=1, marker='o', label='ML model')
@@ -416,18 +429,36 @@ def compare_outputs (dir, target):
                         anStr = anStr + ',' + best_model_ft_sel[i] + \
                                 str(round(best_model_ft_sel_n[i])) + '/' + str(round(best_model_nonOHE_ft_n[i]))
                             #'(' + str(round(best_model_ft_sel_n[i])) + '/' + str(round(best_model_nonOHE_ft_n[i])) + ')'
-                axs.annotate(txt, (up2Date[i], best_model_stat[i]), color='blue', ha='center', textcoords="offset points", xytext=(0,yoff4ModelName), fontsize=9)
-                axs.annotate(anStr, (up2Date[i], best_model_stat[i]),color='blue',  ha='center', textcoords="offset points", xytext=(0, yoff4ModelNameSecondLine), fontsize=9)
+                ftsz = 6 #9
+                axs.annotate(txt, (up2Date[i], best_model_stat[i]), color='blue', ha='center', textcoords="offset points", xytext=(0,yoff4ModelName), fontsize=ftsz)
+                axs.annotate(anStr, (up2Date[i], best_model_stat[i]),color='blue',  ha='center', textcoords="offset points", xytext=(0, yoff4ModelNameSecondLine), fontsize=ftsz)
+
+            if addCECmodel == True:
+                from dynamic_masking import CEC_model_plot
+                # plot cec model
+                df_cec = CEC_model_plot.CEC_model(target)
+                df_cec_crop = df_cec[df_cec['CropName'] == crop_name]
+                axs.plot(df_cec_crop['CEC_date'].values, df_cec_crop['rRMSEp'].values, color='black', linewidth=1,
+                         marker='o', linestyle='dashed', label='CEC')
+                for i in range(len(df_cec_crop['CEC_date'].values)):
+                    axs.annotate(round(df_cec_crop['rRMSEp'].values[i], 2),
+                                 (df_cec_crop['CEC_date'].values[i], df_cec_crop['rRMSEp'].values[i]), color='black',
+                                 ha='center', fontsize=9,  # fontweight='bold',
+                                 textcoords="offset points", xytext=(0, yoff4PeakMetric))
+
+            if addCECmodel == False:
+                axs.set_xlim(xlim[0], xlim[1])
             #plt.show()
-            axs.set_xlim(xlim[0], xlim[1])
             axs.set_ylabel(lbl)
             axs.set_xlabel(xlabel)
             #axs.set_title(crop_name + ', ' + y_var, fontsize=12)
             axs.set_title(crop_name, fontsize=12)
             #axs.set_title(axTilte,  fontsize=12)
             #fig.suptitle(crop_name + ', ' + y_var, fontsize=14, fontweight='bold')
-            axs.legend(frameon=False, loc='upper left', ncol = len(axs.lines))
-
+            if addCECmodel == False:
+                axs.legend(frameon=False, loc='upper left', ncol = len(axs.lines))
+            else:
+                axs.legend(frameon=False, loc='upper right')
 
             # dicVals = list(varSetDict.values())
             # x0 = np.datetime64(datetime.datetime.strptime(sosTime[0], '%Y-%m-%d') - datetime.timedelta(days=10))
@@ -438,7 +469,11 @@ def compare_outputs (dir, target):
 
 
             #plt.show()
-            strFn = os.path.join(dir, 'best_model_in_time_' + crop_name + '_' + y_var + '_time_sampling.png') #dir + '/' + 'best_model_in_time_' + crop_name + '_' + y_var + '_time_sampling.png'
+            if addCECmodel == True:
+                strFn = os.path.join(dir, 'best_model_in_time_' + crop_name + '_' + y_var + '_withCEC_time_sampling.png')
+            else:
+                strFn = os.path.join(dir, 'best_model_in_time_' + crop_name + '_' + y_var + '_time_sampling.png')
+
             #fig.savefig(strFn.replace(" ", ""))
             fig.savefig(strFn)
 

@@ -13,9 +13,10 @@ import Model_error_stats
 def plot_best_scatter(dir, target):
     project = b05_Init.init(target)
     df_regNames = pd.read_csv(project['input_dir'] + '/CountryStats' + '/' + project['AOI'] + '_REGION_id.csv')
+    dir_ouput = os.path.join(dir, 'output')
+    dir_mres =  os.path.join(dir, 'mres')
 
-
-    b1 =  pd.read_csv(dir + '/' + 'all_model_best1.csv')
+    b1 =  pd.read_csv(dir_ouput + '/' + 'all_model_best1.csv')
 
     base_dir = os.path.join(dir, 'scatter_best_models')
     try:
@@ -35,19 +36,20 @@ def plot_best_scatter(dir, target):
             df_c_t = b1[(b1['Crop']==c) & (b1['forecast_time']==t)]
             # get the run_ids, put  first
             Ml_run_id = df_c_t[~df_c_t['Estimator'].isin(cst.benchmarks)]['runID']
-            mres_fns = glob.glob(os.path.join(dir, '*'+Ml_run_id.values[0]+'*mres.csv'))
+            mres_fns = glob.glob(os.path.join(dir_mres, '*'+Ml_run_id.values[0]+'*mres.csv'))
 
             bench_run_id = df_c_t[df_c_t['Estimator'].isin(cst.benchmarks)]['runID']
             model_labels = ['ML'] + df_c_t[df_c_t['Estimator'].isin(cst.benchmarks)]['Estimator'].tolist()
 
             for b in bench_run_id.values:
-                tmp = glob.glob(os.path.join(dir, '*'+b+'*mres.csv'))
+                tmp = glob.glob(os.path.join(dir_mres, '*'+b+'*mres.csv'))
                 mres_fns = mres_fns + tmp
 
             fig, axs = plt.subplots(2,2, figsize=(10, 10), constrained_layout=True)
 
             for i, ax in enumerate(axs.flatten()):
                 #open mres
+                print(mres_fns)
                 df = pd.read_csv(mres_fns[i])
                 lims = [np.floor(np.min([df['yLoo_true'].values, df['yLoo_pred'].values])),
                         np.ceil(np.max([df['yLoo_true'].values, df['yLoo_pred'].values]))]
