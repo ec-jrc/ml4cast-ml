@@ -4,7 +4,7 @@ from preprocess import f_dek_utilities
 import b05_Init
 from pathlib import Path
 
-def LoadCsv_savePickle(target, predictors_dir):
+def LoadCsv_savePickle(target, predictors_dir, ope_run=False):
     ''' Import ASAP data in the csv format, save csv and pickle '''
 
     pd.set_option('display.max_columns', None)
@@ -18,6 +18,8 @@ def LoadCsv_savePickle(target, predictors_dir):
     dirPredictors = project['input_dir'] + '/' + predictors_dir
     dirStat = project['input_dir'] + '/CountryStats'
     dirOut =  project['output_dir']
+    if ope_run:
+        dirOut = dirOut + '/OPE_RUN'
 
     # General part
     # read the table with id and wilaya name

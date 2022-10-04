@@ -488,9 +488,8 @@ class YieldForecaster(object):
     Yield forecasting pipeline
     """
 
-    def __init__(self, run_id, aoi, crop, algo, yvar, doOHE, selected_features, forecast_time, time_sampling, data_reduction = 'none', yieldTrend = False):
+    def __init__(self, run_id, aoi, crop, algo, yvar, doOHE, selected_features, forecast_time, time_sampling, data_reduction = 'none'):
         """Instantiates the class with metadata"""
-        self.useTrend = yieldTrend
         self.id = run_id
         #self.firstYear = firstYear
         self.aoi = aoi
@@ -504,7 +503,6 @@ class YieldForecaster(object):
         self.time_sampling = time_sampling
         self.optimisation = cst.hyperparopt
         self.data_reduction = data_reduction
-        self.PCAprctVar2keep = cst.PCAprctVar2keep
 
         # Derive other parameters from src.constants
         if algo in cst.hyperGrid.keys():
@@ -534,7 +532,6 @@ class YieldForecaster(object):
         statsX = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_stats{prct2retain}.pkl'))    # stats for the 90% main prodducers
         stats = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_stats.pkl'))        # all targetCountry stats
         # drop years before period of interest
-        # !! DIFF WITH HIND:
         stats = stats.drop(stats[stats['Year'] < project['timeRange'][0]].index)
         # drop unnecessary column
         stats = stats.drop(cst.drop_cols_stats, axis=1)

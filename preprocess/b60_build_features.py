@@ -5,7 +5,7 @@ from preprocess import f_dek_utilities
 import datetime
 from dateutil.relativedelta import *
 
-def build_features(target):
+def build_features(target, ope_run=False):
     '''Feature by pheno periods:
     - EXPANSION: SOS-TOM
     - MATURATION: TOM-SEN
@@ -19,8 +19,11 @@ def build_features(target):
 
     project = b05_Init.init(target)
     #get the avg pheno
+    dirPheno = project['output_dir'] + '/Pheno'
     dirOut = project['output_dir']
-    pheno = pd.read_csv(dirOut + '/' + 'Pheno' + '/' +project['AOI'] + '_pheno_stats.csv')#_season1.csv')
+    if ope_run:
+        dirOut = dirOut + '/OPE_RUN'
+    pheno = pd.read_csv(dirPheno + '/' +project['AOI'] + '_pheno_stats.csv')#_season1.csv')
     vals = pheno.loc[pheno['Stats'] == 'mean', ['SOS', 'TOM', 'SEN', 'EOS']].values.flatten()
     sos_tom_sen_eos_DEK = np.round(vals).astype(int)
     #define month and day of each pheno timing

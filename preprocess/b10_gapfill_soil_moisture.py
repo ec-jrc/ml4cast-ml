@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 from vam.whittaker import ws2d
 import os
 import numpy as np
+
+# Smooth the SM data with Whittaker using percent cover as weight (so mor e% cover gets more credit)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 500)
-afi_min_pct = 50
+
 
 input_file = cst.sm_file_for_b10 #your full path to input here
 df = pd.read_csv(input_file)

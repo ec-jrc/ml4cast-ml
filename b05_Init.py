@@ -9,6 +9,7 @@ def init(aoi):
             "prct2retain": 90,  # percent of production to retain
             "timeRange": range(2002, 2019), #2002 because data re from 2001 10 01
             'crop_IDs': [1, 2, 3],
+            'crop_names': {1: 'Durum wheat', 2: 'Soft wheat', 3: 'Barley'},
             # Input/Output specs
             "input_dir": cst.idir,                                        #local_base_dir + '/ML1_data_input'
             "output_dir": os.path.join(cst.odir, aoi), # 'ML1_data_output',
@@ -56,6 +57,7 @@ def init(aoi):
             "prct2retain": 100, # percent of production to retain, used to exclude marginal regions
             "timeRange": range(2002, 2021),  # in year of EOS summer crops starting in dec
             'crop_IDs': [1, 2, 3],
+            'crop_names': {1: 'Maize_total', 2: 'Sunflower', 3:'Soybeans'},
             # Input/Output specs
             "input_dir": cst.idir,
             "output_dir": os.path.join(cst.odir, aoi),
