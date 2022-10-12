@@ -89,14 +89,18 @@ def usetting_and_model_manager(target):
     # Data reduction
     dataReduction = cst.dataReduction
 
-    # //// debug
+    # //// debug ////////////////////////////////////////////////////
     # Edit as below if you want less
-    #algos = ['Lasso']
-    #monthly_forecast_times = [3]
-    # dataReduction =['PCA']
-    # addYieldTrend = [False]
-    # feature_sets = ['rs_reduced']
-    #feature_selections=['MRMR']
+    if True:
+        algos = ['SVR_linear']
+        monthly_forecast_times = [1]
+        dataReduction =['none']
+        addYieldTrend = [True]
+        feature_sets = ['rs_met']
+        feature_selections=['MRMR']
+        crop_IDs = [1]
+        doOHEs = ['none']
+    # //// debug ////////////////////////////////////////////////////
     for time_sampling in time_samplings:
         # prediction times
         if time_sampling == 'M':

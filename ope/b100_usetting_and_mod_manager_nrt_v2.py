@@ -28,6 +28,8 @@ import ast
 import src.constants as cst
 import b05_Init
 import ml.modeller as modeller
+from string import digits
+
 
 #TODO: there is no trend and pCA in this version
 def model_setup_as_pickle(filename, uset):
@@ -63,13 +65,13 @@ def nrt_model_manager(target, forecasting_times, forecast_month, current_year):
     Path(dirOutModel).mkdir(parents=True, exist_ok=True)
 
     # file for used by Condor for parallelization
-    condor_fn = os.path.join(tgt_dir, 'task_arguments_nrt.txt')
-    print(f'Saving task files in {condor_fn}')
-    if os.path.exists(condor_fn):
-        os.remove(condor_fn)
+    #condor_fn = os.path.join(tgt_dir, 'task_arguments_nrt.txt')
+    #print(f'Saving task files in {condor_fn}')
+    # if os.path.exists(condor_fn):
+    #     os.remove(condor_fn)
     # Create directory for pickles
-    pkl_dir = os.path.join(tgt_dir, 'OPE_RUN', 'pkls')
-    Path(pkl_dir).mkdir(parents=True, exist_ok=True)
+    # pkl_dir = os.path.join(tgt_dir, 'pkls')
+    # Path(pkl_dir).mkdir(parents=True, exist_ok=True)
 
     # loop on time sampling type, type of crop, target y variable and forecast time
     project = b05_Init.init(target)
@@ -87,13 +89,13 @@ def nrt_model_manager(target, forecasting_times, forecast_month, current_year):
 
     input_fn = sorted(glob.glob(os.path.join(tgt_dir, '*pheno_features4scikit*.csv')), reverse=True)[0]
     print('####################################')
-    print('Using input:' + input_fn)
-    print('make sure it is correct and updated')
+    print('Using input: ' + input_fn)
+
 
     df_best = pd.read_csv(os.path.join(dirModel, 'best_conf_of_all_models.csv'))
     print('####################################')
-    print('Using best conf file:' + os.path.join(tgt_dir, 'best_conf_of_all_models.csv'))
-    print('make sure it is correct and updated')
+    print('Using best conf file: ' +os.path.join(dirModel, 'best_conf_of_all_models.csv'))
+    print('make sure all is correct and updated')
 
     if target == 'Algeria': #the name was lead_time at time of Algeria's run
         df_run = df_best.loc[df_best['lead_time'] == forecast_time, :]
@@ -124,26 +126,53 @@ def nrt_model_manager(target, forecasting_times, forecast_month, current_year):
                 AddYieldTrend = False
             else:
                 data_reduction = df_run_crop['Data_reduction'].values[0]
-                if df_run_crop['AddYieldTrend'].values[0] == 'TRUE':
+                if df_run_crop['AddYieldTrend'].values[0] == True:
                     AddYieldTrend = True
+            original_runID = df_run_crop['runID'].values[0]
+            # # I have to get the feature_group, to be sent to modeller.YieldForecaster
+            # varsList = ast.literal_eval(df_run_crop['Features'].values[0])
+            # varSetDict = cst.feature_groups
+            # # remove OHE
+            # varsList = [x for x in varsList if
+            #             not ('OHE' in x or 'YieldFromTrend' in x)]  # [x for x in varsList if not 'OHE' in x]
+            # # remove numbers
+            # remove_digits = str.maketrans('', '', digits)
+            # varsList = [x.translate(remove_digits)[0:-1] for x in varsList]  # -2 to remove P or M"
+            # # get unique
+            # varsList = list(set(varsList))
+            # bm_set = 'set not defined'
+            # # check if PCA was activated
+            # PCA_activated = False
+            # if any(['_PC' in x for x in varsList]) == True:
+            #     # remove _PC to allow assigning the feature set
+            #     varsList = [x.replace('_PC', '') for x in varsList]
+            #     PCA_activated = True
+            #
+            # for key in varSetDict.keys():
+            #     if set(varSetDict[key]) == set(varsList):
+            #         bm_set = key
+
+
 
 
             # Save model settings as pickle
-            uset = {'runID': myID,
+            uset = {'original_runID': original_runID,
+                   'runID': myID,
                     'target': target,
                     'cropID': crop_id,
                     'algorithm': algo,
                     'yvar': yvar,
                     'doOHE': doOHE,
                     'selected_features': selected_features,
+                    #'feature_group'
                     'data_reduction': data_reduction,
                     'yieldTrend': AddYieldTrend,
                     'forecast_time': forecast_time,
                     'time_sampling': tsampling,
                     'input_data': input_fn}
 
-            pkl_fn = Path(os.path.join(pkl_dir, f'{myID}_uset.pkl'))
-            model_setup_as_pickle(pkl_fn, uset)
+            # pkl_fn = Path(os.path.join(pkl_dir, f'{myID}_uset.pkl'))
+            # model_setup_as_pickle(pkl_fn, uset)
 
             # condor_content = f'{myID} {str(pkl_fn)} \n'
             # save_condor_launcher(condor_fn, condor_content)
@@ -160,32 +189,39 @@ def nrt_model_manager(target, forecasting_times, forecast_month, current_year):
                                                   uset['time_sampling'],
                                                   data_reduction = uset['data_reduction'],
                                                   yieldTrend = uset['yieldTrend']) #pass data_reduction and trend as optional to keep integrity of algeria ope
-            print(forecaster)
+            #print(forecaster)
+            print(uset)
             input_fn = uset['input_data']
 
-            X, y, years, regions = forecaster.preprocess()
-            tic = time.time()
+            # Fit on all data excluding the year_out
+            X, y, years, feature_names, regions = forecaster.preprocess(save_to_csv=True, ope_run=True,  ope_type='tuning', year_out=current_year) #forecasting tuning
             # forecaster uses data up to where stats are availble because it merges features with stats
+            tic = time.time()
             forecaster.fit(X, y, years, regions)
             runTimeH = (time.time() - tic) / (60 * 60)
             print(f'Model fitted in {round(runTimeH, 4)} hours')
-            X_forecast, regions_forecast = forecaster.preprocess_currentyear(input_fn, current_year)
+
+            # Now apply the fitted model to forecast data
+            X_forecast, y_trash, years_trash, feature_trash, regions_forecast = forecaster.preprocess(save_to_csv=False, ope_run=True,
+                                                                        ope_type='forecasting', year_out=current_year)
             y_forecast = forecaster.predict(X_forecast, regions_forecast)
+
+            # Now get some uncertainty estimations
             y_uncert, y_mae = forecaster.predict_uncertainty(X, y, years, regions, X_forecast, regions_forecast)
-            forecaster.to_csv(regions_forecast, y_forecast, y_uncert, y_mae)
+            forecaster.to_csv(regions_forecast, y_forecast, y_uncert, y_mae, runID=original_runID)
 
             # increment runID
             runID += 1
             myID = f'{run_stamp}_{runID:06d}'
     print('End')
 
-if __name__ == '__main__':
-    current_year = 2022
-    print('**********************************************')
-    print('Trend and PCA are not yet implemented')
-    print('**********************************************')
-    res = input('Do you want to proceed anyhow? (Y/N)')
-    if res == 'Y':
-        nrt_model_manager(target='Algeria', forecast_month='May', current_year=current_year)
+# if __name__ == '__main__':
+#     current_year = 2022
+#     print('**********************************************')
+#     print('Trend and PCA are not yet implemented')
+#     print('**********************************************')
+#     res = input('Do you want to proceed anyhow? (Y/N)')
+#     if res == 'Y':
+#         nrt_model_manager(target='Algeria', forecast_month='May', current_year=current_year)
 
 

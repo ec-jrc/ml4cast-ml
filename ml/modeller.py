@@ -105,62 +105,18 @@ def add_yield_trend_estimate(yxDatac, yvar):
                 # trend estimated with ny years before
                 df['YieldFromTrend'] = df.apply(trend1, args=(ny, minYearFeats), axis=1)
             else:
-                # trend estimated using larger time series (lef or right)
+                # trend estimated using larger time series (left or right)
                 df['YieldFromTrend'] = df.apply(trend2, args=(ny, minYearFeats, df['Year'].tolist()), axis=1)
             # add the trend to yxDatac
             yxDatac.loc[(yxDatac['Crop_ID'] == c) & (yxDatac['AU_code'] == r), 'YieldFromTrend'] = df['YieldFromTrend']
     return yxDatac
 
-class YieldHindcaster(object):
-    """
-    Yield hindcasting pipeline
-    """
+class DataMixin:
+    def preprocess(self, save_to_csv=True, ope_run=False, ope_type='', year_out=None):
+        # ope_type can be tuning or forecasting
+        # tuning is performed on all years having yield data, excluding year out that is used for forecasting (can have yield data or not)
+        # when ope_type is forecasting it just gets the X data (can have yield data or not)
 
-    def __init__(self, run_id, aoi, crop, algo, yvar, feature_set, feature_selection, data_reduction,
-                 prct_features2select_grid, n_features2select_grid, doOHE, forecast_time, yieldTrend, time_sampling):
-        """Instantiates the class with metadata"""
-        self.useTrend = yieldTrend
-        self.id = run_id
-        self.aoi = aoi
-        self.model_name = algo
-        self.crop = crop
-        self.crop_name = ''
-        self.yvar = yvar
-        self.leadtime = forecast_time
-        self.doOHE = doOHE
-        self.nOHE = 0
-        self.time_sampling = time_sampling
-        self.optimisation  = cst.hyperparopt
-
-        # Derive other parameters from src.constants
-        if algo in cst.hyperGrid.keys():
-            self.hyperparams = cst.hyperGrid[algo]
-        else:
-            self.hyperparams = None
-
-        self.feature_prct_grid = cst.feature_prct_grid
-        self.prct_features2select_grid = prct_features2select_grid
-        self.n_features2select_grid = n_features2select_grid
-        self.metric = cst.scoringMetric
-        self.feature_group = cst.feature_groups[feature_set]
-        self.feature_selection = feature_selection
-        self.data_reduction = data_reduction
-        self.PCAprctVar2keep = cst.PCAprctVar2keep
-        self.feature_fn = None
-        self.model_fn = None
-        stamp_id = run_id.split('_')[0]
-        self.output_dir = os.path.join(cst.odir, self.aoi, 'Model', stamp_id)
-        self.output_dir_mres = os.path.join(self.output_dir, 'mres')
-        self.output_dir_yx_preprocData = os.path.join(self.output_dir, 'yx_preprocData')
-        self.output_dir_output = os.path.join(self.output_dir, 'output')
-        self.figure_dir = os.path.join(self.output_dir, 'figures')
-        Path(self.output_dir).mkdir(parents=True, exist_ok=True)
-        Path(self.output_dir_mres).mkdir(parents=True, exist_ok=True)
-        Path(self.output_dir_yx_preprocData).mkdir(parents=True, exist_ok=True)
-        Path(self.output_dir_output).mkdir(parents=True, exist_ok=True)
-        Path(self.figure_dir).mkdir(parents=True, exist_ok=True)
-
-    def preprocess(self, save_to_csv=True):
         project = b05_Init.init(self.aoi)
         prct2retain = project['prct2retain']
         statsX = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_stats{prct2retain}.pkl'))  # stats for the 90% main prodducers
@@ -176,17 +132,40 @@ class YieldHindcaster(object):
         # open predictors
         raw_features = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_pheno_features4scikit.pkl'))
 
-        # merge stats and features, so that at ech stat entry I have the full set of features
-        yxData = pd.merge(stats, raw_features, how='left', left_on=['AU_code', 'Year'],
-                          right_on=['AU_code', 'YearOfEOS'])
+        # merge stats and features, so that at each stat entry I have the full set of features
+        # years without stats (yield are dropped)
+        if (ope_run == True and ope_type == 'tuning') or ope_run == False:
+            yxData = pd.merge(stats, raw_features, how='left', left_on=['AU_code', 'Year'],
+                              right_on=['AU_code', 'YearOfEOS'])
+        elif (ope_run == True and ope_type == 'forecasting'):
+            # I need to keep all years (including those without yield)
+            yxData = pd.merge(stats, raw_features, how='outer', left_on=['AU_code', 'Year'], right_on=['AU_code', 'YearOfEOS'])
+            # transfer year of features to year os stats to have it working with trend
+            yxData.loc[yxData['Year'].isna(), "Year"] = yxData["YearOfEOS"]
+            yxData['Year'] = yxData['Year'].astype('int32')
+            # yxData = yxData[yxData'['Year'] == year_out]
 
+        else:
+            print('Ope run requested without specification')
+            exit()
+
+        # b100 remove records that do not have crop id or region presecribed in statsX
+        # if we have years (when forecasting) withou yield, the se would be removed
+        if (ope_run == True and ope_type == 'forecasting'):
+            tmp = yxData[yxData['Crop_ID'].isna()]
         yxDatac = b1000_preprocess_utilities.retain_X(yxData, statsX, self.crop)
         self.crop_name = yxDatac['Crop_name'].iloc[0]
+        self.AUs = list(yxDatac['AU_code'].unique())
+        if (ope_run == True and ope_type == 'forecasting'):
+            tmp['Crop_ID'] = self.crop
+            tmp['Crop_name'] = self.crop_name
+            yxDatac = pd.concat([yxDatac, tmp])
+
 
         # Add a trend feature (the yield estimate for a year-admin unit)
         if self.model_name == 'Trend' or self.useTrend == True:
             yxDatac = add_yield_trend_estimate(yxDatac, self.yvar)
-        # Remove years having only statistics and not features (use to compute the trend estimate of the yield
+        # Remove years having only statistics and not features (use to compute the trend estimate of the yield)
         yxDatac = yxDatac.drop(yxDatac[yxDatac['Year'] < project['timeRange'][0]].index)
 
         # Get labels (i.e. y values) and ancillary info as separate df
@@ -221,22 +200,26 @@ class YieldHindcaster(object):
                 y = labels[self.yvar].to_numpy()
             else:  # ML models and Lasso
                 y = labels[self.yvar].to_numpy()
-                # remove not needed features
-                _features = [s + self.time_sampling for s in self.feature_group]
-                if self.useTrend == True:
-                    list2keep = [str(i) + '(?!\D+)' for i in _features] + ['YieldFromTrend']
+                if ope_run == True:
+                    X = yxDatac[[x for x in self.selected_features if 'OHE' not in x]].to_numpy()
+                    feature_names = self.selected_features
                 else:
-                    list2keep = [str(i) + '(?!\D+)' for i in _features]
+                    # remove not needed features
+                    _features = [s + self.time_sampling for s in self.feature_group]
+                    if self.useTrend == True:
+                        list2keep = [str(i) + '(?!\D+)' for i in _features] + ['YieldFromTrend']
+                    else:
+                        list2keep = [str(i) + '(?!\D+)' for i in _features]
 
-                X = yxDatac.filter(regex='|'.join(list2keep)).to_numpy()
-                feature_names = list(yxDatac.filter(regex='|'.join(list2keep)).columns)
+                    X = yxDatac.filter(regex='|'.join(list2keep)).to_numpy()
+                    feature_names = list(yxDatac.filter(regex='|'.join(list2keep)).columns)
 
             # Preprocessing of input variables using z-score
             if self.model_name not in cst.benchmarks:
                 scaler = StandardScaler()  # z-score scaler
                 if cst.dataScaling == 'z_f':
                     # scale all features
-                    X = scaler.fit_transform(X)
+                    X = self.scaler.fit_transform(X)
                 elif cst.dataScaling == 'z_fl':
                     # scale all features and label as well
                     X = scaler.fit_transform(X)
@@ -314,7 +297,12 @@ class YieldHindcaster(object):
             # Perform One-Hot Encoding for AU if requested
             if self.doOHE == 'AU_level':
                 OHE = pd.get_dummies(AU_codes, columns=['AU_code'], prefix='OHE_AU')
-                feature_names = feature_names + OHE.columns.to_list()
+                if ope_run == False:
+                    feature_names = feature_names + OHE.columns.to_list()
+                else:
+                    OHEtmp = OHE.copy()
+                    OHEtmp['AU_code'] = AU_codes
+                    self.OHE = OHEtmp.drop_duplicates()
                 self.nOHE = len(OHE.columns.to_list())
                 OHE = OHE.to_numpy()
                 if cst.DoScaleOHEnc:
@@ -326,7 +314,8 @@ class YieldHindcaster(object):
                                                       'AU_clusters', f'{self.crop_name}_clusters.csv'))
                 AU_codes = pd.merge(AU_codes, clustering, left_on='AU_code', right_on='AU_code')
                 OHE = pd.get_dummies(AU_codes['Cluster_ID'], columns=['Cluster_ID'], prefix='OHE_Cluster')
-                feature_names = feature_names + OHE.columns.to_list()
+                if ope_run == False:
+                    feature_names = feature_names + OHE.columns.to_list()
                 self.nOHE = len(OHE.columns.to_list())
                 OHE = OHE.to_numpy()
                 if cst.DoScaleOHEnc:
@@ -345,7 +334,70 @@ class YieldHindcaster(object):
             columns=['AU_code', 'year', self.yvar] + feature_names)
         if save_to_csv:
             data.to_csv(os.path.join(self.output_dir_yx_preprocData, f'ID_{self.id}_crop_{self.crop}_{self.yvar}_{self.model_name}_yx_preprocData.csv'))
+        if (ope_run == True and ope_type == 'forecasting'):
+            # yxData = yxData[yxData'['Year'] == year_out]
+            ind = groups == year_out
+            groups = groups[ind]
+            X = X[ind, :]
+            y = y[ind]
+            AU_codes = AU_codes[ind]
         return X, y, groups, feature_names, AU_codes
+
+
+class YieldHindcaster(DataMixin, object):
+    """
+    Yield hindcasting pipeline
+    """
+
+    def __init__(self, run_id, aoi, crop, algo, yvar, feature_set, feature_selection, data_reduction,
+                 prct_features2select_grid, n_features2select_grid, doOHE, forecast_time, yieldTrend, time_sampling):
+        """Instantiates the class with metadata"""
+        self.useTrend = yieldTrend
+        self.id = run_id
+        self.aoi = aoi
+        self.model_name = algo
+        self.crop = crop
+        self.crop_name = ''
+        self.yvar = yvar
+        self.leadtime = forecast_time
+        self.doOHE = doOHE
+        self.nOHE = 0
+        self.OHE = None
+        self.time_sampling = time_sampling
+        self.optimisation  = cst.hyperparopt
+
+        # Derive other parameters from src.constants
+        if algo in cst.hyperGrid.keys():
+            self.hyperparams = cst.hyperGrid[algo]
+        else:
+            self.hyperparams = None
+
+        self.feature_prct_grid = cst.feature_prct_grid
+        self.prct_features2select_grid = prct_features2select_grid
+        self.n_features2select_grid = n_features2select_grid
+        self.metric = cst.scoringMetric
+        self.feature_group = cst.feature_groups[feature_set]
+        self.feature_selection = feature_selection
+        self.data_reduction = data_reduction
+        self.PCAprctVar2keep = cst.PCAprctVar2keep
+        self.feature_fn = None
+        self.model_fn = None
+        # For compatibility with forecaster
+        self.scaler = StandardScaler()  # z-score scaler
+
+        self.AUs = None
+        stamp_id = run_id.split('_')[0]
+        self.output_dir = os.path.join(cst.odir, self.aoi, 'Model', stamp_id)
+        self.output_dir_mres = os.path.join(self.output_dir, 'mres')
+        self.output_dir_yx_preprocData = os.path.join(self.output_dir, 'yx_preprocData')
+        self.output_dir_output = os.path.join(self.output_dir, 'output')
+        self.figure_dir = os.path.join(self.output_dir, 'figures')
+        Path(self.output_dir).mkdir(parents=True, exist_ok=True)
+        Path(self.output_dir_mres).mkdir(parents=True, exist_ok=True)
+        Path(self.output_dir_yx_preprocData).mkdir(parents=True, exist_ok=True)
+        Path(self.output_dir_output).mkdir(parents=True, exist_ok=True)
+        Path(self.figure_dir).mkdir(parents=True, exist_ok=True)
+
 
     def fit(self, X, y, groups, feature_names, AU_codes, save_output):
         hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, nPegged, selected_features_names, prct_selected, n_selected, avg_scoring_metric_on_val = \
@@ -483,7 +535,7 @@ class YieldHindcaster(object):
                f'------------------------'
 
 
-class YieldForecaster(object):
+class YieldForecaster(DataMixin, object):
     """
     Yield forecasting pipeline
     """
@@ -524,89 +576,91 @@ class YieldForecaster(object):
         stamp_id = run_id.split('_')[0]
         self.output_dir = os.path.join(cst.odir, self.aoi, 'OPE_RUN', 'Model', stamp_id)
         Path(self.output_dir).mkdir(parents=True, exist_ok=True)
+        self.output_dir_yx_preprocData = os.path.join(self.output_dir, 'yx_preprocData')
+        Path(self.output_dir_yx_preprocData).mkdir(parents=True, exist_ok=True)
         #self.figure_dir = os.path.join(cst.odir, self.aoi, 'figures')
-        self.figure_dir = os.path.join(self.output_dir, 'figures')
-        Path(self.figure_dir).mkdir(parents=True, exist_ok=True)
+        #self.figure_dir = os.path.join(self.output_dir, 'figures')
+        #Path(self.figure_dir).mkdir(parents=True, exist_ok=True)
 
-    def preprocess(self):
-        project = b05_Init.init(self.aoi)
-        prct2retain = project['prct2retain']
-        statsX = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_stats{prct2retain}.pkl'))    # stats for the 90% main prodducers
-        stats = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_stats.pkl'))        # all targetCountry stats
-        # drop years before period of interest
-        # !! DIFF WITH HIND:
-        stats = stats.drop(stats[stats['Year'] < project['timeRange'][0]].index)
-        # drop unnecessary column
-        stats = stats.drop(cst.drop_cols_stats, axis=1)
-        # rescale Production units for better graphic and better models
-        stats['Production'] = stats['Production'].div(cst.production_scaler)
-
-        # open predictors self.output_dir
-        raw_features = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_pheno_features4scikit.pkl'))
-
-        # merge stats and features, so that at ech stat entry I have the full set of features (up to year of stats)
-        yxData = pd.merge(stats, raw_features, how='left', left_on=['AU_code', 'Year'],
-                          right_on=['AU_code', 'YearOfEOS'])
-
-        yxDatac = b1000_preprocess_utilities.retain_X(yxData, statsX, self.crop)
-        self.crop_name = yxDatac['Crop_name'].iloc[0]
-        self.AUs = list(yxDatac['AU_code'].unique())
-        # Get labels (i.e. y values) and ancillary info as separate df
-        labels = yxDatac[['Yield', 'Production']]
-        years = yxDatac['Year']
-        AU_codes = yxDatac['AU_code']
-
-        #############################################
-        # retain features based on feature set/method
-        #############################################
-
-        if self.model_name == 'PeakNDVI':
-            # retain features up to the time of forecast (included) = lead time
-            yxDatac = yxDatac.filter(
-                regex='|'.join(
-                    ['(^|\D)' + self.time_sampling + str(i) + '($|\D)' for i in range(0, self.leadtime + 1)]))
-            # ['(^|\D)' + 'M' + str(i) + '($|\D)' for i in range(0, self.leadtime + 1)]))
-            # the only feature is max NDVI in the period
-            feature_names = ['NDpeak']
-            X = yxDatac.filter(like='NDmax').max(axis=1).to_numpy()
-            X = X.reshape((-1, 1))
-            y = labels[self.yvar].to_numpy()
-        elif self.model_name == 'Null_model':
-            feature_names = ['None']
-            # does not have a feature, is simply the mean by AU of targetVar variable
-            y = labels[self.yvar].to_numpy()
-            X = y * 0.0
-            X = X.reshape((-1, 1))
-        elif self.model_name == 'Trend':
-            print('Trend model not implemented for forecaster by Michele on 2021-05-21')
-            NotImplementedError
-        else:  # ML models and Lasso
-            X = yxDatac[[x for x in self.selected_features if 'OHE' not in x]].to_numpy()
-            y = labels[self.yvar].to_numpy()
-
-            # Preprocessing of input variables using z-score
-            if self.model_name not in cst.benchmarks:
-                if cst.dataScaling == 'z_f':
-                    # scale all features
-                    X = self.scaler.fit_transform(X)
-                else:
-                    NotImplementedError
-
-            # Perform One-Hot Encoding for AU if requested
-            if self.doOHE == 'AU_level':
-                OHE = pd.get_dummies(AU_codes, columns=['AU_code'], prefix='OHE_AU')
-                X = np.concatenate((X, OHE.to_numpy()), axis=1)
-                OHE['AU_code'] = AU_codes
-                self.OHE = OHE.drop_duplicates()
-            else:
-                NotImplementedError
-
-        # End of pre-processing of input data -------------------------------------------
-
-        # We use the year as a group (for leave one group out at a time)
-        groups = years.to_numpy()
-        return X, y, groups, AU_codes
-
+    # def XXXpreprocess(self):
+    #     project = b05_Init.init(self.aoi)
+    #     prct2retain = project['prct2retain']
+    #     statsX = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_stats{prct2retain}.pkl'))    # stats for the 90% main prodducers
+    #     stats = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_stats.pkl'))        # all targetCountry stats
+    #     # drop years before period of interest
+    #     # !! DIFF WITH HIND:
+    #     stats = stats.drop(stats[stats['Year'] < project['timeRange'][0]].index)
+    #     # drop unnecessary column
+    #     stats = stats.drop(cst.drop_cols_stats, axis=1)
+    #     # rescale Production units for better graphic and better models
+    #     stats['Production'] = stats['Production'].div(cst.production_scaler)
+    #
+    #     # open predictors self.output_dir
+    #     raw_features = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_pheno_features4scikit.pkl'))
+    #
+    #     # merge stats and features, so that at ech stat entry I have the full set of features (up to year of stats)
+    #     yxData = pd.merge(stats, raw_features, how='left', left_on=['AU_code', 'Year'],
+    #                       right_on=['AU_code', 'YearOfEOS'])
+    #
+    #     yxDatac = b1000_preprocess_utilities.retain_X(yxData, statsX, self.crop)
+    #     self.crop_name = yxDatac['Crop_name'].iloc[0]
+    #     self.AUs = list(yxDatac['AU_code'].unique())
+    #     # Get labels (i.e. y values) and ancillary info as separate df
+    #     labels = yxDatac[['Yield', 'Production']]
+    #     years = yxDatac['Year']
+    #     AU_codes = yxDatac['AU_code']
+    #
+    #     #############################################
+    #     # retain features based on feature set/method
+    #     #############################################
+    #
+    #     if self.model_name == 'PeakNDVI':
+    #         # retain features up to the time of forecast (included) = lead time
+    #         yxDatac = yxDatac.filter(
+    #             regex='|'.join(
+    #                 ['(^|\D)' + self.time_sampling + str(i) + '($|\D)' for i in range(0, self.leadtime + 1)]))
+    #         # ['(^|\D)' + 'M' + str(i) + '($|\D)' for i in range(0, self.leadtime + 1)]))
+    #         # the only feature is max NDVI in the period
+    #         feature_names = ['NDpeak']
+    #         X = yxDatac.filter(like='NDmax').max(axis=1).to_numpy()
+    #         X = X.reshape((-1, 1))
+    #         y = labels[self.yvar].to_numpy()
+    #     elif self.model_name == 'Null_model':
+    #         feature_names = ['None']
+    #         # does not have a feature, is simply the mean by AU of targetVar variable
+    #         y = labels[self.yvar].to_numpy()
+    #         X = y * 0.0
+    #         X = X.reshape((-1, 1))
+    #     elif self.model_name == 'Trend':
+    #         print('Trend model not implemented for forecaster by Michele on 2021-05-21')
+    #         NotImplementedError
+    #     else:  # ML models and Lasso
+    #         X = yxDatac[[x for x in self.selected_features if 'OHE' not in x]].to_numpy()
+    #         y = labels[self.yvar].to_numpy()
+    #
+    #         # Preprocessing of input variables using z-score
+    #         if self.model_name not in cst.benchmarks:
+    #             if cst.dataScaling == 'z_f':
+    #                 # scale all features
+    #                 X = self.scaler.fit_transform(X)
+    #             else:
+    #                 NotImplementedError
+    #
+    #         # Perform One-Hot Encoding for AU if requested
+    #         if self.doOHE == 'AU_level':
+    #             OHE = pd.get_dummies(AU_codes, columns=['AU_code'], prefix='OHE_AU')
+    #             X = np.concatenate((X, OHE.to_numpy()), axis=1)
+    #             OHE['AU_code'] = AU_codes
+    #             self.OHE = OHE.drop_duplicates()
+    #         else:
+    #             NotImplementedError
+    #
+    #     # End of pre-processing of input data -------------------------------------------
+    #
+    #     # We use the year as a group (for leave one group out at a time)
+    #     groups = years.to_numpy()
+    #     return X, y, groups, AU_codes
+    #
     def fit(self, X, y, years, regions):
         if self.model_name == 'PeakNDVI':
             models = {}
@@ -626,49 +680,52 @@ class YieldForecaster(object):
             self.search.fit(X, y, groups=years)
 
 
-    def preprocess_currentyear(self, fn, current_year):
-
-        xData = pd.read_csv(fn)  # all targetCountry stats
-        xData = xData[xData.YearOfEOS == current_year]
-        if self.model_name != 'PeakNDVI':
-            xData = xData[xData['AU_code'].isin(self.OHE['AU_code'].unique())]
-            xDatac = pd.merge(xData, self.OHE, how='left', on='AU_code', suffixes=('', '_y'))
-        else:
-            xDatac = xData[xData['AU_code'].isin(self.AUs)]
-
-        #############################################
-        # retain features based on feature set/method
-        #############################################
-        if self.model_name == 'PeakNDVI':
-            # retain features up to the time of forecast (included) = lead time
-            Xc = xDatac.filter(
-                regex='|'.join(
-                    ['(^|\D)' + self.time_sampling + str(i) + '($|\D)' for i in range(0, self.leadtime + 1)]))
-            # ['(^|\D)' + 'M' + str(i) + '($|\D)' for i in range(0, self.leadtime + 1)]))
-            # the only feature is max NDVI in the period
-            Xc = Xc.filter(like='NDmax').max(axis=1).to_numpy()
-            X = Xc.reshape((-1, 1))
-
-        elif self.model_name == 'Null_model':
-            NotImplemented
-        else:  # ML models and Lasso
-            X = xDatac[[x for x in self.selected_features if 'OHE' not in x]].to_numpy()
-
-            # Preprocessing of input variables using z-score
-            if cst.dataScaling == 'z_f':
-                # scale all features
-                X = self.scaler.transform(X)
-            else:
-                NotImplementedError
-
-            # Perform One-Hot Encoding for AU if requested
-            if self.doOHE == 'AU_level':
-                X_OHE = xDatac[[x for x in list(xDatac.columns) if 'OHE' in x]].to_numpy()
-                X = np.concatenate((X, X_OHE), axis=1)
-            else:
-                NotImplemented
-
-        return X, xDatac['AU_code'].to_numpy()
+    # def preprocess_currentyear(self, fn, current_year):
+    #
+    #     xData = pd.read_csv(fn)  # all targetCountry stats
+    #     xData = xData[xData.YearOfEOS == current_year]
+    #     if self.model_name != 'PeakNDVI':
+    #         if self.doOHE == 'AU_level':
+    #             xData = xData[xData['AU_code'].isin(self.OHE['AU_code'].unique())]
+    #             xDatac = pd.merge(xData, self.OHE, how='left', on='AU_code', suffixes=('', '_y'))
+    #         else:
+    #             xDatac = xData
+    #     else:
+    #         xDatac = xData[xData['AU_code'].isin(self.AUs)]
+    #
+    #     #############################################
+    #     # retain features based on feature set/method
+    #     #############################################
+    #     if self.model_name == 'PeakNDVI':
+    #         # retain features up to the time of forecast (included) = lead time
+    #         Xc = xDatac.filter(
+    #             regex='|'.join(
+    #                 ['(^|\D)' + self.time_sampling + str(i) + '($|\D)' for i in range(0, self.leadtime + 1)]))
+    #         # ['(^|\D)' + 'M' + str(i) + '($|\D)' for i in range(0, self.leadtime + 1)]))
+    #         # the only feature is max NDVI in the period
+    #         Xc = Xc.filter(like='NDmax').max(axis=1).to_numpy()
+    #         X = Xc.reshape((-1, 1))
+    #
+    #     elif self.model_name == 'Null_model':
+    #         NotImplemented
+    #     else:  # ML models and Lasso
+    #         X = xDatac[[x for x in self.selected_features if 'OHE' not in x]].to_numpy()
+    #
+    #         # Preprocessing of input variables using z-score
+    #         if cst.dataScaling == 'z_f':
+    #             # scale all features
+    #             X = self.scaler.transform(X)
+    #         else:
+    #             NotImplementedError
+    #
+    #         # Perform One-Hot Encoding for AU if requested
+    #         if self.doOHE == 'AU_level':
+    #             X_OHE = xDatac[[x for x in list(xDatac.columns) if 'OHE' in x]].to_numpy()
+    #             X = np.concatenate((X, X_OHE), axis=1)
+    #         else:
+    #             X = xDatac
+    #
+    #     return X, xDatac['AU_code'].to_numpy()
 
 
     def predict(self, X_forecast, regions_forecast):
@@ -687,6 +744,10 @@ class YieldForecaster(object):
 
 
     def predict_uncertainty(self, X, y, groups, regions, X_forecast, regions_forecast):
+        # The idea here is to train the selected model using n-1 year, then predict the forecast year with the trained model.
+        # By reapating this for all n available year we get an idea of forecast uncertainty (due to the exclusion of one year)
+        # the uncertainty is the SD of all forecasts for the forecast year
+        # the mae is the mean absolute error of such forecasts
         preds1 = np.zeros(shape=(np.unique(regions_forecast).shape[0], np.unique(groups).shape[0])).astype(np.float)
         preds2 = np.zeros_like(y).astype(np.float)
 
@@ -701,7 +762,8 @@ class YieldForecaster(object):
             if self.model_name == 'Null_model':
                 NotImplemented
             elif self.model_name == 'PeakNDVI':
-                regions_train, regions_test = regions.values[train_index], regions.values[test_index]
+                #regions_train, regions_test = regions.values[train_index], regions.values[test_index]
+                regions_train, regions_test = regions[train_index], regions[test_index]
                 preds1_au = np.zeros_like(regions_test).astype(np.float)
                 preds2_au = np.zeros_like(regions_test).astype(np.float)
                 for au in np.unique(regions_train):
@@ -719,88 +781,95 @@ class YieldForecaster(object):
                 preds2[test_index] = np.abs(preds2_au - y_test)
             else:
                 # Train one model per fold
-                if self.model_name == 'Lasso':
-                    reg = Lasso(alpha=self.search.best_params_['alpha'])
-                elif self.model_name == 'RandomForest':
-                    reg = RandomForestRegressor(random_state=0, max_depth=self.search.best_params_['max_depth'],
-                                                max_features=self.search.best_params_['max_features'],
-                                                n_estimators=self.search.best_params_['n_estimators'],
-                                                min_samples_split=self.search.best_params_['min_samples_split'])
+                # if self.model_name == 'Lasso':
+                #     reg = Lasso(alpha=self.search.best_params_['alpha'])
+                # elif self.model_name == 'RandomForest':
+                #     reg = RandomForestRegressor(random_state=0, max_depth=self.search.best_params_['max_depth'],
+                #                                 max_features=self.search.best_params_['max_features'],
+                #                                 n_estimators=self.search.best_params_['n_estimators'],
+                #                                 min_samples_split=self.search.best_params_['min_samples_split'])
+                #
+                # elif self.model_name == 'MLP':
+                #     reg = MLPRegressor(random_state=0, max_iter=100, tol=0.0015,
+                #                        alpha=self.search.best_params_['alpha'],
+                #                        hidden_layer_sizes=self.search.best_params_['hidden_layer_sizes'],
+                #                        activation=self.search.best_params_['activation'],
+                #                        learning_rate=self.search.best_params_['learning_rate'])
+                #
+                # elif self.model_name == 'GBR':
+                #     # Gradient Boosting for regression
+                #     reg = GradientBoostingRegressor(learning_rate=self.search.best_params_['learning_rate'],
+                #                                     max_depth=self.search.best_params_['max_depth'],
+                #                                     n_estimators=self.search.best_params_['n_estimators'],
+                #                                     min_samples_split=self.search.best_params_['min_samples_split'])
+                #
+                # elif self.model_name == 'SVR_linear':  # can be SVR_linear, SVR_rbf
+                #     reg = SVR(kernel='linear', C=self.search.best_params_['C'],
+                #               gamma=self.search.best_params_['gamma'], epsilon=self.search.best_params_['epsilon'])
+                #
+                # elif self.model_name == 'SVR_rbf':  # can be SVR_linear, SVR_rbf
+                #     reg = SVR(kernel='rbf', C=self.search.best_params_['C'],
+                #               gamma=self.search.best_params_['gamma'], epsilon=self.search.best_params_['epsilon'])
+                # # fit model
+                # reg.fit(X_train, y_train)
+                # # get uncertainty
+                # preds1[:, cnt] = reg.predict(X_forecast)
 
-                elif self.model_name == 'MLP':
-                    reg = MLPRegressor(random_state=0, max_iter=100, tol=0.0015,
-                                       alpha=self.search.best_params_['alpha'],
-                                       hidden_layer_sizes=self.search.best_params_['hidden_layer_sizes'],
-                                       activation=self.search.best_params_['activation'],
-                                       learning_rate=self.search.best_params_['learning_rate'])
-
-                elif self.model_name == 'GBR':
-                    # Gradient Boosting for regression
-                    reg = GradientBoostingRegressor(learning_rate=self.search.best_params_['learning_rate'],
-                                                    max_depth=self.search.best_params_['max_depth'],
-                                                    n_estimators=self.search.best_params_['n_estimators'],
-                                                    min_samples_split=self.search.best_params_['min_samples_split'])
-
-                elif self.model_name == 'SVR_linear':  # can be SVR_linear, SVR_rbf
-                    reg = SVR(kernel='rbf', C=self.search.best_params_['C'],
-                              gamma=self.search.best_params_['gamma'], epsilon=self.search.best_params_['epsilon'])
-
-                elif self.model_name == 'SVR_rbf':  # can be SVR_linear, SVR_rbf
-                    reg = SVR(kernel='linear', C=self.search.best_params_['C'],
-                              gamma=self.search.best_params_['gamma'], epsilon=self.search.best_params_['epsilon'])
-                # fit model
-                reg.fit(X_train, y_train)
-                # get uncertainty
-                preds1[:, cnt] = reg.predict(X_forecast)
+                # More generic than the above:
+                # With given model, set hypers, fit and search:
+                self.search.best_estimator_.fit(X_train, y_train)
+                preds1[:, cnt] = self.search.best_estimator_.predict(X_forecast)
                 cnt += 1
                 # get historical performance
-                preds2[test_index] = np.abs(reg.predict(X_test) - y_test)
+                # preds2[test_index] = np.abs(reg.predict(X_test) - y_test)
+                preds2[test_index] = np.abs(self.search.best_estimator_.predict(X_test) - y_test)
 
         uncrt = preds1
         ae = np.reshape(preds2, [y_test.shape[0], -1])
 
         return uncrt.std(axis=1), ae.mean(axis=1)
 
-    def to_csv(self, regions, forecasts, funcertainty, fmae):
+    def to_csv(self, regions, forecasts, funcertainty, fmae, runID = ''):
         df_forecast = pd.DataFrame({'ASAP1_ID': np.nan,
                                     'Region_ID': regions,
                                     'Region_name': np.nan,
                                     'Crop_name': self.crop_name,
-                                    'fyield_tha': forecasts,
-                                    'uncertainty_pct': funcertainty,
-                                    'cv_mae': fmae,
-                                    'y_percentile': np.nan,
-                                    'av_yield_tha': np.nan,
-                                    'min_yield_tha': np.nan,
-                                    'max_yield_tha': np.nan,
-                                    'yield_diff_pct': np.nan,
-                                    'farea_ha': np.nan,
-                                    'fproduction_t': np.nan,
-                                    'p_percentile': np.nan,
-                                    'algorithm': self.model_name})
+                                    'fyield': forecasts,
+                                    'fyield_SD_Bootstrap_1yr': funcertainty,
+                                    'fyield_cv_MAE': fmae,
+                                    'fyield_percentile': np.nan,
+                                    'avg_obs_yield': np.nan,
+                                    'min_obs_yield': np.nan,
+                                    'max_obs_yield': np.nan,
+                                    'fyield_diff_pct': np.nan,
+                                    'avg_obs_area': np.nan,
+                                    'fproduction(fyield*avg_obs_area)': np.nan,
+                                    'fproduction_percentile': np.nan,
+                                    'algorithm': self.model_name,
+                                    'runID': runID})
 
         stats = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_stats.pkl'))
         stats = stats[stats['Crop_ID'] == self.crop]
 
         for region in regions:
             stats_region = stats[stats['Region_ID'] == region]
-            yield_region = df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield_tha'].values
+            fyield_region = df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield'].values
             df_forecast.loc[df_forecast['Region_ID'] == region, 'ASAP1_ID'] = stats_region.iloc[0]['ASAP1_ID']
-            df_forecast.loc[df_forecast['Region_ID'] == region, 'y_percentile'] = \
-                percentile_below(stats_region['Yield'], yield_region)
+            df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield_percentile'] = \
+                percentile_below(stats_region['Yield'], fyield_region)
             df_forecast.loc[df_forecast['Region_ID'] == region, 'Region_name'] = \
                 stats_region.iloc[0]['AU_name']
-            df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction_t'] = \
-                df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield_tha'] * stats_region['Area'].mean()
-            df_forecast.loc[df_forecast['Region_ID'] == region, 'av_yield_tha'] = stats_region['Yield'].mean()
-            df_forecast.loc[df_forecast['Region_ID'] == region, 'min_yield_tha'] = stats_region['Yield'].min()
-            df_forecast.loc[df_forecast['Region_ID'] == region, 'max_yield_tha'] = stats_region['Yield'].max()
-            df_forecast.loc[df_forecast['Region_ID'] == region, 'yield_diff_pct'] = \
-                100 * (yield_region - stats_region['Yield'].mean()) / stats_region['Yield'].mean()
-            df_forecast.loc[df_forecast['Region_ID'] == region, 'farea_ha'] = stats_region['Area'].mean()
-            df_forecast.loc[df_forecast['Region_ID'] == region, 'p_percentile'] = \
+            df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction(fyield*avg_obs_area)'] = \
+                df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield'] * stats_region['Area'].mean()
+            df_forecast.loc[df_forecast['Region_ID'] == region, 'avg_obs_yield'] = stats_region['Yield'].mean()
+            df_forecast.loc[df_forecast['Region_ID'] == region, 'min_obs_yield'] = stats_region['Yield'].min()
+            df_forecast.loc[df_forecast['Region_ID'] == region, 'max_obs_yield'] = stats_region['Yield'].max()
+            df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield_diff_pct'] = \
+                100 * (fyield_region - stats_region['Yield'].mean()) / stats_region['Yield'].mean()
+            df_forecast.loc[df_forecast['Region_ID'] == region, 'avg_obs_area'] = stats_region['Area'].mean()
+            df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction_percentile'] = \
                 percentile_below(stats_region['Production'],
-                                 df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction_t'].values)
+                                 df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction(fyield*avg_obs_area)'].values)
 
         forecast_fn = os.path.join(
             self.output_dir,

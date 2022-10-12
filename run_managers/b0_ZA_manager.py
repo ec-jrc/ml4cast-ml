@@ -13,10 +13,10 @@ import src.constants as cst
 # from preprocess import b60_build_features
 # from preprocess import b65_check_data
 # from preprocess import b70_data_exploration
-# import b100_usetting_and_mod_manager
+import b100_usetting_and_mod_manager
 #from postprocess_analysis import b200_gather_output
 #from postprocess_analysis import b215_compare_best_config_outputs_by_model
-from postprocess_analysis import b_230_best_model_scatter
+#from postprocess_analysis import b_230_best_model_scatter
 target = 'ZAsummer'
 
 
@@ -33,10 +33,10 @@ if (True):
     # b60_build_features.build_features(target)
     # b65_check_data.check(target)
     # b70_data_exploration.explore(target)
-    # b100_usetting_and_mod_manager.usetting_and_model_manager(target)
+    b100_usetting_and_mod_manager.usetting_and_model_manager(target)
 
-    dir_run_of_interest = cst.dir_run_of_interest_b200_b215
+    #dir_run_of_interest = cst.dir_run_of_interest_b200_b215
     # b200_gather_output.gather_output(dir_run_of_interest)
     #b215_compare_best_config_outputs_by_model.compare_outputs(os.path.join(dir_run_of_interest, 'output', target)
-    b_230_best_model_scatter.plot_best_scatter(dir_run_of_interest, target)
+    #b_230_best_model_scatter.plot_best_scatter(dir_run_of_interest, target)
 print("--- %s seconds ---" % (time.time() - start_time))

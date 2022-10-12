@@ -192,57 +192,59 @@ def setHyper(optimisation, model, param_grid, inner_cv, nJobsForGridSearchCv, sc
         else:
             print('Model name not implemented: ' + model)
             exit()
-
-    elif optimisation == 'bayesian':
-        n_iter_search = 60
-        if model == 'LassoCV':
-            search = LassoCV(cv=inner_cv, random_state=0)  # max_iter
-        elif model == 'Lasso':
-            search = BayesSearchCV(linear_model.Lasso(random_state=0, max_iter=10000),
-                                   param_grid, n_iter=n_iter_search,
-                                   cv=inner_cv, n_jobs=nJobsForGridSearchCv,
-                                   n_points=nJobsForGridSearchCv,
-                                   optimizer_kwargs = {'base_estimator': 'RF'},
-                                   scoring=scoringMetric)
-        elif model == 'RandomForest':
-            search = BayesSearchCV(RandomForestRegressor(random_state=0),
-                                   param_grid, n_iter=n_iter_search,
-                                   cv=inner_cv, n_jobs=nJobsForGridSearchCv,
-                                   n_points=nJobsForGridSearchCv,
-                                   optimizer_kwargs= {'base_estimator': 'RF'},
-                                   scoring=scoringMetric)
-            # search = RandomizedSearchCV(estimator=RandomForestRegressor(random_state=0), n_iter = 10, param_grid = param_grid_RandomForest, random_state = 0,cv = gen_inner_cv)
-        elif model == 'MLP':
-            # Multi-Layer Perceptron
-            #search = BayesSearchCV(MLPRegressor(random_state=0, max_iter=10000),
-            #                       hidden_layer_sizes=[Integer(4, 16), Integer(4, 16), Integer(4, 16)],
-            #                       n_iter=n_iter_search,
-            #                       cv=inner_cv, n_jobs=nJobsForGridSearchCv, scoring=scoringMetric)
-            search = BayesSearchCV(estimator=MLPWrapper(),
-                                   search_spaces=param_grid,
-                                   n_iter=n_iter_search, cv=inner_cv, n_jobs=nJobsForGridSearchCv,
-                                   n_points=nJobsForGridSearchCv,
-                                   optimizer_kwargs={'base_estimator': 'RF'},
-                                   scoring=scoringMetric)
-
-        elif model == 'GBR':
-            # Gradient Boosting for regression
-            search = BayesSearchCV(ensemble.GradientBoostingRegressor(random_state=0),
-                                   param_grid, n_iter=n_iter_search,
-                                   cv=inner_cv, n_jobs=nJobsForGridSearchCv,
-                                   n_points=nJobsForGridSearchCv,
-                                   optimizer_kwargs = {'base_estimator': 'RF'},
-                                   scoring=scoringMetric)
-        elif model[0:3] == 'SVR':  # can be SVR_linear, SVR_rbf
-            search = BayesSearchCV(SVR(kernel=model[4:], cache_size=1000),
-                                   param_grid, n_iter=n_iter_search,
-                                   cv=inner_cv, n_jobs=nJobsForGridSearchCv, verbose=0,
-                                   n_points=nJobsForGridSearchCv,
-                                   optimizer_kwargs={'base_estimator': 'RF'},
-                                   scoring=scoringMetric)
-        else:
-            print('Model name not implemented: ' + model)
-            exit()
+    else:
+        print('Optimisation not implemented: ' + model)
+        exit()
+    # elif optimisation == 'bayesian':
+    #     n_iter_search = 60
+    #     if model == 'LassoCV':
+    #         search = LassoCV(cv=inner_cv, random_state=0)  # max_iter
+    #     elif model == 'Lasso':
+    #         search = BayesSearchCV(linear_model.Lasso(random_state=0, max_iter=10000),
+    #                                param_grid, n_iter=n_iter_search,
+    #                                cv=inner_cv, n_jobs=nJobsForGridSearchCv,
+    #                                n_points=nJobsForGridSearchCv,
+    #                                optimizer_kwargs = {'base_estimator': 'RF'},
+    #                                scoring=scoringMetric)
+    #     elif model == 'RandomForest':
+    #         search = BayesSearchCV(RandomForestRegressor(random_state=0),
+    #                                param_grid, n_iter=n_iter_search,
+    #                                cv=inner_cv, n_jobs=nJobsForGridSearchCv,
+    #                                n_points=nJobsForGridSearchCv,
+    #                                optimizer_kwargs= {'base_estimator': 'RF'},
+    #                                scoring=scoringMetric)
+    #         # search = RandomizedSearchCV(estimator=RandomForestRegressor(random_state=0), n_iter = 10, param_grid = param_grid_RandomForest, random_state = 0,cv = gen_inner_cv)
+    #     elif model == 'MLP':
+    #         # Multi-Layer Perceptron
+    #         #search = BayesSearchCV(MLPRegressor(random_state=0, max_iter=10000),
+    #         #                       hidden_layer_sizes=[Integer(4, 16), Integer(4, 16), Integer(4, 16)],
+    #         #                       n_iter=n_iter_search,
+    #         #                       cv=inner_cv, n_jobs=nJobsForGridSearchCv, scoring=scoringMetric)
+    #         search = BayesSearchCV(estimator=MLPWrapper(),
+    #                                search_spaces=param_grid,
+    #                                n_iter=n_iter_search, cv=inner_cv, n_jobs=nJobsForGridSearchCv,
+    #                                n_points=nJobsForGridSearchCv,
+    #                                optimizer_kwargs={'base_estimator': 'RF'},
+    #                                scoring=scoringMetric)
+    #
+    #     elif model == 'GBR':
+    #         # Gradient Boosting for regression
+    #         search = BayesSearchCV(ensemble.GradientBoostingRegressor(random_state=0),
+    #                                param_grid, n_iter=n_iter_search,
+    #                                cv=inner_cv, n_jobs=nJobsForGridSearchCv,
+    #                                n_points=nJobsForGridSearchCv,
+    #                                optimizer_kwargs = {'base_estimator': 'RF'},
+    #                                scoring=scoringMetric)
+    #     elif model[0:3] == 'SVR':  # can be SVR_linear, SVR_rbf
+    #         search = BayesSearchCV(SVR(kernel=model[4:], cache_size=1000),
+    #                                param_grid, n_iter=n_iter_search,
+    #                                cv=inner_cv, n_jobs=nJobsForGridSearchCv, verbose=0,
+    #                                n_points=nJobsForGridSearchCv,
+    #                                optimizer_kwargs={'base_estimator': 'RF'},
+    #                                scoring=scoringMetric)
+    #     else:
+    #         print('Model name not implemented: ' + model)
+    #         exit()
     return search
 
 #@ignore_warnings(category=ConvergenceWarning)
