@@ -92,8 +92,8 @@ def usetting_and_model_manager(target):
     # //// debug ////////////////////////////////////////////////////
     # Edit as below if you want less
     if True:
-        algos = ['SVR_linear']
-        monthly_forecast_times = [1]
+        algos = ['GPR2']
+        monthly_forecast_times = [3]
         dataReduction =['none']
         addYieldTrend = [True]
         feature_sets = ['rs_met']

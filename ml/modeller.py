@@ -14,6 +14,7 @@ from sklearn import linear_model
 from sklearn.decomposition import PCA
 from scipy import stats
 import re
+from string import digits
 
 import src.constants as cst
 import preprocess.b1000_preprocess_utilities as b1000_preprocess_utilities
@@ -201,18 +202,43 @@ class DataMixin:
             else:  # ML models and Lasso
                 y = labels[self.yvar].to_numpy()
                 if ope_run == True:
-                    X = yxDatac[[x for x in self.selected_features if 'OHE' not in x]].to_numpy()
-                    feature_names = self.selected_features
-                else:
-                    # remove not needed features
-                    _features = [s + self.time_sampling for s in self.feature_group]
-                    if self.useTrend == True:
-                        list2keep = [str(i) + '(?!\D+)' for i in _features] + ['YieldFromTrend']
-                    else:
-                        list2keep = [str(i) + '(?!\D+)' for i in _features]
+                    # I have to recognise the feature group from self.selected_features
+                    varSetDict = cst.feature_groups
+                    varsList = self.considered_features
+                    # remove OHE
+                    varsList = [x for x in varsList if not ('OHE' in x or 'YieldFromTrend' in x)]  # [x for x in varsList if not 'OHE' in x]
+                    # remove numbers
+                    remove_digits = str.maketrans('', '', digits)
+                    varsList = [x.translate(remove_digits)[0:-1] for x in varsList]  # -2 to remove P or M"
+                    # get unique
+                    varsList = list(set(varsList))
+                    bm_set = 'set not defined'
+                    # check if PCA was activated
+                    # PCA_activated = False
+                    if any(['_PC' in x for x in varsList]) == True:
+                        # remove _PC to allow assigning the feature set
+                        varsList = [x.replace('_PC', '') for x in varsList]
+                    #     PCA_activated = True
+                    #
+                    for key in varSetDict.keys():
+                        if set(varSetDict[key]) == set(varsList):
+                            bm_set = key
+                    self.feature_group = cst.feature_groups[bm_set]
 
-                    X = yxDatac.filter(regex='|'.join(list2keep)).to_numpy()
-                    feature_names = list(yxDatac.filter(regex='|'.join(list2keep)).columns)
+                # if ope_run == True:
+                #     X = yxDatac[[x for x in self.selected_features if 'OHE' not in x]].to_numpy()
+                #     feature_names = self.selected_features
+                # if ope_run == False:
+
+                # remove not needed features
+                _features = [s + self.time_sampling for s in self.feature_group]
+                if self.useTrend == True:
+                    list2keep = [str(i) + '(?!\D+)' for i in _features] + ['YieldFromTrend']
+                else:
+                    list2keep = [str(i) + '(?!\D+)' for i in _features]
+
+                X = yxDatac.filter(regex='|'.join(list2keep)).to_numpy()
+                feature_names = list(yxDatac.filter(regex='|'.join(list2keep)).columns)
 
             # Preprocessing of input variables using z-score
             if self.model_name not in cst.benchmarks:
@@ -243,6 +269,7 @@ class DataMixin:
                 #        - z scaling is done already above
                 # second: operate PCA on all var of group except RainSum [ 0-9]
                 # get list of feature type in feauture group and exclude RainSum
+                # Note: trend is unaffected because it is not in the feature group
                 feature2PCA = [s for s in self.feature_group if s != 'RainSum'] #[f(x) for x in sequence if condition]
                 for var2PCA in feature2PCA:
                     # print(var2PCA)
@@ -272,37 +299,39 @@ class DataMixin:
                     # print('shape out', X.shape)
                     # print('varout', feature_names)
                     # print()
-                # now adjust n feature to be secelted in case feature selction is required
-                if self.feature_selection != 'none':
-                    if len(feature_names) == 1:
-                        #PCA has reduced to 1 feature, no feature selection possible
-                        self.feature_selection = 'none'
-                    else:
-                        # print(self.prct_features2select_grid)
-                        # print(self.n_features2select_grid)
-                        n_features = len(feature_names)
-                        prct_grid = cst.feature_prct_grid
-                        n_features2select_grid = n_features * np.array(prct_grid) / 100
-                        n_features2select_grid = np.round_(n_features2select_grid, decimals=0, out=None)
-                        # keep those with at least 1 feature
-                        idx2retain = [idx for idx, value in enumerate(n_features2select_grid) if value >= 1]
-                        prct_features2select_grid = np.array(prct_grid)[idx2retain]
-                        n_features2select_grid = n_features2select_grid[idx2retain]
-                        # drop possible duplicate in n, and if the same number of ft referes to multiple %, take the largest (this explain the np.flip)
-                        n_features2select_grid, idx2retain = np.unique(np.flip(np.array(n_features2select_grid)),
-                                                                       return_index=True)
-                        prct_features2select_grid = np.flip(prct_features2select_grid)[idx2retain]
-                        self.prct_features2select_grid = prct_features2select_grid
-                        self.n_features2select_grid = n_features2select_grid
+                # now adjust n feature to be selected in case feature selection is required
+                if ope_run == False:
+                    if self.feature_selection != 'none':
+                        if len(feature_names) == 1:
+                            #PCA has reduced to 1 feature, no feature selection possible
+                            self.feature_selection = 'none'
+                        else:
+                            # print(self.prct_features2select_grid)
+                            # print(self.n_features2select_grid)
+                            n_features = len(feature_names)
+                            prct_grid = cst.feature_prct_grid
+                            n_features2select_grid = n_features * np.array(prct_grid) / 100
+                            n_features2select_grid = np.round_(n_features2select_grid, decimals=0, out=None)
+                            # keep those with at least 1 feature
+                            idx2retain = [idx for idx, value in enumerate(n_features2select_grid) if value >= 1]
+                            prct_features2select_grid = np.array(prct_grid)[idx2retain]
+                            n_features2select_grid = n_features2select_grid[idx2retain]
+                            # drop possible duplicate in n, and if the same number of ft referes to multiple %, take the largest (this explain the np.flip)
+                            n_features2select_grid, idx2retain = np.unique(np.flip(np.array(n_features2select_grid)),
+                                                                           return_index=True)
+                            prct_features2select_grid = np.flip(prct_features2select_grid)[idx2retain]
+                            self.prct_features2select_grid = prct_features2select_grid
+                            self.n_features2select_grid = n_features2select_grid
             # Perform One-Hot Encoding for AU if requested
             if self.doOHE == 'AU_level':
                 OHE = pd.get_dummies(AU_codes, columns=['AU_code'], prefix='OHE_AU')
-                if ope_run == False:
-                    feature_names = feature_names + OHE.columns.to_list()
-                else:
-                    OHEtmp = OHE.copy()
-                    OHEtmp['AU_code'] = AU_codes
-                    self.OHE = OHEtmp.drop_duplicates()
+                feature_names = feature_names + OHE.columns.to_list()
+                # if ope_run == False:
+                #     feature_names = feature_names + OHE.columns.to_list()
+                # else:
+                #     OHEtmp = OHE.copy()
+                #     OHEtmp['AU_code'] = AU_codes
+                #     self.OHE = OHEtmp.drop_duplicates()
                 self.nOHE = len(OHE.columns.to_list())
                 OHE = OHE.to_numpy()
                 if cst.DoScaleOHEnc:
@@ -324,6 +353,15 @@ class DataMixin:
                 #set back AU_codes to only AU_codes
                 AU_codes = AU_codes['AU_code']
         # End of pre-processing of input data -------------------------------------------
+        # Retain selected features for the ope model
+        if ope_run == True:
+            # drop the features that were not selected
+            selected_features_set = set(self.selected_features)
+            index2retain = [i for i, val in enumerate(feature_names) if val in selected_features_set]
+            feature_names = [feature_names[i] for i in index2retain]
+            X = X[:,index2retain]
+            # X = yxDatac[[x for x in self.selected_features if 'OHE' not in x]].to_numpy()
+            # feature_names = self.selected_features
 
         # We use the year as a group (for leave one group out at a time)
         groups = years.to_numpy()
@@ -540,7 +578,7 @@ class YieldForecaster(DataMixin, object):
     Yield forecasting pipeline
     """
 
-    def __init__(self, run_id, aoi, crop, algo, yvar, doOHE, selected_features, forecast_time, time_sampling, data_reduction = 'none', yieldTrend = False):
+    def __init__(self, run_id, dirOutModel, aoi, crop, algo, yvar, doOHE, considered_features, selected_features, forecast_time, time_sampling, data_reduction = 'none', yieldTrend = False):
         """Instantiates the class with metadata"""
         self.useTrend = yieldTrend
         self.id = run_id
@@ -565,7 +603,9 @@ class YieldForecaster(DataMixin, object):
             self.hyperparams = None
 
         self.AUs = None
+        self.considered_features = considered_features
         self.selected_features = selected_features
+        self.feature_group = None
         self.scaler = None
         self.metric = cst.scoringMetric
         self.scaler = StandardScaler()  # z-score scaler
@@ -573,9 +613,9 @@ class YieldForecaster(DataMixin, object):
 
         self.feature_fn = None
         self.model_fn   = None
-        stamp_id = run_id.split('_')[0]
-        self.output_dir = os.path.join(cst.odir, self.aoi, 'OPE_RUN', 'Model', stamp_id)
-        Path(self.output_dir).mkdir(parents=True, exist_ok=True)
+        #stamp_id = run_id.split('_')[0]
+        self.output_dir = dirOutModel #os.path.join(cst.odir, self.aoi, 'OPE_RUN', 'Model', stamp_id)
+        #Path(self.output_dir).mkdir(parents=True, exist_ok=True)
         self.output_dir_yx_preprocData = os.path.join(self.output_dir, 'yx_preprocData')
         Path(self.output_dir_yx_preprocData).mkdir(parents=True, exist_ok=True)
         #self.figure_dir = os.path.join(cst.odir, self.aoi, 'figures')
@@ -673,8 +713,9 @@ class YieldForecaster(DataMixin, object):
             self.search = models
         else:
             cv = LeaveOneGroupOut()
+            n_features = X.shape[1]
             self.search = b110_modelApp_with_feature_selection.setHyper(
-                self.optimisation, self.model_name, self.hyperparams, cv, cst.nJobsForGridSearchCv, self.metric
+                self.optimisation, self.model_name, self.hyperparams, cv, cst.nJobsForGridSearchCv, self.metric, n_features=n_features,
             )
             # Tune hyperparameters
             self.search.fit(X, y, groups=years)

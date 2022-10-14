@@ -61,7 +61,7 @@ def nrt_model_manager(target, forecasting_times, forecast_month, current_year):
     tgt_dir = os.path.join(cst.odir, target, 'OPE_RUN')
     dirModel = os.path.join(cst.odir, target, 'Model', 'output')
     #Path(dirModel).mkdir(parents=True, exist_ok=True)
-    dirOutModel = os.path.join(tgt_dir, 'Model', run_stamp)
+    dirOutModel = os.path.join(tgt_dir, 'Model', run_stamp+'_forecast_'+str(current_year)+'_'+str(forecast_month))
     Path(dirOutModel).mkdir(parents=True, exist_ok=True)
 
     # file for used by Condor for parallelization
@@ -118,16 +118,20 @@ def nrt_model_manager(target, forecasting_times, forecast_month, current_year):
             ft_sel = df_run_crop['Ft_selection'].values[0]
             if ft_sel == 'MRMR':
                 selected_features = df_run_crop['Selected_features_names_fit'].values[0]
+                considered_features = df_run_crop['Features'].values[0]
             else:
                 selected_features = df_run_crop['Features'].values[0]
+                considered_features = selected_features
             selected_features = ast.literal_eval(selected_features)
+            considered_features = ast.literal_eval(considered_features)
             if target == 'Algeria':
                 data_reduction = 'None'
                 AddYieldTrend = False
             else:
                 data_reduction = df_run_crop['Data_reduction'].values[0]
-                if df_run_crop['AddYieldTrend'].values[0] == True:
-                    AddYieldTrend = True
+                AddYieldTrend = df_run_crop['AddYieldTrend'].values[0]
+                # if df_run_crop['AddYieldTrend'].values[0] == True:
+                #     AddYieldTrend = True
             original_runID = df_run_crop['runID'].values[0]
             # # I have to get the feature_group, to be sent to modeller.YieldForecaster
             # varsList = ast.literal_eval(df_run_crop['Features'].values[0])
@@ -158,11 +162,13 @@ def nrt_model_manager(target, forecasting_times, forecast_month, current_year):
             # Save model settings as pickle
             uset = {'original_runID': original_runID,
                    'runID': myID,
+                    'dirOutModel': dirOutModel,
                     'target': target,
                     'cropID': crop_id,
                     'algorithm': algo,
                     'yvar': yvar,
                     'doOHE': doOHE,
+                    'considered_features': considered_features,
                     'selected_features': selected_features,
                     #'feature_group'
                     'data_reduction': data_reduction,
@@ -179,11 +185,13 @@ def nrt_model_manager(target, forecasting_times, forecast_month, current_year):
 
             # if cst.is_condor is False:
             forecaster = modeller.YieldForecaster(uset['runID'],
+                                                  uset['dirOutModel'],
                                                   uset['target'],
                                                   uset['cropID'],
                                                   uset['algorithm'],
                                                   uset['yvar'],
                                                   uset['doOHE'],
+                                                  uset['considered_features'],
                                                   uset['selected_features'],
                                                   uset['forecast_time'],
                                                   uset['time_sampling'],
@@ -192,6 +200,7 @@ def nrt_model_manager(target, forecasting_times, forecast_month, current_year):
             #print(forecaster)
             print(uset)
             input_fn = uset['input_data']
+
 
             # Fit on all data excluding the year_out
             X, y, years, feature_names, regions = forecaster.preprocess(save_to_csv=True, ope_run=True,  ope_type='tuning', year_out=current_year) #forecasting tuning
@@ -213,7 +222,8 @@ def nrt_model_manager(target, forecasting_times, forecast_month, current_year):
             # increment runID
             runID += 1
             myID = f'{run_stamp}_{runID:06d}'
-    print('End')
+    return dirOutModel
+    #print('End')
 
 # if __name__ == '__main__':
 #     current_year = 2022
