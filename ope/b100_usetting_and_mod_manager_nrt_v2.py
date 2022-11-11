@@ -212,7 +212,7 @@ def nrt_model_manager(target, forecasting_times, forecast_month, current_year):
 
             # Now apply the fitted model to forecast data
             X_forecast, y_trash, years_trash, feature_trash, regions_forecast = forecaster.preprocess(save_to_csv=False, ope_run=True,
-                                                                        ope_type='forecasting', year_out=current_year)
+                                                                        ope_type='forecasting', year_out=current_year-1)
             y_forecast = forecaster.predict(X_forecast, regions_forecast)
 
             # Now get some uncertainty estimations

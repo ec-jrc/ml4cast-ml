@@ -4,7 +4,7 @@ import src.constants as cst
 
 target = 'ZAsummer'
 forecast_month = 'November'
-forcast_year = 2022 #this is the harvest year, so in operation during 2022, it will be 2023
+forcast_year = 2023 #this is the harvest year, so in operation during 2022, it will be 2023
 
 forecasting_times = {'November': 1, 'December': 2, 'January': 3, 'February': 4, 'March': 5, 'April': 6, 'May': 7,}
 # store the updated data in: -PY_data-ML1_data_input-Predictors_4OPE
