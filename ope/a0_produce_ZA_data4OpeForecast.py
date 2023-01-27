@@ -3,7 +3,7 @@ from ope import b100_usetting_and_mod_manager_nrt_v2,b200_gather_outputs_nrt
 import src.constants as cst
 
 target = 'ZAsummer'
-forecast_month = 'November'
+forecast_month = 'January'
 forcast_year = 2023 #this is the harvest year, so in operation during 2022, it will be 2023
 
 forecasting_times = {'November': 1, 'December': 2, 'January': 3, 'February': 4, 'March': 5, 'April': 6, 'May': 7,}
