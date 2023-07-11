@@ -131,7 +131,10 @@ class DataMixin:
         stats['Production'] = stats['Production'].div(cst.production_scaler)
 
         # open predictors
-        raw_features = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_pheno_features4scikit.pkl'))
+        if ope_run == True:
+            raw_features = pd.read_pickle(os.path.join(cst.odir, self.aoi, 'OPE_RUN', f'{self.aoi}_pheno_features4scikit.pkl'))
+        else:
+            raw_features = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_pheno_features4scikit.pkl'))
 
         # merge stats and features, so that at each stat entry I have the full set of features
         # years without stats (yield are dropped)
@@ -149,17 +152,18 @@ class DataMixin:
         else:
             print('Ope run requested without specification')
             exit()
-
         # b100 remove records that do not have crop id or region presecribed in statsX
         # if we have years (when forecasting) withou yield, the se would be removed
         if (ope_run == True and ope_type == 'forecasting'):
             tmp = yxData[yxData['Crop_ID'].isna()]
         yxDatac = b1000_preprocess_utilities.retain_X(yxData, statsX, self.crop)
+        #yxDatac = yxData
         self.crop_name = yxDatac['Crop_name'].iloc[0]
         self.AUs = list(yxDatac['AU_code'].unique())
         if (ope_run == True and ope_type == 'forecasting'):
             tmp['Crop_ID'] = self.crop
             tmp['Crop_name'] = self.crop_name
+            tmp = b1000_preprocess_utilities.retain_X(tmp, statsX, self.crop) # FS added for Algeria forecasts
             yxDatac = pd.concat([yxDatac, tmp])
 
 
@@ -877,7 +881,7 @@ class YieldForecaster(DataMixin, object):
                                     'Crop_name': self.crop_name,
                                     'fyield': forecasts,
                                     'fyield_SD_Bootstrap_1yr': funcertainty,
-                                    'fyield_cv_MAE': fmae,
+                                     'fyield_cv_MAE': fmae,
                                     'fyield_percentile': np.nan,
                                     'avg_obs_yield': np.nan,
                                     'min_obs_yield': np.nan,
@@ -901,13 +905,13 @@ class YieldForecaster(DataMixin, object):
             df_forecast.loc[df_forecast['Region_ID'] == region, 'Region_name'] = \
                 stats_region.iloc[0]['AU_name']
             df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction(fyield*avg_obs_area)'] = \
-                df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield'] * stats_region['Area'].mean()
+                df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield'] * stats_region['Area'][-5::].mean()
             df_forecast.loc[df_forecast['Region_ID'] == region, 'avg_obs_yield'] = stats_region['Yield'].mean()
             df_forecast.loc[df_forecast['Region_ID'] == region, 'min_obs_yield'] = stats_region['Yield'].min()
             df_forecast.loc[df_forecast['Region_ID'] == region, 'max_obs_yield'] = stats_region['Yield'].max()
             df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield_diff_pct'] = \
-                100 * (fyield_region - stats_region['Yield'].mean()) / stats_region['Yield'].mean()
-            df_forecast.loc[df_forecast['Region_ID'] == region, 'avg_obs_area'] = stats_region['Area'].mean()
+                100 * ((fyield_region - stats_region['Yield'][-5::].mean()) / stats_region['Yield'][-5::].mean() )#ADDED LAST 5 YEARS
+            df_forecast.loc[df_forecast['Region_ID'] == region, 'avg_obs_area'] = stats_region['Area'][-5::].mean()
             df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction_percentile'] = \
                 percentile_below(stats_region['Production'],
                                  df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction(fyield*avg_obs_area)'].values)
