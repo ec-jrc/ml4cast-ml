@@ -29,8 +29,8 @@ for reg in regions:
     w  = np.array(df_reg['afi_pct'].values/100).astype('double')
     # z = ws2d(y, 0.5, w)
     #w = w *0 +1
-    z = whittaker_smooth_m(y, 0.5, None, d=2)
-    #z = whittaker_smooth_m_withWeights(y, 0.5, w, None, d=2)
+    #z = whittaker_smooth_m(y, 0.5, None, d=2)
+    z = whittaker_smooth_m_withWeights(y, 0.5, w, None, d=2)
     df_reg['sm_smooth'] = z
     df_sm_out = pd.concat([df_sm_out, df_reg])
     # Test to understand lambda, lambda fixed at 0.5
@@ -41,12 +41,12 @@ for reg in regions:
     ax1 = plt.subplot()
     l1, = ax1.plot(xax1, w[a:b], color='black')
     ax1.set_ylim([0,1])
-    #ax1.set_xlim([0, 50])
+    ax1.set_xlim([0, 50])
     ax2 = ax1.twinx()
     l2, = ax2.plot(xax1, y[a:b], color='grey')
     l2, = ax2.plot(xax1, z[a:b], color='blue')
     ax2.set_ylim([0, 0.4])
-    #ax2.set_xlim([0, 50])
+    ax2.set_xlim([0, 50])
     # l2, = ax2.plot(xax1, zz[a:b], color='red')
     fn = os.path.join(os.path.dirname(cst.sm_file_for_b10), reg + '_smoothed.png')
     plt.tight_layout

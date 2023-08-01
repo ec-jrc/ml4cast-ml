@@ -124,5 +124,5 @@ def whittaker_smooth_m_withWeights(y0, lmbd, w, no_data_val, d=2):
     # E = sparse.eye(m, format='csc')
     D = speyediff(m, d, format='csc')
     coefmat = W + lmbd * D.conj().T.dot(D)
-    z = splu(coefmat).solve(y)
+    z = splu(coefmat).solve(w*y)
     return z
