@@ -20,6 +20,18 @@ gdal_path_apps= dm_cst.gdal_path_apps
 gdal_warp_path = os.path.join(gdal_path, 'gdalwarp')
 #km2 of NDVI pixels (rough estimate)
 pix2km2 = 0.860946376547824
+if study == 'steffen':
+    TEMPLATE_OUTPUT = dm_cst.TEMPLATE_OUTPUT_ZAeast
+    # DICT_AFI = {'summer_crops_2018': [1, 3, 4, 5, 7],
+    #             'winter_crops_2018': [9],
+    #             'win2sum_crops_2018': [10, 11],
+    #             'pastures_2018': [2],
+    #             'fallow_2018': [6],
+    #             'arable_2018': [1, 3, 4, 5, 6, 7, 9, 10, 11],
+    #             'sugarcane_2018': [23]}
+    DICT_AFI = {'arable_land': [1]}
+    input_file = dm_cst.input_file_ZAeast
+    output_path = dm_cst.output_path_ZAeast
 if study == 'ZAeast':
     TEMPLATE_OUTPUT = dm_cst.TEMPLATE_OUTPUT_ZAeast
     # DICT_AFI = {'summer_crops_2018': [1, 3, 4, 5, 7],
