@@ -1,0 +1,3 @@
+2024 05 03
+- handle missing data in yield without exluding if only on year missing
+- fix info leakage when using trend
