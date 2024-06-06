@@ -13,21 +13,21 @@ from G_HTCondor import g100_HTCondor
 
 if __name__ == '__main__':
     '''
-    This script shall be used to run these different runTypes: 
-    1) [tuning] tunes models with double LOYO loop (test various configuration)
-    2) [opeForecast] run the operational yield of 2) using predictors only. Predictors are saved in a
-       different dir that can be updated and to avoid overwrite of features used for training
+    This script shall be used to for:
+    [runType = 'tuning'] tuning models with double LOYO loop (test various configuration)
+    
     PART A is run locally to generate data and spec files
     PART B can be run locally or on HT Condor
     '''
-
-
-    # ----------------------------------------------------------------------------------------------------------
-    # PART A
+    # USER SETTINGS
     # Give a name to the run that will be used to make the output dir name
     run_name = 'buttami'
-    runType = 'tuning'  # ['tuning', 'opeForecast']
     tune_on_condor = False
+    # ----------------------------------------------------------------------------------------------------------
+    # PART A
+
+    runType = 'tuning'  # ['tuning', 'opeForecast']
+
 
     start_time = time.time()
 
