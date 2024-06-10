@@ -15,37 +15,31 @@ import time
 
 if __name__ == '__main__':
     '''
-    This script shall be used to run these different runTypes: 
-    1) [tuning] tunes models with double LOYO loop (test various configuration)
-    2) [opeForecast] run the operational yield of 2) using predictors only. Predictors are save in a
-       different dir that can be updated and to avoid overwrite of features used for training
+    This script shall be used to run the operational yield. Predictors are saved in a
+       different dir that can be updated and to avoid overwrite of features used for training.
+       The script first refit the model and then make the forecast
     '''
-    # USE MODELS TUNED WITH THE FOLLOWING RUN
-    run_name = 'test'
-    runType = 'opeForecast'  # ['tuning', 'opeForecast']
-    start_time = time.time()
-    forecastingMonth = 5
-    forecastingYear = 2024 # The year refer to time of EOS
-
-    metric_for_model_selection = 'RMSE_p' # 'RMSE_val' MUST BE USED
-
     pd.set_option('display.width', 5000)
     pd.set_option('display.max_columns', None)
 
+    # USER SETTINGS ###########################################################
+    # USE MODELS TUNED WITH THE FOLLOWING RUN
+    run_name = 'testMic'
+    # config file to be used
+    config_fn = r'V:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json'
+    forecastingMonth = 5
+    forecastingYear = 2024 # This year refer to time of EOS
+    metric_for_model_selection = 'RMSE_p'  # 'RMSE_val' MUST BE USED
+    # END OF USER SETTINGS ##########################################################
+
+    runType = 'opeForecast'  # ['tuning', 'opeForecast']
+    start_time = time.time()
     # load region specific data info
-    config = a10_config.read(r'V:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json', run_name)
+    config = a10_config.read(config_fn, run_name)
     # make necessary directories
-    if runType == 'tuning':
-        Path(config.output_dir).mkdir(parents=True, exist_ok=True)
-        Path(config.models_dir).mkdir(parents=True, exist_ok=True)
-        Path(config.models_spec_dir).mkdir(parents=True, exist_ok=True)
-        Path(config.models_out_dir).mkdir(parents=True, exist_ok=True)
-    elif runType in ['opeForecast']:
-        Path(config.ope_run_dir).mkdir(parents=True, exist_ok=True)
-        Path(config.ope_run_out_dir).mkdir(parents=True, exist_ok=True)
-
-
-    #prepare data
+    Path(config.ope_run_dir).mkdir(parents=True, exist_ok=True)
+    Path(config.ope_run_out_dir).mkdir(parents=True, exist_ok=True)
+    # prepare data
     b100_load.LoadPredictors_Save_Csv(config, runType)
     b100_load.build_features(config, runType)
 

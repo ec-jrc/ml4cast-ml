@@ -183,7 +183,16 @@ class YieldModeller(DataMixin, object):
                 #print('Iteration outer loop = ' + str(nIterationOuterLoop))
                 X_train, X_test, groups_train, AU_code_train = X[train_index], X[test_index], groups[train_index], AU_codes[train_index]
                 y_train, y_test, groups_test, AU_code_test = y[train_index], y[test_index], groups[test_index], AU_codes[test_index]
-                # Not implemented: Exclude records (year - AU) with missing nan
+                # Not implemented:
+                # Exclude records (year - AU) with missing nan
+                # train set
+                nas = np.isnan(y_train)
+                y_train = y_train[~nas]
+                X_train = X_train[~nas, :]
+                groups_train = groups_train[~nas]
+                AU_code_train = AU_code_train[~nas]
+                # for the test set do nothing, missing values are not an issue (the model does not have to be tuned)
+
                 if self.uset['algorithm'] in ['Null_model', 'Trend', 'PeakNDVI']:
                     outLoopRes = d110_benchmark_models.run_LOYO(self.uset['algorithm'], X_train, X_test, y_train, y_test, AU_code_train, AU_code_test, groups_test)
                     tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year'])

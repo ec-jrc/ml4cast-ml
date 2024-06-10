@@ -14,63 +14,59 @@ from G_HTCondor import g100_HTCondor
 if __name__ == '__main__':
     '''
     This script shall be used to for:
-    [runType = 'tuning'] tuning models with double LOYO loop (test various configuration)
+    tuning models with double LOYO loop (test various configuration)
     
     PART A is run locally to generate data and spec files
     PART B can be run locally or on HT Condor
     '''
-    # USER SETTINGS
+    # USER SETTINGS ###########################################################
     # Give a name to the run that will be used to make the output dir name
-    run_name = 'buttami'
+    run_name = 'testMic_with_missing' #
+    # config file to be used
+    config_fn = r'V:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json'
+    # specify months on which to forecast
+    forecastingMonths = [5]
+    # Use condor or run locally
     tune_on_condor = False
+    # END OF USER SETTINGS ###########################################################
+
     # ----------------------------------------------------------------------------------------------------------
     # PART A
-
     runType = 'tuning'  # ['tuning', 'opeForecast']
-
-
     start_time = time.time()
-
     # load region specific data info
-    config = a10_config.read(r'V:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json', run_name)
+    config = a10_config.read(config_fn, run_name)
     # make necessary directories
-    if runType == 'tuning':
-        Path(config.output_dir).mkdir(parents=True, exist_ok=True)
-        Path(config.models_dir).mkdir(parents=True, exist_ok=True)
-        Path(config.models_spec_dir).mkdir(parents=True, exist_ok=True)
-        Path(config.models_out_dir).mkdir(parents=True, exist_ok=True)
-    elif runType in ['opeTune', 'opeForecast']:
-        Path(config.ope_run_dir).mkdir(parents=True, exist_ok=True)
+    Path(config.output_dir).mkdir(parents=True, exist_ok=True)
+    Path(config.models_dir).mkdir(parents=True, exist_ok=True)
+    Path(config.models_spec_dir).mkdir(parents=True, exist_ok=True)
+    Path(config.models_out_dir).mkdir(parents=True, exist_ok=True)
     # load model configurations to be tested
-    modelSettings = a10_config.mlSettings(forecastingMonths = [5]) #[3,6]
+    modelSettings = a10_config.mlSettings(forecastingMonths=forecastingMonths) #[3,6]
 
-
-    if runType == 'tuning':
-        ##################################################################################################################
-        # MODIFY HERE TO DO LESS TESTING
-        config.crops = ['Maize_total']
-        want_keys = ['rs_met_reduced']
-        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
-        modelSettings.doOHEs = ['AU_level']
-        modelSettings.feature_selections = ['none']
-        modelSettings.feature_prct_grid = [50]
-        want_keys = ['Lasso'] #['GPR'] #['XGBoost']
-        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        modelSettings.addYieldTrend = [False]
-        modelSettings.dataReduction = ['none']
-        ###################################################################################################################
+    ##################################################################################################################
+    # MODIFY HERE TO DO LESS TESTING
+    #config.crops = ['Maize_total']
+    want_keys = ['rs_met_reduced']
+    modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
+    modelSettings.doOHEs = ['AU_level']
+    modelSettings.feature_selections = ['none']
+    modelSettings.feature_prct_grid = [50]
+    want_keys = ['Lasso'] #['GPR'] #['XGBoost']
+    modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
+    modelSettings.addYieldTrend = [False]
+    modelSettings.dataReduction = ['none']
+    ###################################################################################################################
     print(modelSettings.__dict__)
-
-    if True: #already tested
+    if True:
         b100_load.LoadPredictors_Save_Csv(config, runType)
         b100_load.build_features(config, runType)
         # remove admin units with missing data in yield !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        b100_load.LoadLabel_Exclude_Missing(config)
+        # b100_load.LoadLabel_Exclude_Missing(config)
+        b100_load.LoadLabel(config)
         # prepare json files specifying the details of each run to be tested
         c100_save_model_specs.save_model_specs(config, modelSettings)
-
     # print(config.__dict__)
-    # print(config.sos)
 
     # ----------------------------------------------------------------------------------------------------------
     # PART B
@@ -91,19 +87,3 @@ if __name__ == '__main__':
         print('to be implemented')
 
 
-# tic = time.time()
-# with open(fn, 'r') as fp:
-#     uset = json.load(fp)
-# print(uset)
-# hindcaster = d100_modeller.YieldModeller(uset)
-# # preprocess
-# X, y, groups, feature_names, AU_codes = hindcaster.preprocess(config, runType)
-# # fit and put results in a dict
-# hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, \
-#     selected_features_names, prct_selected, n_selected, \
-#     avg_scoring_metric_on_val, fitted_model = hindcaster.fit(X, y, groups, feature_names, AU_codes, runType)
-# runTimeH = (time.time() - tic) / (60 * 60)
-# print(f'Model fitted in {runTimeH} hours')
-# # error stats
-# hindcaster.validate(hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, runTimeH, feature_names, selected_features_names,
-#                 prct_selected, n_selected, avg_scoring_metric_on_val, config, save_file=True, save_figs=False)

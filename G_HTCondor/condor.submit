@@ -1,9 +1,25 @@
+#******2024 new instructions
+#universe = docker
+#docker_image = harbor.cidsn.jrc.it/jeodpp-htcondor/<your docker image name and tag>
+#initialdir = <eos/jeodpp/data/projects/.../fullpath to the dir from where you submit>.
+#executable = /bin/bash
+#arguments = </eos/jeodpp/data/projects/.../fullpath>/hello_world.sh $(ClusterID) $(Process)
+#
+#The commands that might need to be updated in your submit files are:
+#initialdir
+#executable
+#arguments
+
+#initialdir should point to the directory containing your HTCondor submit file. This folder must be a subfolder of your EOS project folder.
+#executable should contain the full path to the executable file in your docker container. Most often it will be /bin/bash but it could also be the path to the R executable in case your processing is relying on R.
+#arguments should contain the full path to the script to be run together with the arguments passed to it.
+#******end of 2024 new instructions
+
 #Universe must be docker
-universe                 = docker
+universe = docker
 
 #Docker image are pulled from the JEODPP registry
-docker_image             = jeoreg.cidsn.jrc.it:5000/jeodpp-htcondor/ml4cast-htcondor:v0.7
-
+docker_image = harbor.cidsn.jrc.it/jeodpp-htcondor/ml4cast-htcondor:v0.7 #jeoreg.cidsn.jrc.it:5000/jeodpp-htcondor/ml4cast-htcondor:v0.7
 
 #We strongly suggest to start the workflow with bash script
 executable               = ./ml4cast_run.sh

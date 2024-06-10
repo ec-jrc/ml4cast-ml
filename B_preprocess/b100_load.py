@@ -201,3 +201,35 @@ def LoadLabel_Exclude_Missing(config, save_csv = True, plot_fig= False, verbose=
     # print('end of b100 LoadLabel_Exclude_Missing')
     return stats
 
+def LoadLabel(config, save_csv = True, plot_fig= False):
+    '''
+    This function is loading stats (without excluding admin with missing values)
+    '''
+
+    # get yield stats
+    stats = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_stats.csv'))
+    #'AU_name' may not be present
+    if ('AU_name' in stats.columns) == False:
+        names = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
+        stats = pd.merge(stats, names, how='left', left_on=['Region_ID'], right_on=['AU_code'])
+    if ('Crop_name' in stats.columns) == False:
+        names = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
+        stats = pd.merge(stats, names, how='left', left_on=['Crop_ID'], right_on=['Crop_ID'])
+    # drop years before period of interest
+    stats = stats.drop(stats[stats['Year'] < config.year_start].index).sort_values('AU_name')
+    stats.drop(stats.filter(regex="Unnamed"), axis=1, inplace=True)
+
+    if save_csv:
+        stats.to_csv(os.path.join(config.output_dir, config.AOI + '_stats_missing_excluded.csv'), index=False)
+    if plot_fig:
+        #plot remaining regioms
+        g = sns.relplot(
+                data=stats,
+                x="Year", y="Yield", col="AU_name",  hue="Crop_name",
+                kind="line", linewidth=2, #zorder=5,
+                col_wrap=5, height=1, aspect=2, #legend=False,
+            )
+        g.tight_layout()
+        plt.savefig(os.path.join(config.output_dir, config.AOI + '_time_series_missing_excluded.png'))
+    # print('end of b100 LoadLabel_Exclude_Missing')
+    return stats

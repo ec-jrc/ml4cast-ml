@@ -5,28 +5,42 @@ def mean_error_nan(y_true, y_pred):
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     nas = np.logical_or(np.isnan(y_true), np.isnan(y_pred))          #2021-4-30 nan treatement added
-    return np.mean(np.array(y_pred[~nas]) - np.array(y_true[~nas]))
+    if not all(nas):
+        return np.mean(np.array(y_pred[~nas]) - np.array(y_true[~nas]))
+    else:
+        return np.nan
+
 
 def r2_nan(x, y):
     # scikit r2_score is not resistant to nan
     x = np.array(x)
     y = np.array(y)
     nas = np.logical_or(np.isnan(x), np.isnan(y))
-    return metrics.r2_score(x[~nas], y[~nas])
+    if not all(nas):
+        return metrics.r2_score(x[~nas], y[~nas])
+    else:
+        return np.nan
 
 def mean_absolute_error_nan(x, y):
     # scikit not resistant to nan
     x = np.array(x)
     y = np.array(y)
     nas = np.logical_or(np.isnan(x), np.isnan(y))
-    return metrics.mean_absolute_error(x[~nas], y[~nas])
+    if not all(nas):
+        return metrics.mean_absolute_error(x[~nas], y[~nas])
+    else:
+        return np.nan
+
 
 def rmse_nan(x, y):
     # scikit not resistant to nan
     x = np.array(x)
     y = np.array(y)
     nas = np.logical_or(np.isnan(x), np.isnan(y))
-    return metrics.mean_squared_error(x[~nas], y[~nas], squared=False)
+    if not all(nas):
+        return metrics.mean_squared_error(x[~nas], y[~nas], squared=False)
+    else:
+        return np.nan
 
 # def mean_rel_abs_error(w):
 #     """Mean Absolute Percentage Error"""
@@ -35,20 +49,7 @@ def rmse_nan(x, y):
 #
 #     w['mean_rel_abs_error'] = ((w['yLoo_true' ] -w['yLoo_pred']).abs() /w['yLoo_true_mean' ] *100)
 #     return ((w['yLoo_true' ] -w['yLoo_pred']).abs() /w['yLoo_true_mean' ] *100).mean()
-def allStats_overall(mRes):
-    # mean true y used for normalization
-    y_true = np.array(mRes['yLoo_true'])
-    nas = np.isnan(y_true)
-    avg_y_true = np.mean(y_true[~nas])
-    res = {
-        'Pred_R2': r2_nan(mRes['yLoo_true'], mRes['yLoo_pred']),
-        'Pred_MAE': mean_absolute_error_nan(mRes['yLoo_true'], mRes['yLoo_pred']),
-        'rel_Pred_MAE': mean_absolute_error_nan(mRes['yLoo_true'], mRes['yLoo_pred']) / avg_y_true * 100.0,
-        'Pred_ME': mean_error_nan(mRes['yLoo_true'], mRes['yLoo_pred']),
-        'Pred_RMSE': rmse_nan(mRes['yLoo_true'], mRes['yLoo_pred']),
-        'rel_Pred_RMSE': rmse_nan(mRes['yLoo_true'], mRes['yLoo_pred'])/ avg_y_true * 100.0
-    }
-    return res
+
 
 def allStats_country(mRes):
     # At national level, not as average of held out year (cv folder)
@@ -86,6 +87,21 @@ def allStats_country_one_year(mRes, year):
         'Pred_RMSE_year': rmse_nan(mRes1year['yLoo_true'], mRes1year['yLoo_pred']),
         'Pred_rRMSE_year': rmse_nan(mRes1year['yLoo_true'], mRes1year['yLoo_pred']) / avg_y_true * 100.0
 
+    }
+    return res
+
+def allStats_overall(mRes):
+    # mean true y used for normalization
+    y_true = np.array(mRes['yLoo_true'])
+    nas = np.isnan(y_true)
+    avg_y_true = np.mean(y_true[~nas])
+    res = {
+        'Pred_R2': r2_nan(mRes['yLoo_true'], mRes['yLoo_pred']),
+        'Pred_MAE': mean_absolute_error_nan(mRes['yLoo_true'], mRes['yLoo_pred']),
+        'rel_Pred_MAE': mean_absolute_error_nan(mRes['yLoo_true'], mRes['yLoo_pred']) / avg_y_true * 100.0,
+        'Pred_ME': mean_error_nan(mRes['yLoo_true'], mRes['yLoo_pred']),
+        'Pred_RMSE': rmse_nan(mRes['yLoo_true'], mRes['yLoo_pred']),
+        'rel_Pred_RMSE': rmse_nan(mRes['yLoo_true'], mRes['yLoo_pred'])/ avg_y_true * 100.0
     }
     return res
 
