@@ -1,15 +1,13 @@
 import time
 import os
 import glob
-import json
 from pathlib import Path
 
 from A_config import a10_config
 from C_model_setting import c100_save_model_specs
 from B_preprocess import b100_load
-from D_modelling import d100_modeller
+from D_modelling import d090_model_wrapper
 from F_post_processsing import F100_gather_hindcast_output
-from G_HTCondor import g100_HTCondor
 
 if __name__ == '__main__':
     '''
@@ -21,15 +19,21 @@ if __name__ == '__main__':
     '''
     # USER SETTINGS ###########################################################
     # Give a name to the run that will be used to make the output dir name
-    run_name = 'testMic_with_missing' #
+    run_name = 'test0' #
     # config file to be used
     config_fn = r'V:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json'
     # specify months on which to forecast
     forecastingMonths = [5]
     # Use condor or run locally
     tune_on_condor = False
+    if tune_on_condor:
+        dir_condor_submit = '/eos/jeodpp/data/projects/ML4CAST/'
+    else:
+        dir_condor_submit = r'V:\foodsec\Projects\SNYF\ZA_test_new_code'
     # END OF USER SETTINGS ###########################################################
 
+    # debug
+    tune_on_condor = True
     # ----------------------------------------------------------------------------------------------------------
     # PART A
     runType = 'tuning'  # ['tuning', 'opeForecast']
@@ -70,20 +74,46 @@ if __name__ == '__main__':
 
     # ----------------------------------------------------------------------------------------------------------
     # PART B
+    spec_files_list = glob.glob(os.path.join(config.models_spec_dir, '*.json'))
     if tune_on_condor == False:
         # get the produced spec file list
-        spec_files_list = glob.glob(os.path.join(config.models_spec_dir, '*.json'))
         for fn in spec_files_list:
-            g100_HTCondor.fit_and_validate_single_model(fn, config, runType)
-
-        print('ended ZA_manager')
-
+            d090_model_wrapper.fit_and_validate_single_model(fn, config, runType)
         F100_gather_hindcast_output.gather_output(config.models_out_dir)
         print("--- %s seconds ---" % (time.time() - start_time))
+        print('ended ZA_manager')
     else:
         # running with condor
-        # make the list
+        # make the task list (id, filename full path)
+        condor_task_list_fn = os.path.join(config.root_dir, 'HT_condor_task_arguments.txt')
+        if os.path.exists(condor_task_list_fn):
+            os.remove(condor_task_list_fn)
+        f_obj = open(condor_task_list_fn, 'a')
+        for el in spec_files_list:
+            id =config.AOI + '_' + os.path.splitext(os.path.basename(el))[0]
+            f_obj.write(f'{id} {str(el)} {config_fn} {run_name}\n')
+        f_obj.close()
+
         # launch the condor processing
-        print('to be implemented')
+        #Petar:
+        # adjust the temmplate
+        with open('G_HTCondor/condor.submit_template') as tmpl:
+            content = tmpl.read()
+            content = content.format(AOI=config.AOI, root_dir=config.root_dir)
+        with open(os.path.join(dir_condor_submit, 'condor.submit'), 'w') as out:
+            out.write(content)
+        #debug
+        # from G_HTCondor import condor_launcher
+        # condor_launcher.launcher(r'V:\foodsec\Projects\SNYF\ZA_test_new_code\MLYF\RUN_test0_TUNING\Specs\000010_Maize_total_Lasso.json', config_fn, run_name)
+
+        # sudo -u ml4castproc condor_submit condor.submit
+        # place the one above somewhere USE FULL PATH
+        run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', 'condor.submit']
+
+        # Check below with Petar
+        # p = subprocess.run(run_cmd, shell=False, input='\n', capture_output=True, text=True)
+        # if p.returncode != 0:
+        #     self.log('ERR', p.stderr)
+        #     raise Exception('Step subprocess error')
 
 

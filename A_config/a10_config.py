@@ -13,9 +13,10 @@ class read:
     self.year_start = int(jdict['year_start'])
     self.year_end = int(jdict['year_end'])
     self.crops = jdict['crops']
-    self.data_dir = jdict['data_dir']
-    self.ope_data_dir = jdict['ope_data_dir']
-    self.output_dir = jdict['output_dir']
+    self.root_dir = jdict['root_dir']
+    self.data_dir = os.path.join(self.root_dir, jdict['data_dir'])
+    self.ope_data_dir = os.path.join(self.root_dir, jdict['ope_data_dir'])
+    self.output_dir = os.path.join(self.root_dir, jdict['output_dir'])
 
     # run_stamp = datetime.datetime.today().strftime('%Y%m%d')
     self.ope_run_dir = os.path.join(self.output_dir, 'RUN_'+run_name +'_OPE')

@@ -138,7 +138,9 @@ class DataMixin:
         data = pd.DataFrame(
             np.concatenate([AU_codes.reshape((-1, 1)), groups.reshape((-1, 1)), y.reshape((-1, 1)), X], axis=1),
             columns=['AU_code', 'year', 'Yield'] + feature_names)
-        data.to_csv(os.path.join(config.models_out_dir, 'ID_' + str(self.uset['runID']) +
+        myID = self.uset['runID']
+        myID = f'{myID:06d}'
+        data.to_csv(os.path.join(config.models_out_dir, 'ID_' + str(myID) +
                                  '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] + '_yx_preprocData.csv'), index=False)
         # if runType == 'opeForecast':
         #     # yxData = yxData[yxData'['Year'] == year_out]
