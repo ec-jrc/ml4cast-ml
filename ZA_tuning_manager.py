@@ -107,7 +107,7 @@ if __name__ == '__main__':
         # condor_launcher.launcher(r'V:\foodsec\Projects\SNYF\ZA_test_new_code\MLYF\RUN_test0_TUNING\Specs\000010_Maize_total_Lasso.json', config_fn, run_name)
 
         # sudo -u ml4castproc condor_submit condor.submit
-        # place the one above somewhere USE FULL PATH
+        # place the one above somewhere USE FULL PATH for 'condor.submit'
         run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', 'condor.submit']
 
         # Check below with Petar
