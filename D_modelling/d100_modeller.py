@@ -24,7 +24,7 @@ class DataMixin:
         # [opeTune] tunes the best model on all available years
         # [opeForecast] run the operational yield
 
-        stats = pd.read_csv(os.path.join(config.output_dir, config.AOI + '_stats_missing_excluded.csv'))
+        stats = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'))
         # rescale Production units for better graphic and better models (if production is avail)
         if 'Production' in stats.columns:
             stats['Production'] = stats['Production'].div(config.production_scaler)
@@ -338,7 +338,7 @@ class YieldModeller(DataMixin, object):
         # mean of temporal R2 of each AU
         meanAUR2 = d140_modelStats.meanAUR2(mRes)  # equivalent to R2 within
         # National level stats
-        stats = pd.read_csv(os.path.join(config.output_dir, config.AOI + '_stats_missing_excluded.csv'))
+        stats = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'))
         # national yield using subnat yield weighted by area
         tmp = stats[stats['Crop_name'] == self.uset['crop']][['Region_ID', 'Area']]
         # get avg area

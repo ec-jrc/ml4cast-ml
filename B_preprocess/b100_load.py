@@ -220,7 +220,7 @@ def LoadLabel(config, save_csv = True, plot_fig= False):
     stats.drop(stats.filter(regex="Unnamed"), axis=1, inplace=True)
 
     if save_csv:
-        stats.to_csv(os.path.join(config.output_dir, config.AOI + '_stats_missing_excluded.csv'), index=False)
+        stats.to_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'), index=False)
     if plot_fig:
         #plot remaining regioms
         g = sns.relplot(
@@ -230,6 +230,6 @@ def LoadLabel(config, save_csv = True, plot_fig= False):
                 col_wrap=5, height=1, aspect=2, #legend=False,
             )
         g.tight_layout()
-        plt.savefig(os.path.join(config.output_dir, config.AOI + '_time_series_missing_excluded.png'))
+        plt.savefig(os.path.join(config.models_dir, config.AOI + '_time_series.png'))
     # print('end of b100 LoadLabel_Exclude_Missing')
     return stats
