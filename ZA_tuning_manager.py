@@ -20,8 +20,8 @@ if __name__ == '__main__':
     # Give a name to the run that will be used to make the output dir name
     run_name = 'test0' #
     # config file to be used
-    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
-    # test
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
+    config_fn = r'V:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json'
     # specify months on which to forecast
     forecastingMonths = [5]
     # Use condor or run locally
