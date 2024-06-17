@@ -207,7 +207,7 @@ def LoadLabel(config, save_csv = True, plot_fig= False):
     '''
 
     # get yield stats
-    stats = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_stats.csv'))
+    stats = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_STATS.csv'))
     #'AU_name' may not be present
     if ('AU_name' in stats.columns) == False:
         names = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))

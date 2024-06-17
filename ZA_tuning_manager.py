@@ -2,7 +2,6 @@ import time
 import os
 import glob
 from pathlib import Path
-
 from A_config import a10_config
 from C_model_setting import c100_save_model_specs
 from B_preprocess import b100_load
@@ -21,7 +20,7 @@ if __name__ == '__main__':
     # Give a name to the run that will be used to make the output dir name
     run_name = 'test0' #
     # config file to be used
-    config_fn = r'V:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json'
+    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
     # specify months on which to forecast
     forecastingMonths = [5]
     # Use condor or run locally
@@ -32,8 +31,6 @@ if __name__ == '__main__':
         dir_condor_submit = r'V:\foodsec\Projects\SNYF\ZA_test_new_code'
     # END OF USER SETTINGS ###########################################################
 
-    # debug
-    tune_on_condor = True
     # ----------------------------------------------------------------------------------------------------------
     # PART A
     runType = 'tuning'  # ['tuning', 'opeForecast']
