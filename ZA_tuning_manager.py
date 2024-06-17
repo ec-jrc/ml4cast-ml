@@ -21,6 +21,7 @@ if __name__ == '__main__':
     run_name = 'test0' #
     # config file to be used
     config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
+    # test
     # specify months on which to forecast
     forecastingMonths = [5]
     # Use condor or run locally
