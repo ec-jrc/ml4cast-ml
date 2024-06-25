@@ -2,6 +2,7 @@ import time
 import os
 import glob
 from pathlib import Path
+import subprocess
 from A_config import a10_config
 from C_model_setting import c100_save_model_specs
 from B_preprocess import b100_load
@@ -20,16 +21,12 @@ if __name__ == '__main__':
     # Give a name to the run that will be used to make the output dir name
     run_name = 'test0' #
     # config file to be used
-    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
-    config_fn = r'V:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json'
+    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
+    # config_fn = r'V:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json'
     # specify months on which to forecast
     forecastingMonths = [5]
     # Use condor or run locally
-    tune_on_condor = False
-    if tune_on_condor:
-        dir_condor_submit = '/eos/jeodpp/data/projects/ML4CAST/'
-    else:
-        dir_condor_submit = r'V:\foodsec\Projects\SNYF\ZA_test_new_code'
+    tune_on_condor = True
     # END OF USER SETTINGS ###########################################################
 
     # ----------------------------------------------------------------------------------------------------------
@@ -43,6 +40,10 @@ if __name__ == '__main__':
     Path(config.models_dir).mkdir(parents=True, exist_ok=True)
     Path(config.models_spec_dir).mkdir(parents=True, exist_ok=True)
     Path(config.models_out_dir).mkdir(parents=True, exist_ok=True)
+    if tune_on_condor:
+        dir_condor_submit = config.models_dir
+    else:
+        dir_condor_submit = r'V:\foodsec\Projects\SNYF\ZA_test_new_code'
     # load model configurations to be tested
     modelSettings = a10_config.mlSettings(forecastingMonths=forecastingMonths) #[3,6]
 
@@ -83,35 +84,45 @@ if __name__ == '__main__':
     else:
         # running with condor
         # make the task list (id, filename full path)
-        condor_task_list_fn = os.path.join(config.root_dir, 'HT_condor_task_arguments.txt')
+        condor_task_list_fn = os.path.join(config.models_dir, 'HT_condor_task_arguments.txt')
         if os.path.exists(condor_task_list_fn):
             os.remove(condor_task_list_fn)
         f_obj = open(condor_task_list_fn, 'a')
         for el in spec_files_list:
             id =config.AOI + '_' + os.path.splitext(os.path.basename(el))[0]
-            f_obj.write(f'{id} {str(el)} {config_fn} {run_name}\n')
+            f_obj.write(f'{str(el)} {config_fn} {run_name}\n')
         f_obj.close()
+        # copy the run.sh file in the condor_submit dir and change mode
+
 
         # launch the condor processing
         #Petar:
-        # adjust the temmplate
+        # adjust the template
+        condSubPath = os.path.join(dir_condor_submit, 'condor.submit')
+        # shDestination = os.path.join(config.models_dir, '_ml4cast_run.sh')
+        # run_cmd = subprocess.call(f'cp ./G_HTCondor/_ml4cast_run.sh {shDestination}', shell=True)
+
         with open('G_HTCondor/condor.submit_template') as tmpl:
             content = tmpl.read()
-            content = content.format(AOI=config.AOI, root_dir=config.root_dir)
-        with open(os.path.join(dir_condor_submit, 'condor.submit'), 'w') as out:
+            content = content.format(AOI=config.AOI, root_dir=config.models_dir) #, shDestination=shDestination)
+        with open(condSubPath, 'w') as out:
             out.write(content)
-        #debug
-        # from G_HTCondor import condor_launcher
-        # condor_launcher.launcher(r'V:\foodsec\Projects\SNYF\ZA_test_new_code\MLYF\RUN_test0_TUNING\Specs\000010_Maize_total_Lasso.json', config_fn, run_name)
+        # Make the dirs /mnt/jeoproc/log/ml4castproc/{AOI}/out/job_$(Process).out
+        Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'out')).mkdir(parents=True, exist_ok=True)
+        Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'err')).mkdir(parents=True, exist_ok=True)
+        Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'log')).mkdir(parents=True, exist_ok=True)
+        # now copy the sh file
 
+        # chmod 755 run.sh
+
+        # Launch condor
         # sudo -u ml4castproc condor_submit condor.submit
         # place the one above somewhere USE FULL PATH for 'condor.submit'
-        run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', 'condor.submit']
 
-        # Check below with Petar
-        # p = subprocess.run(run_cmd, shell=False, input='\n', capture_output=True, text=True)
-        # if p.returncode != 0:
-        #     self.log('ERR', p.stderr)
-        #     raise Exception('Step subprocess error')
+        run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath]
+        p = subprocess.run(run_cmd, shell=False, input='\n', capture_output=True, text=True)
+        if p.returncode != 0:
+            print('ERR', p.stderr)
+            raise Exception('Step subprocess error')
 
 

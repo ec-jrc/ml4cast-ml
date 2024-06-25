@@ -1,54 +1,16 @@
-#******2024 new instructions
-#universe = docker
-#docker_image = harbor.cidsn.jrc.it/jeodpp-htcondor/<your docker image name and tag>
-#initialdir = <eos/jeodpp/data/projects/.../fullpath to the dir from where you submit>.
-#executable = /bin/bash
-#arguments = </eos/jeodpp/data/projects/.../fullpath>/hello_world.sh $(ClusterID) $(Process)
-#
-#The commands that might need to be updated in your submit files are:
-#initialdir
-#executable
-#arguments
-
-#initialdir should point to the directory containing your HTCondor submit file. This folder must be a subfolder of your EOS project folder.
-#executable should contain the full path to the executable file in your docker container. Most often it will be /bin/bash but it could also be the path to the R executable in case your processing is relying on R.
-#arguments should contain the full path to the script to be run together with the arguments passed to it.
-#******end of 2024 new instructions
-
-
-
-#Universe must be docker
-universe = docker
-
-#Docker image are pulled from the JEODPP registry (2024: perhaps to be updated)
-docker_image = harbor.cidsn.jrc.it/jeodpp-htcondor/ml4cast-htcondor:v0.7 #jeoreg.cidsn.jrc.it:5000/jeodpp-htcondor/ml4cast-htcondor:v0.7
-
-#We strongly suggest to start the workflow with bash script
-executable               = ./ml4cast_run.sh
-
-#arguments of the workflow script
-arguments                = $(Cluster) $(Process) $(task)
-
-#Resources required by the application
+Universe = docker
+Executable=/bin/bash
+#max_retries=10
+requirements = $(requirements) && (TARGET.Machine == "s-jrciprjeop161p")
+Docker_image = harbor.cidsn.jrc.it/jeodpp-htcondor/debian12-slim:0.1
+initialdir = {root_dir}
+arguments                = /eos/jeodpp/data/projects/ML4CAST/ml4cast-ml/G_HTCondor/run.sh $(Cluster) $(Process) $(tasks)
 request_cpus             = 4
 request_memory           = 10GB
-
-
-# Michele, 2024 06 14, this I don't understand and comment out
-##We suggest to transfer the workflow script and aux-files to the container instead to read directly from EOS
-#transfer_input_files     = /eos/jeodpp/data/projects/ML4CAST/condor/ml4cast-ml/HTCondor/ml4cast_run.sh
-
+transfer_input_files     = /eos/jeodpp/data/projects/ML4CAST/ml4cast-ml/condor_launcher.py
 should_transfer_files    = YES
-##when_to_transfer_output  = ON_EXIT
-
-
-#Location of the *.log must be in /eos/jeodpp/htcondor/processing_logs/[USE-CASE]
-output                   = {root_dir}/processing_logs/{AOI}/job_$(Process).out
-error                    = {root_dir}/processing_logs/{AOI}/job_$(Process).err
-log                      = {root_dir}/processing_logs/{AOI}/job_$(Process).log
-
-#Tag for the job in the queue
+output                   = /mnt/jeoproc/log/ml4castproc/{AOI}/out/job_$(Process).out
+error                    = /mnt/jeoproc/log/ml4castproc/{AOI}/err/job_$(Process).err
+log                      = /mnt/jeoproc/log/ml4castproc/{AOI}/log/job_$(Process).log
 batch_name               = "ml4cast_{AOI}"
-
-#Cmd to submit
-queue id,task,config_fn, run_name from {root_dir}/HT_condor_task_arguments.txt
+queue tasks from {root_dir}/HT_condor_task_arguments.txt

@@ -9,12 +9,13 @@ from sklearn.model_selection import LeaveOneGroupOut #, LeavePGroupsOut, GroupSh
 #import joblib
 # from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import copy
-from sklearn.preprocessing import KBinsDiscretizer
-from sklearn.base import BaseEstimator, RegressorMixin
+# from sklearn.preprocessing import KBinsDiscretizer
+# from sklearn.base import BaseEstimator, RegressorMixin
 
 from C_model_setting import c1000_utils
 from D_modelling import d105_PCA_on_features, d110_benchmark_models, d120_set_hyper, d130_get_hyper, d140_modelStats
-from E_viz import e100_eval_figs as viz
+# AVOID USE OF MATPLOTLIB GIVING ERRORS IN CONDOR
+# from E_viz import e100_eval_figs as viz
 
 # define a data class that it is used to preprocess the data (both in hidcasting and forecasting)
 class DataMixin:
@@ -407,15 +408,16 @@ class YieldModeller(DataMixin, object):
             res_df.to_csv(os.path.join(config.models_out_dir, 'ID_' + str(myID) +
                                 '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] +
                                 '_output.csv'), index=False)
-        if save_figs:
-            accuracy_over_time = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
-                                '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] + '_accuracy_over_time.png')
-            viz.accuracy_over_time(mRes, mCountryRes, filename=accuracy_over_time)
-
-            scatter_plot_au = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
-                                '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] + '_scatter_by_AU.png')
-            viz.scatter_plot_accuracy(mRes, error_spatial['Pred_R2'], "AU_code", filename=scatter_plot_au)
-            scatter_plot_year = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
-                                '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] + '_scatter_by_year.png')
-            viz.scatter_plot_accuracy(mRes, error_spatial['Pred_R2'], "Year", filename=scatter_plot_year)
-        return
+        # AVOID USE OF MATPLOTLIB GIVING ERRORS IN CONDOR
+        # if save_figs:
+        #     accuracy_over_time = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+        #                         '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] + '_accuracy_over_time.png')
+        #     viz.accuracy_over_time(mRes, mCountryRes, filename=accuracy_over_time)
+        #
+        #     scatter_plot_au = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+        #                         '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] + '_scatter_by_AU.png')
+        #     viz.scatter_plot_accuracy(mRes, error_spatial['Pred_R2'], "AU_code", filename=scatter_plot_au)
+        #     scatter_plot_year = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+        #                         '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] + '_scatter_by_year.png')
+        #     viz.scatter_plot_accuracy(mRes, error_spatial['Pred_R2'], "Year", filename=scatter_plot_year)
+        # return

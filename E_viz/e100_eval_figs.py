@@ -1,7 +1,7 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+#import pandas as pd
 
 
 def accuracy_over_time(mRes, mCountryRes, filename=None):

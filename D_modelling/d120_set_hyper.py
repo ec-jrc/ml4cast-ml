@@ -8,7 +8,8 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel
 import xgboost as xgb
 import numpy as np
-import mrmr
+#import mrmr
+from mrmr_loc.pandas import mrmr_regression
 import pandas as pd
 
 def setHyper(model, param_grid, inner_cv, nJobsForGridSearchCv, scoringMetric, n_features = 0):
@@ -100,7 +101,10 @@ def setHyper_ft_sel(X, y, X_test, prct_features2select_grid, featureNames,
 
 
     # get ranked idx of variables
-    ranked_idx_selected_features = mrmr.mrmr_regression(X=dfZ, y=dfy, K=int(max(n_features2select_grid)), show_progress=True)
+    #ranked_idx_selected_features = mrmr.mrmr_regression(X=dfZ, y=dfy, K=int(max(n_features2select_grid)), show_progress=False)
+    # use local version for HT condor
+    ranked_idx_selected_features = mrmr_regression(X=dfZ, y=dfy, K=int(max(n_features2select_grid)),
+                                                        show_progress=False)
     for n in list(map(int, n_features2select_grid)):
         idx_selected_features = sorted(ranked_idx_selected_features[0: n])
         if len(indices_OHE) > 0:
