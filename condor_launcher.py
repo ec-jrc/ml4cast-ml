@@ -1,8 +1,5 @@
 import sys
-import json
-import time
-import os
-from A_config import a10_config
+from ..A_config import a10_config
 from D_modelling import d090_model_wrapper
 
 def launcher(fn, config_fn, run_name):
