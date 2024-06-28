@@ -130,14 +130,20 @@ class mlSettings:
              [64, 64, 64],
              [16, 16, 16]]
       hl = hl2 + hl3
-      self.hyperGrid = dict(Lasso={'alpha': np.logspace(-5, 0, 13, endpoint=True).tolist()},
+      #self.hyperGrid = dict(Lasso={'alpha': np.logspace(-5, 0, 13, endpoint=True).tolist()},
+      self.hyperGrid = dict(Lasso={'alpha': np.logspace(-3, 0.5, 15, endpoint=True).tolist()}, # change in 27/6/2024 to be > 0 and also >1 (up to 3)
                        RandomForest={'max_depth': [10, 15, 20, 25, 30, 35, 40],  # Maximum number of levels in tree
-                                     'max_features': ['auto', 'sqrt'],  # Number of features to consider at every split
-                                     'n_estimators': [100, 250, 500],  # Number of trees in random forest
-                                     'min_samples_split': np.linspace(0.2, 0.8, 6, endpoint=True).tolist()},
-                       MLP={'alpha': np.logspace(-5, -1, 6, endpoint=True),
+                                     #'max_features': ['auto', 'sqrt'],  # Number of features to consider at every split
+                                     'max_features': ['1', 'sqrt'],  # Number of features to consider at every split # change in 27/6/2024
+                                     #'n_estimators': [100, 250, 500],  # Number of trees in random forest
+                                     'n_estimators': [50, 100, 250, 500],  # Number of trees in random forest # change in 27/6/2024
+                                     #'min_samples_split': np.linspace(0.2, 0.8, 6, endpoint=True).tolist() # change in 27/6/2024 back to default
+                                     },
+                       #MLP={'alpha': np.logspace(-5, -1, 6, endpoint=True),
+                        MLP={'alpha': np.logspace(-5, -2, 5, endpoint=True), # change in 27/6/2024
                             'hidden_layer_sizes': hl,
-                            'activation': ['relu', 'tanh'],
+                            #'activation': ['relu', 'tanh']  hange in 27/6/2024 back to default
+
                             'learning_rate': ['constant', 'adaptive']},
 
                        # SVR_linear={'gamma': np.logspace(-2, 2, 2, endpoint=True).tolist(),
@@ -146,20 +152,23 @@ class mlSettings:
                        #                  'epsilon': np.logspace(-6, .5, 2, endpoint=True).tolist(),
                        #                  # 'epsilon': np.logspace(-6, .5, 7, endpoint=True).tolist(),
                        #                  'C': [1, 100]},
-                       SVR_linear={'gamma': np.logspace(-2, 2, 7, endpoint=True).tolist(),
+                       SVR_linear={#'gamma': np.logspace(-2, 2, 7, endpoint=True).tolist(), # change in 27/6/2024: there is no gamma in linear
                                    # gamma defines how much influence a single training example has.
                                    # The larger gamma is, the closer other examples must be to be affected.
-                                   'epsilon': np.logspace(-6, .5, 7, endpoint=True).tolist(),
-                                   'C': [1e-5, 1e-4, 1e-3, 1e-2, 1, 10, 100]},
+                                   #'epsilon': np.logspace(-6, .5, 7, endpoint=True).tolist(),
+                                   'epsilon': np.logspace(-4, .5, 7, endpoint=True).tolist(), # change in 27/6/2024
+                                   #'C': [1e-5, 1e-4, 1e-3, 1e-2, 1, 10, 100]}, # change in 27/6/2024
+                                   'C': [0.001, 0.01, 0.1, 1, 10, 100, 300]}, #thi sis log scale  plus 200
                        # SVR_rbf={'gamma': np.logspace(-2, 2, 2, endpoint=True).tolist(),
                        #          'epsilon': np.logspace(-6, .5, 2, endpoint=True).tolist(),
                        #          'C': [1e-5, 100]},
-                       SVR_rbf={'gamma': np.logspace(-2, 2, 7, endpoint=True).tolist(),
-                                     'epsilon': np.logspace(-6, .5, 7, endpoint=True).tolist(),
-                                     'C': [1e-5, 1e-4, 1e-3, 1e-2, 1, 10, 100]},
+                       SVR_rbf={'gamma': np.logspace(-3, 1, 7, endpoint=True).tolist(),
+                                     'epsilon': np.logspace(-4, .5, 7, endpoint=True).tolist(), # change in 27/6/2024
+                                     #'C': [1e-5, 1e-4, 1e-3, 1e-2, 1, 10, 100]},
+                                     'C':[0.001, 0.01, 0.1, 1, 10, 100, 300]}, # change in 27/6/2024
                             #GPR1={'alpha': [1e-10, 1e-5, 1e-1]},
                        #GPR2={'alpha': [1e-10, 1e-5, 1e-1, 0.05]})
-                       GPR = {'alpha': [1e-10, 1e-5, 1e-1, 0.05]},
+                       GPR = {'alpha': [1e-10, 1e-7, 1e-4, 0.01, 0.1, 0.5]},
                        GBR={'learning_rate': [0.01, 0.05, 0.1],
                            # Empirical evidence suggests that small values of learning_rate favor better test error.
                             # [HTF] recommend to set the learning rate to a small constant (e.g. learning_rate <= 0.1)
@@ -167,8 +176,8 @@ class mlSettings:
                            'max_depth': [10, 20, 40],
                            'n_estimators': [100, 250, 500],
                            'min_samples_split': np.linspace(0.1, 0.8, 6, endpoint=True).tolist()},
-                       XGBoost = {'learning_rate': [0.05, 0.1, 0.3, 0.5],
-                                  'max_depth': [2, 4, 6, 8],
-                                  'min_child_weight': [1, 3, 5]}
+                       XGBoost = {'learning_rate': [0.05, 0.1, 0.2, 0.3],
+                                  'max_depth': [2, 4, 6, 8, 10],
+                                  'min_child_weight': [1, 3, 5, 10]}
                                   #'gamma': [0, 2, 5]}
                        )

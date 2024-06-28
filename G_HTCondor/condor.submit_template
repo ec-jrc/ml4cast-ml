@@ -1,7 +1,7 @@
 Universe = docker
 Executable=/bin/bash
 #max_retries=10
-requirements = $(requirements) && (TARGET.Machine == "s-jrciprjeop161p")
+#requirements = $(requirements) && (TARGET.Machine == "s-jrciprjeop161p")
 Docker_image = harbor.cidsn.jrc.it/jeodpp-htcondor/debian12-slim:0.1
 initialdir = {root_dir}
 arguments                = /eos/jeodpp/data/projects/ML4CAST/ml4cast-ml/G_HTCondor/run.sh $(Cluster) $(Process) $(tasks)
