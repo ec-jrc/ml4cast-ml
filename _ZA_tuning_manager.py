@@ -89,40 +89,36 @@ if __name__ == '__main__':
             os.remove(condor_task_list_fn)
         f_obj = open(condor_task_list_fn, 'a')
         for el in spec_files_list:
-            id =config.AOI + '_' + os.path.splitext(os.path.basename(el))[0]
+            #id = config.AOI + '_' + os.path.splitext(os.path.basename(el))[0]
             f_obj.write(f'{str(el)} {config_fn} {run_name}\n')
         f_obj.close()
-        # copy the run.sh file in the condor_submit dir and change mode
+        # Make sure that the run.sh in this project is executable (# chmod 755 run.sh)
 
-
-        # launch the condor processing
-        #Petar:
-        # adjust the template
+        # adjust the condor.submit template
         condSubPath = os.path.join(dir_condor_submit, 'condor.submit')
-        # shDestination = os.path.join(config.models_dir, '_ml4cast_run.sh')
-        # run_cmd = subprocess.call(f'cp ./G_HTCondor/_ml4cast_run.sh {shDestination}', shell=True)
-
         with open('G_HTCondor/condor.submit_template') as tmpl:
             content = tmpl.read()
             content = content.format(AOI=config.AOI, root_dir=config.models_dir) #, shDestination=shDestination)
         with open(condSubPath, 'w') as out:
             out.write(content)
-        # Make the dirs /mnt/jeoproc/log/ml4castproc/{AOI}/out/job_$(Process).out
+        # Make the dirs for condor output on /mnt/jeoproc/log/ml4castproc/
         Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'out')).mkdir(parents=True, exist_ok=True)
         Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'err')).mkdir(parents=True, exist_ok=True)
         Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'log')).mkdir(parents=True, exist_ok=True)
-        # now copy the sh file
 
-        # chmod 755 run.sh
-
-        # Launch condor
-        # sudo -u ml4castproc condor_submit condor.submit
-        # place the one above somewhere USE FULL PATH for 'condor.submit'
-
+        # Launch condor (sudo -u ml4castproc condor_submit condor.submit)
         run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath]
         p = subprocess.run(run_cmd, shell=False, input='\n', capture_output=True, text=True)
         if p.returncode != 0:
             print('ERR', p.stderr)
             raise Exception('Step subprocess error')
+        # JobStatus is an integer;
+        # states: - 1: Idle(I) - 2: Running(R) - 3: Removed(X) - 4: Completed(C) - 5: Held(H) - 6: Transferring
+        # Output - 7: Suspended
+        # sudo -u ml4castproc condor_q submitter ml4castproc -format '%s ' JobBatchName -format '%-3d ' ProcId -format '%-3d\n' JobStatus
+        check_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath]
+
+
+        # now that is submitted
 
 
