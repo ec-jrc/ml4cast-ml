@@ -1,6 +1,8 @@
 import time
 import os
+import sys
 import glob
+import json
 from pathlib import Path
 import subprocess
 from A_config import a10_config
@@ -95,7 +97,38 @@ def tune(run_name, config_fn, forecastingMonths, tune_on_condor):
     else:
         # running with condor
         # make the task list (id, filename full path)
-        condor_task_list_fn = os.path.join(config.models_dir, 'HT_condor_task_arguments.txt')
+        fn_condor_task_list = 'HT_condor_task_arguments.txt'
+        condor_task_list_fn = os.path.join(config.models_dir, fn_condor_task_list)
+        # If the file already exists it means that we are re-running Condor for some reasons (get stopped somehow)
+        # In this case copy the HT_condor_task_arguments to HT_condor_task_arguments_all and keep
+        # only the entries that were not successful (sya that logs will be overwritten and must be moved a folder,
+        # wait for Y from keyboard)
+        if os.path.isfile(condor_task_list_fn):
+            print('HT_condor_task_arguments.txt already exists')
+            print('>Jobs that produced already outputs will be skipped')
+            print('Log files will be deleted, move to a named dir if you want to keep them')
+            pro = input('Type Y to proceed')
+            if pro == 'Y':
+                fn_rename = fn_condor_task_list.split('.')[0] + '_all.txt'
+                os.rename(condor_task_list_fn, os.path.join(config.models_dir, fn_rename))
+                # update spec_files_list
+                new_file_list = []
+                for el in spec_files_list:
+                    # make the expected output name
+                    with open(el, 'r') as fp:
+                        uset = json.load(fp)
+                    myID = uset['runID']
+                    myID = f'{myID:06d}'
+                    fn_to_check = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+                                          '_crop_' + uset['crop'] + '_Yield_' + uset['algorithm'] + '_output.csv')
+                    if not os.path.isfile(fn_to_check):
+                        new_file_list.append(el)
+                spec_files_list = new_file_list
+                print('List of files with no output:')
+                print(*spec_files_list, sep='\n')
+            else:
+                sys.exit('Tuner terminated by user')
+
         if os.path.exists(condor_task_list_fn):
             os.remove(condor_task_list_fn)
         f_obj = open(condor_task_list_fn, 'a')

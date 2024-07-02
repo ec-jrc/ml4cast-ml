@@ -1,12 +1,15 @@
 import tuner
-from A_config import a10_config
 import datetime
 import time
+import glob
+import os
+import json
 import threading
 import subprocess
 import pandas as pd
+from A_config import a10_config
 
-def monitor_condor_q(time_step_minutes, submitter, batch_name):
+def monitor_condor_q(time_step_minutes, submitter, config):
   start_time = time.time()
   first_check = True
   while True:
@@ -47,7 +50,24 @@ def monitor_condor_q(time_step_minutes, submitter, batch_name):
     df['StatusString'] = df['Status'].map(statesDict)
     if len(df) == 0:
         print('nothing on Condor anymore, the monitoring will stop')
-        print("--- %s Hours ---" % (time.time() - start_time)/(60*60))
+        print("--- %s Hours ---" % str((time.time() - start_time)/(60*60)))
+        # here add a check that all specs have a corresponding output
+        spec_files_list = glob.glob(os.path.join(config.models_spec_dir, '*.json'))
+        new_file_list = []
+        for el in spec_files_list:
+            # make the expected output name
+            with open(el, 'r') as fp:
+                uset = json.load(fp)
+            myID = uset['runID']
+            myID = f'{myID:06d}'
+            fn_to_check = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+                                       '_crop_' + uset['crop'] + '_Yield_' + uset['algorithm'] + '_output.csv')
+            if not os.path.isfile(fn_to_check):
+                new_file_list.append(el)
+        if len(new_file_list) > 0:
+            print(str(len(new_file_list)) + ' files with no output:')
+            print('List of files with no output:')
+            print(*spec_files_list, sep='\n')
         break
     print('Condor stats on ' + str(datetime.datetime.now()))
     if first_check:
@@ -71,14 +91,16 @@ def monitor_condor_q(time_step_minutes, submitter, batch_name):
 
 
 if __name__ == '__main__':
+    # USER PARAMS
     run_name = 'month5'
     config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
     forecastingMonths = [5]
     tune_on_condor = True
+    # END OF USER PARAMS
     config = a10_config.read(config_fn, run_name)
-    batch_name = 'ml4cast_' + config.AOI
+    #batch_name = 'ml4cast_' + config.AOI
     tuner.tune(run_name, config_fn, forecastingMonths, tune_on_condor)
     print('Condor runs launched, start the monitoring')
     # Start the monitoring loop in a separate thread to avoid blocking the main program
-    thread = threading.Thread(target=monitor_condor_q, args=(30, 'ml4castproc', batch_name))
+    thread = threading.Thread(target=monitor_condor_q, args=(30, 'ml4castproc', config))
     thread.start()
