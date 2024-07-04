@@ -7,7 +7,7 @@ from A_config import a10_config
 from C_model_setting import c100_save_model_specs
 from B_preprocess import b100_load
 from D_modelling import d090_model_wrapper
-from F_post_processsing import F100_gather_hindcast_output
+from F_post_processsing import F100_analyze_hindcast_output
 
 if __name__ == '__main__':
     '''

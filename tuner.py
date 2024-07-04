@@ -9,7 +9,7 @@ from A_config import a10_config
 from C_model_setting import c100_save_model_specs
 from B_preprocess import b100_load
 from D_modelling import d090_model_wrapper
-from F_post_processsing import F100_gather_hindcast_output
+from F_post_processsing import F100_analyze_hindcast_output
 
 def remove_files(path):
   """
@@ -68,7 +68,7 @@ def tune(run_name, config_fn, forecastingMonths, tune_on_condor):
         # get the produced spec file list
         for fn in spec_files_list:
             d090_model_wrapper.fit_and_validate_single_model(fn, config, runType)
-        F100_gather_hindcast_output.gather_output(config.models_out_dir)
+        F100_analyze_hindcast_output.gather_output(config.models_out_dir)
         print("--- %s seconds ---" % (time.time() - start_time))
     else:
         # running with condor
