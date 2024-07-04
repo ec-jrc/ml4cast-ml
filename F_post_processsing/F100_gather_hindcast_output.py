@@ -2,7 +2,7 @@ import pathlib
 import pandas as pd
 
 def gather_output(dir):
-    run_res = list(pathlib.Path(dir).glob('ID*_output.csv'))
+    run_res = list(sorted(pathlib.Path(dir).glob('ID*_output.csv')))
     print('N files = ' + str(len(run_res)))
     print('Missing files are printed ') #(no warning issued if they are files that were supposed to be skipped (ft sel asked on 1 var)')
 

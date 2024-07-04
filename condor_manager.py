@@ -92,7 +92,7 @@ def monitor_condor_q(time_step_minutes, submitter, config):
 
 if __name__ == '__main__':
     # USER PARAMS
-    run_name = 'month5'
+    run_name = 'month5_onlyXGB'
     config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
     forecastingMonths = [5]
     tune_on_condor = True

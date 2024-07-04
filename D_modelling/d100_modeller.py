@@ -334,7 +334,7 @@ class YieldModeller(DataMixin, object):
     def validate(self, hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, runTimeH, featureNames,
                  selected_features_names, prct_selected, n_selected, avg_scoring_metric_on_val, config, save_file=True,
                  save_figs=False):
-        error_spatial = d140_modelStats.allStats_spatial(mRes)
+        error_spatial = d140_modelStats.allStats_spatial(mRes) #this must be used for LOO stats
         error_overall = d140_modelStats.allStats_overall(mRes)
         # mean of temporal R2 of each AU
         meanAUR2 = d140_modelStats.meanAUR2(mRes)  # equivalent to R2 within
@@ -382,11 +382,11 @@ class YieldModeller(DataMixin, object):
                    'avg_R2_p_overall': error_overall['Pred_R2'],
                    'avg_R2_p_spatial': error_spatial['Pred_R2'],
                    'avg_R2_p_temporal(alias R2_WITHINp)': str(meanAUR2),
-                   'MAE_p': error_overall['Pred_MAE'],
-                   'rMAE_p': error_overall['rel_Pred_MAE'],
-                   'ME_p': error_overall['Pred_ME'],
-                   'RMSE_p': error_overall['Pred_RMSE'],
-                   'rRMSE_p': error_overall['rel_Pred_RMSE'],
+                   'MAE_p': error_spatial['Pred_MAE'],
+                   'rMAE_p': error_spatial['rel_Pred_MAE'],
+                   'ME_p': error_spatial['Pred_ME'],
+                   'RMSE_p': error_spatial['Pred_RMSE'],
+                   'rRMSE_p': error_spatial['rel_Pred_RMSE'],
                    'HyperParGrid': hyperParamsGrid,
                    'HyperPar': hyperParams,
                    'Country_R2_p': error_Country_level['Pred_R2'],

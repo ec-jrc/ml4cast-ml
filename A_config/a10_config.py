@@ -1,4 +1,6 @@
 #import pandas as pd
+import sys
+
 import numpy as np
 import os
 import json
@@ -176,8 +178,42 @@ class mlSettings:
                            'max_depth': [10, 20, 40],
                            'n_estimators': [100, 250, 500],
                            'min_samples_split': np.linspace(0.1, 0.8, 6, endpoint=True).tolist()},
-                       XGBoost = {'learning_rate': [0.05, 0.1, 0.2, 0.3],
-                                  'max_depth': [2, 4, 6, 8, 10],
-                                  'min_child_weight': [1, 3, 5, 10]}
-                                  #'gamma': [0, 2, 5]}
+                       XGBoost = {'learning_rate': [0.01,0.05, 0.1, 0.2, 0.3],
+                                  'max_depth': [2, 4, 6, 8, 10, 12],
+                                  'min_child_weight': [1, 3, 5, 10],
+                                  'gamma': [0, 1, 2, 4, 6],
+                                  'n_estimators': [50, 100, 250, 500]} #new 2024
+                                  #'gamma': [1, 2, 4, 6]}
+                                 #'n_estimators': [50, 100, 250, 500],
                        )
+
+def config_reducer(modelSettings, run_name):
+    # MODIFY HERE TO DO LESS TESTING
+    # 'feature_groups': {
+    # 'rs_met': ['ND', 'NDmax', 'rad', 'RainSum', 'T', 'Tmin', 'Tmax'], 'rs_met_reduced': ['ND', 'RainSum', 'T'],
+    # 'rs_met_sm_reduced': ['ND', 'RainSum', 'T', 'SM'], 'rs': ['ND', 'NDmax'], 'rs_reduced': ['ND'],
+    # 'rs_sm_reduced': ['ND', 'SM'], 'met': ['rad', 'RainSum', 'T', 'Tmin', 'Tmax'],
+    # 'met_reduced': ['rad', 'RainSum', 'T'], 'met_sm_reduced': ['rad', 'RainSum', 'T', 'SM']
+    if run_name == 'month5':
+        want_keys = ['rs_met_reduced', 'rs_met_sm_reduced', 'rs_reduced', 'rs_sm_reduced']
+        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
+        modelSettings.doOHEs = ['AU_level']
+        modelSettings.feature_prct_grid = [5, 25, 50, 100]
+        want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf'] #used in run month5
+        #want_keys = ['XGBoost'] # used in run month5 month5_onlyXGB
+        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
+        # modelSettings.feature_selections = ['none']
+        # modelSettings.addYieldTrend = [False]
+        # modelSettings.dataReduction = ['none']
+    elif run_name == 'month5_onlyXGB':
+        want_keys = ['rs_met_reduced', 'rs_met_sm_reduced', 'rs_reduced', 'rs_sm_reduced']
+        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
+        modelSettings.doOHEs = ['AU_level']
+        modelSettings.feature_prct_grid = [5, 25, 50, 100]
+        want_keys = ['XGBoost'] # used in run month5 month5_onlyXGB
+        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
+    else:
+        print('a10.config: model setting reduction not defined for this run name')
+        print('program will stop')
+        sys.exit()
+    return modelSettings

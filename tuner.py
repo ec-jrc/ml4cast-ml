@@ -60,21 +60,8 @@ def tune(run_name, config_fn, forecastingMonths, tune_on_condor):
     # load model configurations to be tested
     modelSettings = a10_config.mlSettings(forecastingMonths=forecastingMonths) #[3,6]
     ##################################################################################################################
-    # MODIFY HERE TO DO LESS TESTING
-    # 'feature_groups': {
-    # 'rs_met': ['ND', 'NDmax', 'rad', 'RainSum', 'T', 'Tmin', 'Tmax'], 'rs_met_reduced': ['ND', 'RainSum', 'T'],
-    # 'rs_met_sm_reduced': ['ND', 'RainSum', 'T', 'SM'], 'rs': ['ND', 'NDmax'], 'rs_reduced': ['ND'],
-    # 'rs_sm_reduced': ['ND', 'SM'], 'met': ['rad', 'RainSum', 'T', 'Tmin', 'Tmax'],
-    # 'met_reduced': ['rad', 'RainSum', 'T'], 'met_sm_reduced': ['rad', 'RainSum', 'T', 'SM']
-    want_keys = ['rs_met_reduced', 'rs_met_sm_reduced', 'rs_reduced', 'rs_sm_reduced']
-    modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
-    modelSettings.doOHEs = ['AU_level']
-    #modelSettings.feature_selections = ['none']
-    modelSettings.feature_prct_grid = [5, 25, 50, 100]
-    want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf']
-    modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-    #modelSettings.addYieldTrend = [False]
-    #modelSettings.dataReduction = ['none']
+    # MODIFY in this function TO DO LESS TESTING
+    a10_config.config_reducer(modelSettings, run_name)
     ###################################################################################################################
     print(modelSettings.__dict__)
     # Prepare input files
