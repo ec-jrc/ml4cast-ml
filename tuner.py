@@ -10,6 +10,7 @@ from C_model_setting import c100_save_model_specs
 from B_preprocess import b100_load
 from D_modelling import d090_model_wrapper
 from F_post_processsing import F100_gather_hindcast_output
+
 def remove_files(path):
   """
   Removes all files in the given directory path, but leaves subdirectories and their contents untouched.
@@ -28,25 +29,13 @@ def remove_files(path):
 
 
 def tune(run_name, config_fn, forecastingMonths, tune_on_condor):
-    '''
-    This script shall be used to for:
-    tuning models with double LOYO loop (test various configuration)
-    run_name: give a name to the run that will be used to make the output dir name
-    # config file to be used
-    config_fn: config file to be used
-    forecastingMonths: specify months on which to forecast [5]
-    tune_on_condor = Use condor or run locally, True or False
-    
+    """
     PART A is run locally to generate data and spec files
-    PART B can be run locally or on HT Condor
-    '''
-    # USER SETTINGS ###########################################################
-
-    # END OF USER SETTINGS ###########################################################
-
+    PART B tune each of the spec file and produce the output. it can be run locally or on HT Condor depending on tune_on_condor
+    """
     # ----------------------------------------------------------------------------------------------------------
     # PART A
-    runType = 'tuning'  # ['tuning', 'opeForecast']
+    runType = 'tuning'  # this is fixed fr tuning ['tuning', 'opeForecast']
     start_time = time.time()
     # load region specific data info
     config = a10_config.read(config_fn, run_name)

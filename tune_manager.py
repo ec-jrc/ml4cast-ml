@@ -91,16 +91,33 @@ def monitor_condor_q(time_step_minutes, submitter, config):
 
 
 if __name__ == '__main__':
+    """
+    Main function for tuning the models on a single pc or condor
+    The user must define:
+    run_name: a name that will be used to create output directory
+    config_fn: the json file with essential info of the data (variables, phenology, crops to be included, etc)
+    forecastingMonths: a list of forecasting times (remember that month 1 is the month of SOS)
+    tune_on_condor: boolean, how to tune: sequentially on a machine or parallel on bdap
+    
+    If condor run is requested it set up a condor monitoring routine (monitor_condor_q) to follow progress
+    and warn in case of jobs put on hold. This monitoring stops when there are no more jobs in the que,
+    monitor_condor_q will check that all spec files used have a corresponding output file 
+    """
     # USER PARAMS
     run_name = 'month5_onlyXGB'
     config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
     forecastingMonths = [5]
     tune_on_condor = True
+    # the class mlSettings of a10_config sets all the possible configuration to be tested.
+    # The user can reduce the numbers of possible configuration in a given run by editing
+    # the function config_reducer in  a10_config
     # END OF USER PARAMS
+
+
     config = a10_config.read(config_fn, run_name)
-    #batch_name = 'ml4cast_' + config.AOI
     tuner.tune(run_name, config_fn, forecastingMonths, tune_on_condor)
-    print('Condor runs launched, start the monitoring')
-    # Start the monitoring loop in a separate thread to avoid blocking the main program
-    thread = threading.Thread(target=monitor_condor_q, args=(30, 'ml4castproc', config))
-    thread.start()
+    if tune_on_condor:
+        print('Condor runs launched, start the monitoring')
+        # Start the monitoring loop in a separate thread to avoid blocking the main program
+        thread = threading.Thread(target=monitor_condor_q, args=(30, 'ml4castproc', config))
+        thread.start()
