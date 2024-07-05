@@ -68,59 +68,44 @@ def compare_outputs (dir):
         print('The metric is not coded, compare_outputs cannot be executed')
         sys.exit()
     var4time = 'forecast_time'
-    if target == 'Algeria':
-        var4time = 'lead_time' #correct issue of calling forecast_time as lead_time, fixed after the Algeria paper
+    # if target == 'Algeria':
+    #     var4time = 'lead_time' #correct issue of calling forecast_time as lead_time, fixed after the Algeria paper
     mo = pd.read_csv(dir + '/' + 'all_model_output.csv')
 
     # get best 4 ML configurations by lead time, crop type and y var PLUS benchmarks
     moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
-    b4 = moML.groupby(['Crop','targetVar','Time_sampling', var4time]).apply(lambda x: x.sort_values([metric2use], ascending = sortAscending).head(4)).reset_index(drop=True)
+    b4 = moML.groupby(['Crop', var4time]).apply(lambda x: x.sort_values([metric2use], ascending = sortAscending).head(4)).reset_index(drop=True)
     # always add the benchmarks
-    tmp = mo.groupby(['Crop','targetVar','Time_sampling',var4time]) \
+    tmp = mo.groupby(['Crop', var4time]) \
         .apply(lambda x: x.loc[x['Estimator'].isin(mlsettings.benchmarks)]).reset_index(drop=True)
-    tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'targetVar', 'Crop'])
-    b4 = b4.append(tmp)
-    b4 = b4.sort_values(['Time_sampling',var4time,'Crop','targetVar',metric2use], \
-                   ascending=[True,True,True,True,sortAscending])
+    tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'Crop'])
+    b4 = pd.concat([b4, tmp])
+    b4 = b4.sort_values([var4time,'Crop', metric2use], \
+                   ascending=[True, True, sortAscending])
     b4.to_csv(dir + '/' + 'all_model_best4.csv', index=False)
 
     # and absolute best
-    b1 = mo.groupby(['Crop', 'targetVar', 'Time_sampling', var4time]).apply(
+    b1 = mo.groupby(['Crop', var4time]).apply(
         lambda x: x.sort_values([metric2use], ascending=sortAscending).head(1)).reset_index(drop=True)
     b1['Ordering'] = 0  # just used to order Ml, peak, null in the csv
     for idx, val in enumerate(mlsettings.benchmarks, start=0):
-        tmp = mo.groupby(['Crop', 'targetVar', 'Time_sampling', var4time]) \
+        tmp = mo.groupby(['Crop', var4time]) \
             .apply(lambda x: x.loc[x['Estimator'].isin([mlsettings.benchmarks[idx]])]).reset_index(drop=True)
         tmp['Ordering'] = idx+1
-        tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'targetVar', 'Crop'])
-        b1 = b1.append(tmp)
-    b1 = b1.sort_values(['Crop','Time_sampling',var4time,'targetVar','Ordering'], \
-                   ascending=[True,True,True,True,True])
+        tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'Crop'])
+        b1 = pd.concat([b1, tmp])
+    b1 = b1.sort_values(['Crop', var4time, 'Ordering'], \
+                   ascending=[True, True, True])
     b1 = b1.drop(columns=['Ordering'])
     b1.to_csv(dir + '/' + 'all_model_best1.csv', index=False)
 
 
-    # best configuration of each model by forecast time, crop type and y var
-    # find out the models tested
-    # models = mo['Estimator'].unique()
+    # best configuration of each model type by forecast time, crop type and y var
     # find out, for each of them, the best performing configuration y lead time, crop type and y var
-    bmc = mo.groupby(['Crop','targetVar','Time_sampling',var4time,'Estimator']).apply(lambda x: x.sort_values([metric2use], ascending = sortAscending).head(1)).reset_index(drop=True)
-    bmc = bmc.sort_values(['Time_sampling', 'Crop', 'targetVar', var4time, metric2use], \
-                        ascending=[True, True, True, True, sortAscending])
+    bmc = mo.groupby(['Crop', var4time, 'Estimator']).apply(lambda x: x.sort_values([metric2use], ascending = sortAscending).head(1)).reset_index(drop=True)
+    bmc = bmc.sort_values(['Crop', var4time, metric2use], \
+                        ascending=[True, True, sortAscending])
     bmc.to_csv(dir + '/' + 'best_conf_of_all_models.csv', index=False)
-
-    # average performance (in all crops, by target variable, by model specs)
-    # first remove OHE from features as we get a different list by crops
-    #mo = mo.fillna('')
-    mo['Features_withoutOHE'] = mo['Features'].apply(lambda x: '['+', '.join(str(item) for item in str(x).strip('][').split(', ') if not("OHE" in item)) +']')
-    avgPerf = mo.groupby(['dataScaling','DoOHEnc','AddTargetMeanToFeature',
-                          #'DoScaleOHEnc','Features_withoutOHE','scoringMetric',
-                          'Features_withoutOHE', 'scoringMetric',
-                          'Time_sampling', var4time,
-                          'targetVar','Estimator'], dropna=False).mean()
-    #avgPerf.to_csv(dirOutModel + '/' + project['AOI'] + '_model_mean_perf.csv')
-    avgPerf.to_csv(dir + '/' + 'all_model_mean_perf.csv') #, index=False) sort_values(['Crop','targetVar','Time_sampling','up2timeID'], ascending=True)\
-
 
     # make some plots on best 4
     stat_column_name = metric2use       # select what to plot

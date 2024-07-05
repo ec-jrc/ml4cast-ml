@@ -13,10 +13,6 @@ def monitor_condor_q(time_step_minutes, submitter, config):
   start_time = time.time()
   first_check = True
   while True:
-    current_time = datetime.datetime.now().time()
-
-
-    # do something
     # JobStatus is an integer;
     # states: - 1: Idle(I) - 2: Running(R) - 3: Removed(X) - 4: Completed(C) - 5: Held(H) - 6: Transferring
     # Output - 7: Suspended
