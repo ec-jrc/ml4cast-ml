@@ -68,7 +68,7 @@ def tune(run_name, config_fn, forecastingMonths, tune_on_condor):
         # get the produced spec file list
         for fn in spec_files_list:
             d090_model_wrapper.fit_and_validate_single_model(fn, config, runType)
-        F100_analyze_hindcast_output.gather_output(config.models_out_dir)
+        #F100_analyze_hindcast_output.gather_output(config.models_out_dir)
         print("--- %s seconds ---" % (time.time() - start_time))
     else:
         # running with condor

@@ -4,7 +4,9 @@ import json
 from D_modelling import d100_modeller
 
 
-def fit_and_validate_single_model(fn, config, runType):
+def fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False):
+    # when called with run2get_mres_only = True it just return mres (for plotting)
+    # and does not write anything
     tic = time.time()
     with open(fn, 'r') as fp:
         uset = json.load(fp)
@@ -14,7 +16,7 @@ def fit_and_validate_single_model(fn, config, runType):
     fn_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
                           '_crop_' + uset['crop'] + '_Yield_' + uset['algorithm'] +
                           '_output.csv')
-    if not os.path.exists(fn_out):
+    if not os.path.exists(fn_out) or run2get_mres_only:
         hindcaster = d100_modeller.YieldModeller(uset)
         # preprocess
         X, y, groups, feature_names, AU_codes = hindcaster.preprocess(config, runType)
@@ -22,6 +24,8 @@ def fit_and_validate_single_model(fn, config, runType):
         hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, \
         selected_features_names, prct_selected, n_selected, \
         avg_scoring_metric_on_val, fitted_model = hindcaster.fit(X, y, groups, feature_names, AU_codes, runType)
+        if run2get_mres_only:
+            return mRes
         runTimeH = (time.time() - tic) / (60 * 60)
         # print(f'Model fitted in {runTimeH} hours')
         # error stats
