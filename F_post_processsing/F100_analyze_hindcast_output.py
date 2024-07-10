@@ -104,22 +104,35 @@ def compare_outputs (dir, config, metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
     # plot it by forecasting time (simple bars)
     # One figure per forecasting time
     # in order to assign teh same colors I have to do some workaround
-    b1['tmp_est'] = b1['Estimator'].map(lambda x: x if x.isin(mlsettings.benchmarks) else 'ML')
+    b1['tmp_est'] = b1['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
     # colors = {'Cat1': "#F28E2B", 'Cat2': "#4E79A7", 'Cat3': "#79706E"}
     colors = {'ML': "#0000FF", 'Null_model': "#969696", 'PeakNDVI': "#FF0000", 'Trend': "#009600"}
     for t in b1[var4time].unique():
         crops = b1['Crop'].unique()
-        fig, axs = plt.subplots(ncols=len(crops))
+        fig, axs = plt.subplots(ncols=len(crops), figsize=(14, 6))
         ax_c = 0 #ax counter
+        # get mas metirc
+        ymax = b1[b1[var4time] == t][metric2use].max()
         for crop in crops:
             # in order to assign teh same colors I have to do some workaround
-            p = sns.barplot((b1[b1[var4time] == t]) & (b1[b1['Crop'] == crop]), x="Estimator", y=metric2use, hue="tmp_est",
-                       palette=colors, ax=axs[ax_c])
-            h, l = p.get_legend_handles_labels()
-            l, h = zip(*sorted(zip(l, h)))
-            p.legend(h, l, title="Model")
+            tmp = b1[(b1[var4time] == t) & (b1['Crop'] == crop)]
+            sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
+            tmp['pltOrder'] = tmp['tmp_est'].map(sort_dict)
+            tmp= tmp.sort_values('pltOrder')
+            p = sns.barplot(tmp, x="tmp_est", y=metric2use, hue="tmp_est",
+                       palette=colors, ax=axs[ax_c], dodge=False, width=0.4)
+            axs[ax_c].get_legend().set_visible(False)
+            axs[ax_c].set_title(crop)
+            axs[ax_c].set(ylim=(0, ymax*1.1))
             ax_c = ax_c + 1
-        plt.savefig(dir + '/' + 'all_model_best1.png')
+
+        h, l = p.get_legend_handles_labels()
+        #l, h = zip(*sorted(zip(l, h)))
+        # p.legend(bbox_to_anchor=(1.05, 0), loc='lower left', borderaxespad=0.)
+        plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+
+        fig.tight_layout()
+        plt.savefig(dir + '/' + 'all_model_best1_forecast_time_'+str(t)+'.png')
 
 
 
