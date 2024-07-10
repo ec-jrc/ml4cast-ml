@@ -9,9 +9,12 @@ import subprocess
 import pandas as pd
 from A_config import a10_config
 
-def monitor_condor_q(time_step_minutes, submitter, config):
+def monitor_condor_q(time_step_minutes, submitter, config, run_name):
   start_time = time.time()
   first_check = True
+  fn_output = os.path.join(config.models_dir, 'monitor_condor_q_RUN_' + run_name + '.txt')
+  with open(fn_output, 'w') as f:
+    f.write('Condor monitoring for run ' + run_name + ' ' + str(datetime.datetime.now()) + '\n')
   while True:
     # JobStatus is an integer;
     # states: - 1: Idle(I) - 2: Running(R) - 3: Removed(X) - 4: Completed(C) - 5: Held(H) - 6: Transferring
@@ -20,14 +23,17 @@ def monitor_condor_q(time_step_minutes, submitter, config):
     # check_cmd = ['sudo', '-u', submitter, 'condor_q', 'submitter', submitter, '-format', "'%s '", 'JobBatchName', '-format', "'%-3d '", 'ProcId', '-format', r"'%-3d\n'", 'JobStatus']
     check_cmd = ['sudo', '-u', submitter, 'condor_q', 'submitter', submitter, '-format', "%s ", 'JobBatchName',
                  '-format', "%-3d ", 'ProcId', '-format', "%s ", 'GlobalJobId','-format', r"%-3d\n", 'JobStatus']
-
-    print('***')
-    print (" ".join(check_cmd))
-    print('***')
+    # Write output to a file
+    with open(fn_output, 'a') as f:
+        f.write(" ".join(check_cmd) + '\n')
+        f.write('\n')
     p = subprocess.run(check_cmd, shell=False, input='\n', capture_output=True, text=True)
     if p.returncode != 0:
-        print('ERR', p.stderr)
-        raise Exception('Step subprocess error')
+        with open(fn_output, 'a') as f:
+            f.write('ERR ' + p.stderr + '\n')
+            f.write('\n')
+            print('ERR', p.stderr)
+        #raise Exception('Step subprocess error')
     # print(p.stdout)
     # make it a df
     # Split the string into lines
@@ -45,6 +51,11 @@ def monitor_condor_q(time_step_minutes, submitter, config):
     statesDict = {1: 'Idle', 2: 'Running', 3: 'Removed', 4: 'Completed', 5: 'Held', 6: 'Transferring'}
     df['StatusString'] = df['Status'].map(statesDict)
     if len(df) == 0:
+        with open(fn_output, 'a') as f:
+            f.write("###################################" + '\n')
+            f.write("nothing on Condor anymore, the monitoring will stop" + '\n')
+            f.write("--- %s Hours ---" % str((time.time() - start_time)/(60*60)))
+            f.write('\n')
         print('nothing on Condor anymore, the monitoring will stop')
         print("--- %s Hours ---" % str((time.time() - start_time)/(60*60)))
         # here add a check that all specs have a corresponding output
@@ -61,21 +72,40 @@ def monitor_condor_q(time_step_minutes, submitter, config):
             if not os.path.isfile(fn_to_check):
                 new_file_list.append(el)
         if len(new_file_list) > 0:
+            with open(fn_output, 'a') as f:
+                f.write(str(len(new_file_list)) + ' files with no output:' + '\n')
+                f.write("List of files with no output:" + '\n')
+                for i in spec_files_list:
+                    f.write(i + '\n')
             print(str(len(new_file_list)) + ' files with no output:')
             print('List of files with no output:')
             print(*spec_files_list, sep='\n')
         break
-    print('Condor stats on ' + str(datetime.datetime.now()))
+    with open(fn_output, 'a') as f:
+        f.write('Condor stats on ' + str(datetime.datetime.now()) + '\n')
+    # print('Condor stats on ' + str(datetime.datetime.now()))
     if first_check:
         first_check = False
         jobRequested = len(df)
     else:
-        print('Jobs sbmitted: ' + str(jobRequested))
+        with open(fn_output, 'a') as f:
+            f.write('Jobs submitted: ' + str(jobRequested) + '\n')
+            print('Jobs submitted: ' + str(jobRequested))
+    with open(fn_output, 'a') as f:
+        f.write('Jobs in que: ' + str(len(df)) + '\n')
+        f.write('Jobs running: ' + str(len(df[df['StatusString']=='Running']))+ '\n')
+        f.write('Jobs idle: ' + str(len(df[df['StatusString'] == 'Idle']))+ '\n')
+        f.write('Jobs held: ' + str(len(df[df['StatusString'] == 'Held']))+ '\n')
     print('Jobs in que: ' + str(len(df)))
     print('Jobs running: ' + str(len(df[df['StatusString']=='Running'])))
     print('Jobs idle: ' + str(len(df[df['StatusString'] == 'Idle'])))
     print('Jobs held: ' + str(len(df[df['StatusString'] == 'Held'])))
     if len(df[df['StatusString'] == 'Held']) > 0:
+        with open(fn_output, 'a') as f:
+            f.write('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' + '\n')
+            f.write(print('JOBS HELD') + '\n')
+            f.write(f[df['StatusString'] == 'Held'].to_string() + '\n')
+            f.write('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'+ '\n')
         print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         print('JOBS HELD')
         print(df[df['StatusString'] == 'Held'])
@@ -100,9 +130,9 @@ if __name__ == '__main__':
     monitor_condor_q will check that all spec files used have a corresponding output file 
     """
     # USER PARAMS
-    run_name = 'month5_onlyXGB'
+    run_name = 'month5and8'
     config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
-    forecastingMonths = [5]
+    forecastingMonths = [5, 8]
     tune_on_condor = True
     # the class mlSettings of a10_config sets all the possible configuration to be tested.
     # The user can reduce the numbers of possible configuration in a given run by editing
@@ -111,9 +141,10 @@ if __name__ == '__main__':
 
 
     config = a10_config.read(config_fn, run_name)
+    # DEBUG
     tuner.tune(run_name, config_fn, forecastingMonths, tune_on_condor)
     if tune_on_condor:
         print('Condor runs launched, start the monitoring')
         # Start the monitoring loop in a separate thread to avoid blocking the main program
-        thread = threading.Thread(target=monitor_condor_q, args=(30, 'ml4castproc', config))
+        thread = threading.Thread(target=monitor_condor_q, args=(1, 'ml4castproc', config, run_name)) #60 is min to wait for checking
         thread.start()
