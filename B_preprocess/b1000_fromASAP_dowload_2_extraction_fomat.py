@@ -1,0 +1,33 @@
+import pandas as pd
+if __name__ == '__main__':
+    files2import = [r'V:\foodsec\Projects\SNYF\NDarfur\Tuninga_data\indicators_sudan_v8\country_29_var_10_set_2_class_1_sensor_4.csv',
+                    r'V:\foodsec\Projects\SNYF\NDarfur\Tuninga_data\indicators_sudan_v8\country_29_var_140_set_2_class_1_sensor_4.csv',
+                    r'V:\foodsec\Projects\SNYF\NDarfur\Tuninga_data\indicators_sudan_v8\country_29_var_180_set_2_class_1_sensor_4.csv',
+                    r'V:\foodsec\Projects\SNYF\NDarfur\Tuninga_data\indicators_sudan_v8\country_29_var_201_set_2_class_1_sensor_3.csv']
+
+    fb_out = r'V:\foodsec\Projects\SNYF\NDarfur\Tuning_data\NDarfur_ASAP_data.csv'
+    df0 = pd.read_csv(files2import[0])
+    df1 = pd.read_csv(files2import[1])
+    df2 = pd.read_csv(files2import[2])
+    df3 = pd.read_csv(files2import[3])
+    df = pd.concat([df0, df1, df2, df3], axis=0)
+    df.insert(0, 'reg0_name', df['region_name'])
+    df.insert(0, 'reg0_id', df['region_id'])
+    df = df.drop(['country_name', 'region_name', 'region_id', 'country_id'], axis=1)
+    df = df.rename(columns={'variable_id': 'var_id', 'value':'mean'})
+
+    df['classset_name'] = 'static masks'
+    df['classesset_id'] = 2
+    df['stddev'] = 0
+    df['date'] = pd.to_datetime(df['date'], format='%Y%m%d')
+    df['date'] = df['date'].dt.strftime('%Y-%m-%d')
+    df.loc[df['variable_name'] == 'FPAR', 'variable_name'] = 'NDVI'
+    df.loc[df['variable_name'] == 'Solar Radiation', 'variable_name'] = 'rad'
+    df.loc[df['variable_name'] == 'Rainfall', 'variable_name'] = 'rainfall' #Temperature
+    df.loc[df['variable_name'] == 'Temperature', 'variable_name'] = 'temperature'
+    df['class_name'] = df['class_name'].str.lower() # it was written with Capital C
+    df_out = df[['reg0_name', 'reg0_id',  'variable_name', 'var_id', 'classset_name', 'classesset_id', 'class_name', 'class_id', 'date', 'mean',  'stddev']]
+    df_out.to_csv(fb_out, index=False)
+
+    print('End')
+

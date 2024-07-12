@@ -14,7 +14,7 @@ def LoadPredictors_Save_Csv(config, runType):
     desired_width=320
     pd.set_option('display.width', desired_width)
     np.set_printoptions(linewidth=desired_width)
-    pd.set_option('display.max_columns',10)
+    pd.set_option('display.max_columns',1000)
 
     dirIn = config.data_dir
     dirOut = config.models_dir
@@ -35,7 +35,7 @@ def LoadPredictors_Save_Csv(config, runType):
     # now link it with AU_code and name
     df = pd.merge(df, regNames, left_on=['reg0_id'], right_on=['ASAP1_ID'])
     # get first NDVI time and drop everything before
-    minDate = df[df['variable_name'] == 'NDVI']['date'].min()
+    minDate = df[(df['variable_name'] == 'NDVI') | (df['variable_name'] == 'FPAR')]['date'].min()
     df = df[df['date'] >= minDate]
     # fidf date, add a column with date
     df['Date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')

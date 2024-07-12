@@ -130,10 +130,11 @@ if __name__ == '__main__':
     monitor_condor_q will check that all spec files used have a corresponding output file 
     """
     # USER PARAMS
-    run_name = 'month5and8'
-    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
-    forecastingMonths = [5, 8]
-    tune_on_condor = True
+    run_name = 'months56'
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
+    config_fn = r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
+    forecastingMonths = [5, 6] # here I am giving also the month after harvest
+    tune_on_condor = False
     # the class mlSettings of a10_config sets all the possible configuration to be tested.
     # The user can reduce the numbers of possible configuration in a given run by editing
     # the function config_reducer in  a10_config

@@ -28,7 +28,10 @@ def run_LOYO(model, X_train, X_test, y_train, y_test, AU_code_train, AU_code_tes
         for au in AU_code_test:
             # the trend for the left out is store in the X
             index = np.where(AU_code_test == au)
-            yloo_pred.extend(np.squeeze(X_test)[index])
+            if X_test.shape == (1, 1):
+                yloo_pred.append(np.squeeze(X_test)[()])
+            else:
+                yloo_pred.extend(np.squeeze(X_test)[index])
             yloo_au.extend(AU_code_test[index].tolist())
             yloo_true.extend(y_test[index].tolist())
             outLoopRes = [yloo_pred, yloo_true, yloo_au, np.unique(groups_test).tolist() * len(yloo_pred)]
