@@ -97,10 +97,8 @@ def compare_outputs (config, metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
         print('The metric is not coded, compare_outputs cannot be executed')
         sys.exit()
     var4time = 'forecast_time'
-    # if target == 'Algeria':
-    #     var4time = 'lead_time' #correct issue of calling forecast_time as lead_time, fixed after the Algeria paper
-    mo = pd.read_csv(config.models_out_dir + '/' + 'all_model_output.csv')
 
+    mo = pd.read_csv(config.models_out_dir + '/' + 'all_model_output.csv')
     # get best 4 ML configurations by lead time, crop type and y var PLUS benchmarks
     moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
     b4 = moML.groupby(['Crop', var4time]).apply(lambda x: x.sort_values([metric2use], ascending = sortAscending).head(4)).reset_index(drop=True)
@@ -113,19 +111,28 @@ def compare_outputs (config, metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
                    ascending=[True, True, sortAscending])
     b4.to_csv(config.models_out_dir + '/' + 'all_model_best4.csv', index=False)
 
-    # and absolute best
-    b1 = mo.groupby(['Crop', var4time]).apply(
-        lambda x: x.sort_values([metric2use], ascending=sortAscending).head(1)).reset_index(drop=True)
-    b1['Ordering'] = 0  # just used to order Ml, peak, null in the csv
-    for idx, val in enumerate(mlsettings.benchmarks, start=0):
-        tmp = mo.groupby(['Crop', var4time]) \
-            .apply(lambda x: x.loc[x['Estimator'].isin([mlsettings.benchmarks[idx]])]).reset_index(drop=True)
-        tmp['Ordering'] = idx+1
-        tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'Crop'])
-        b1 = pd.concat([b1, tmp])
-    b1 = b1.sort_values(['Crop', var4time, 'Ordering'], \
-                   ascending=[True, True, True])
-    b1 = b1.drop(columns=['Ordering'])
+    # and absolute ML best (plus benchmarks)
+    # get best 4 ML configurations by lead time, crop type and y var PLUS benchmarks
+    moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
+    b1ML = moML.groupby(['Crop', var4time]).apply(lambda x: x.sort_values([metric2use], ascending = sortAscending).head(1)).reset_index(drop=True)
+    # always add the benchmarks
+    tmp = mo.groupby(['Crop', var4time]) \
+        .apply(lambda x: x.loc[x['Estimator'].isin(mlsettings.benchmarks)]).reset_index(drop=True)
+    tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'Crop'])
+    b1 = pd.concat([b1ML, tmp])
+
+    # b1 = mo.groupby(['Crop', var4time]).apply(
+    #     lambda x: x.sort_values([metric2use], ascending=sortAscending).head(1)).reset_index(drop=True)
+    # b1['Ordering'] = 0  # just used to order Ml, peak, null in the csv
+    # for idx, val in enumerate(mlsettings.benchmarks, start=0):
+    #     tmp = mo.groupby(['Crop', var4time]) \
+    #         .apply(lambda x: x.loc[x['Estimator'].isin([mlsettings.benchmarks[idx]])]).reset_index(drop=True)
+    #     tmp['Ordering'] = idx+1
+    #     tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'Crop'])
+    #     b1 = pd.concat([b1, tmp])
+    # b1 = b1.sort_values(['Crop', var4time, 'Ordering'], \
+    #                ascending=[True, True, True])
+    # b1 = b1.drop(columns=['Ordering'])
     b1.to_csv(config.models_out_dir + '/' + 'all_model_best1.csv', index=False)
 
     # plot it by forecasting time (simple bars)

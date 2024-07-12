@@ -205,7 +205,7 @@ def config_reducer(modelSettings, run_name):
         # modelSettings.feature_selections = ['none']
         # modelSettings.addYieldTrend = [False]
         # modelSettings.dataReduction = ['none']
-    if run_name == 'months56': #North Darfur
+    if run_name == 'months45': #North Darfur
         want_keys = ['rs_met_reduced', 'rs_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
         modelSettings.doOHEs = ['none']

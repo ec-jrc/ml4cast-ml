@@ -39,7 +39,7 @@ def save_model_specs(config, modelSettings):
                 'nJobsForGridSearchCv': modelSettings.nJobsForGridSearchCv}
         myID = f'{runID:06d}'
         with open(os.path.join(config.models_spec_dir, myID + '_' + crop + '_' + algo + '.json'), 'w') as fp:
-            json.dump(uset, fp)
+            json.dump(uset, fp, indent=4)
         runID = runID + 1
 
     # save files for ML
