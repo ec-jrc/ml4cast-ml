@@ -132,7 +132,7 @@ def build_features(config, runType):
                     else:
                         row.append(dfM_au_yy_v_mm['mean'].iloc[0])
                         columns.append(vs + MonthSep + str(mm))
-                    if (v == 'temperature') or (v == 'NDVI'):
+                    if (v == 'temperature') or (v == 'NDVI') or (v == 'FPAR'):
                         columns.append(vs + 'min' + MonthSep + str(mm))
                         row.append(dfM_au_yy_v_mm['min'].iloc[0])
                         columns.append(vs + 'max' + MonthSep + str(mm))

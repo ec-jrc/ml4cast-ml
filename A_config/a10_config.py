@@ -67,13 +67,14 @@ class mlSettings:
 
     # feature groups to be considered
     rad_var = 'rad' #sometimes is 'Rad'
+    bio_var = 'ND' # could be FPAR... se config ivars and ivars short
     self.feature_groups = {
-      'rs_met': ['ND', 'NDmax', rad_var, 'RainSum', 'T', 'Tmin', 'Tmax'],
-      'rs_met_reduced': ['ND', 'RainSum', 'T'],
-      'rs_met_sm_reduced': ['ND', 'RainSum', 'T', 'SM'],  # test of ZA
-      'rs': ['ND', 'NDmax'],
-      'rs_reduced': ['ND'],
-      'rs_sm_reduced': ['ND', 'SM'],
+      'rs_met': [bio_var, bio_var + 'max', rad_var, 'RainSum', 'T', 'Tmin', 'Tmax'],
+      'rs_met_reduced': [bio_var, 'RainSum', 'T'],
+      'rs_met_sm_reduced': [bio_var, 'RainSum', 'T', 'SM'],  # test of ZA
+      'rs': [bio_var, bio_var + 'max'],
+      'rs_reduced': [bio_var],
+      'rs_sm_reduced': [bio_var, 'SM'],
       'met': [rad_var, 'RainSum', 'T', 'Tmin', 'Tmax'],
       'met_reduced': [rad_var, 'RainSum', 'T'],
       'met_sm_reduced': [rad_var, 'RainSum', 'T', 'SM']
