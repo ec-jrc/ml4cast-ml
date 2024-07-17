@@ -1,0 +1,12 @@
+The root dir is COUNTRY_DIR.
+Before tuning, the following directories and data must be compiled
+COUNTRY_DIR
+            \.{XXX}_config.json                              # Config file, best to use country name for XXX.
+                                                             # The var AOI in the file must match the file names
+                                                             # in COUNTRY_DIR\Tuning_data\
+            \Tuning_data
+                        \{AOI}_ASAP_data.csv                 # ASAP data
+                        \{AOI}_Crop_id.csv                   # Table linking crop name and is
+                        \{AOI}_measurement_units.csv         # yield measurement units
+                        \{AOI}_REGION_id.csv                 # Table linking region names and ids
+                        \{AOI}_STATS.csv                     # Yield official stas

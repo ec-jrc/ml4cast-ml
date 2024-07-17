@@ -1,20 +1,16 @@
 import pathlib
 import sys
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import matplotlib.dates as mdates
-import numpy as np
-import datetime
-from string import digits
-import ast
 import os
 from A_config import a10_config
+from E_viz import e100_eval_figs
 
 def gather_output(config):
+    analysisOutputDir = os.path.join(config.models_out_dir, 'Analysis')
+    pathlib.Path(analysisOutputDir).mkdir(parents=True, exist_ok=True)
     run_res = list(sorted(pathlib.Path(config.models_out_dir).glob('ID*_output.csv')))
     print('N files = ' + str(len(run_res)))
-    print('Missing files are printed ') #(no warning issued if they are files that were supposed to be skipped (ft sel asked on 1 var)')
+    print('Missing files are printed, if any ') #(no warning issued if they are files that were supposed to be skipped (ft sel asked on 1 var)')
     cc = 0
     if len(run_res) > 0:
         for file_obj in run_res:
@@ -35,10 +31,10 @@ def gather_output(config):
 
                     if file_obj == run_res[0]:
                         #it is the first, save with hdr
-                        df.to_csv(file_obj.parent / 'all_model_output.csv', mode='w', header=True, index=False)
+                        df.to_csv(analysisOutputDir + '/all_model_output.csv', mode='w', header=True, index=False)
                     else:
                         #it is not first, without hdr
-                        df.to_csv(file_obj.parent / 'all_model_output.csv', mode='a', header=False, index=False)
+                        df.to_csv(analysisOutputDir + '/all_model_output.csv', mode='a', header=False, index=False)
                         # print if something is missing
                         if run_id > run_id0:
                             if (run_id != run_id0 + 1):
@@ -49,39 +45,15 @@ def gather_output(config):
                     run_id0 = run_id
     else:
         print('There is no a single output file')
-
-def addStringIfNotEmpty(info, x, sep = ','):
-    if x != '':
-        if len(info)>0:
-            info = info + sep +'  ' + str(x)
-        else:
-            info = str(x)
-    return info
-
-def output_row_to_ML_info_string(df, metric2use):
-    info_string0 = round(df[metric2use].values[0],2)
-    algo = df.Estimator.values[0]
-    info_string1 = algo
-    ohe = 'OHEau' if df.DoOHEnc.values[0] == 'AU_level' else ''
-    info_string1 = addStringIfNotEmpty(info_string1, ohe)
-    yt = 'YT' if df.AddYieldTrend.values[0] == 'True' else ''
-    info_string1 = addStringIfNotEmpty(info_string1, yt)
-    info_string2 = df.Feature_set.values[0]
-    dr = df.Data_reduction.values[0] if df.Data_reduction.values[0] != 'none' else ''
-    info_string3 = addStringIfNotEmpty('', dr)
-    fs = df.Ft_selection.values[0] if df.Ft_selection.values[0] != 'none' else ''
-    info_string3 = addStringIfNotEmpty('', fs)
-    prct= round(df.Prct_selected_fit.values[0]) if fs != '' else ''
-    info_string3 = addStringIfNotEmpty(info_string3, prct, sep=':')
-    return [info_string0, info_string1, info_string2, info_string3]
-
+    print('End of printing missing files')
 
 def compare_outputs (config, metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
     #get some vars from mlSettings class
     mlsettings = a10_config.mlSettings(forecastingMonths=0)
-    includeTrendModel = True   #for Algeria run ther is no trend model
-    addCECmodel = False #only for South Africa
-    ylim_rRMSE_p = [0,30]
+    # includeTrendModel = True   #for Algeria run ther is no trend model
+    # addCECmodel = False #only for South Africa
+    
+    analysisOutputDir = os.path.join(config.models_out_dir, 'Analysis')
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', 400)  # width is = 400
 
@@ -98,7 +70,7 @@ def compare_outputs (config, metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
         sys.exit()
     var4time = 'forecast_time'
 
-    mo = pd.read_csv(config.models_out_dir + '/' + 'all_model_output.csv')
+    mo = pd.read_csv(analysisOutputDir + '/' + 'all_model_output.csv')
     # get best 4 ML configurations by lead time, crop type and y var PLUS benchmarks
     moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
     b4 = moML.groupby(['Crop', var4time]).apply(lambda x: x.sort_values([metric2use], ascending = sortAscending).head(4)).reset_index(drop=True)
@@ -109,7 +81,7 @@ def compare_outputs (config, metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
     b4 = pd.concat([b4, tmp])
     b4 = b4.sort_values([var4time,'Crop', metric2use], \
                    ascending=[True, True, sortAscending])
-    b4.to_csv(config.models_out_dir + '/' + 'all_model_best4.csv', index=False)
+    b4.to_csv(analysisOutputDir + '/' + 'all_model_best4.csv', index=False)
 
     # and absolute ML best (plus benchmarks)
     # get best 4 ML configurations by lead time, crop type and y var PLUS benchmarks
@@ -120,106 +92,22 @@ def compare_outputs (config, metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
         .apply(lambda x: x.loc[x['Estimator'].isin(mlsettings.benchmarks)]).reset_index(drop=True)
     tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'Crop'])
     b1 = pd.concat([b1ML, tmp])
+    b1.to_csv(analysisOutputDir + '/' + 'all_model_best1.csv', index=False)
 
-    # b1 = mo.groupby(['Crop', var4time]).apply(
-    #     lambda x: x.sort_values([metric2use], ascending=sortAscending).head(1)).reset_index(drop=True)
-    # b1['Ordering'] = 0  # just used to order Ml, peak, null in the csv
-    # for idx, val in enumerate(mlsettings.benchmarks, start=0):
-    #     tmp = mo.groupby(['Crop', var4time]) \
-    #         .apply(lambda x: x.loc[x['Estimator'].isin([mlsettings.benchmarks[idx]])]).reset_index(drop=True)
-    #     tmp['Ordering'] = idx+1
-    #     tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'Crop'])
-    #     b1 = pd.concat([b1, tmp])
-    # b1 = b1.sort_values(['Crop', var4time, 'Ordering'], \
-    #                ascending=[True, True, True])
-    # b1 = b1.drop(columns=['Ordering'])
-    b1.to_csv(config.models_out_dir + '/' + 'all_model_best1.csv', index=False)
+    # plot it by forecasting time (simple bars for each forecasting time)
+    e100_eval_figs.bars_by_forecast_time(b1, metric2use, mlsettings, var4time, analysisOutputDir)
 
-    # plot it by forecasting time (simple bars)
-    # One figure per forecasting time
-    # in order to assign teh same colors I have to do some workaround
-    b1['tmp_est'] = b1['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
-    # colors = {'Cat1': "#F28E2B", 'Cat2': "#4E79A7", 'Cat3': "#79706E"}
-    colors = {'ML': "#0000FF", 'Null_model': "#969696", 'PeakNDVI': "#FF0000", 'Trend': "#009600"}
-    for t in b1[var4time].unique():
-        crops = b1['Crop'].unique()
-        fig, axs = plt.subplots(ncols=len(crops), figsize=(14, 6))
-        ax_c = 0 #ax counter
-        # get mas metirc
-        ymax = b1[b1[var4time] == t][metric2use].max()
-        for crop in crops:
-            # in order to assign teh same colors I have to do some workaround
-            tmp = b1[(b1[var4time] == t) & (b1['Crop'] == crop)]
-            sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
-            tmp['pltOrder'] = tmp['tmp_est'].map(sort_dict)
-            tmp = tmp.sort_values('pltOrder')
-            p = sns.barplot(tmp, x="tmp_est", y=metric2use, hue="tmp_est",
-                       palette=colors, ax=axs[ax_c], dodge=False, width=0.4)
-            ml_row = tmp[tmp['tmp_est'] == 'ML']
-            [info_string0, info_string1, info_string2, info_string3] = output_row_to_ML_info_string(ml_row, metric2use)
-            axs[ax_c].text(0.65, 0.95, info_string0,  transform=axs[ax_c].transAxes, horizontalalignment='center')
-            axs[ax_c].text(0.65, 0.91, info_string1, transform=axs[ax_c].transAxes, horizontalalignment='center')
-            axs[ax_c].text(0.65, 0.87, info_string2, transform=axs[ax_c].transAxes, horizontalalignment='center')
-            axs[ax_c].text(0.65, 0.83, info_string3, transform=axs[ax_c].transAxes, horizontalalignment='center')
-            axs[ax_c].get_legend().set_visible(False)
-            axs[ax_c].set_title(crop)
-            axs[ax_c].set(ylim=(0, ymax*1.1))
-            axs[ax_c].set(xlabel='Model')
-            ax_c = ax_c + 1
+    # plot scatter of Ml and bechmark, on eplot per crop and forecasting time
+    e100_eval_figs.scatter_plots(b1, config, var4time, analysisOutputDir)
 
-        h, l = p.get_legend_handles_labels()
-        #l, h = zip(*sorted(zip(l, h)))
-        # p.legend(bbox_to_anchor=(1.05, 0), loc='lower left', borderaxespad=0.)
-        plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-        fig.tight_layout()
-        plt.savefig(config.models_out_dir + '/' + 'all_model_best1_forecast_time_'+str(t)+'.png')
-
-    # now scatterplot
-    crops = b1['Crop'].unique()
-    forcTimes = b1[var4time].unique()
-    for c in crops:
-        for t in forcTimes:
-            df_c_t = b1[(b1['Crop'] == c) & (b1[var4time] == t)]
-            sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
-            df_c_t['pltOrder'] = df_c_t['tmp_est'].map(sort_dict)
-            df_c_t = df_c_t.sort_values('pltOrder')
-            # get the run_ids, put  first
-            Ml_run_id = df_c_t[df_c_t['tmp_est'] == 'ML']['runID']
-            bench_run_id = df_c_t[df_c_t['tmp_est'].isin(mlsettings.benchmarks)]['runID']
-            model_labels = ['ML'] + df_c_t[df_c_t['Estimator'].isin(mlsettings.benchmarks)]['Estimator'].tolist()
-
-            fig, axs = plt.subplots(2, 2, figsize=(10, 10), constrained_layout=True)
-
-            for i, ax in enumerate(axs.flatten()):
-                # open mres
-                print(mres_fns)
-                df = pd.read_csv(mres_fns[i])
-                lims = [np.floor(np.min([df['yLoo_true'].values, df['yLoo_pred'].values])),
-                        np.ceil(np.max([df['yLoo_true'].values, df['yLoo_pred'].values]))]
-                r2p = Model_error_stats.r2_nan(df['yLoo_true'].values, df['yLoo_pred'].values)
-                for au_code in df['AU_code'].unique():
-                    x = df[df['AU_code'] == au_code]['yLoo_true'].values
-                    y = df[df['AU_code'] == au_code]['yLoo_pred'].values
-                    lbl = df_regNames[df_regNames['AU_code'] == au_code.astype('int')]['AU_name'].values[0]
-                    ax.scatter(x, y, label=lbl)
-                    ax.plot(lims, lims, color='black', linewidth=0.5)
-                    ax.set_title(model_labels[i] + ',R2p=' + str(np.round(r2p, 2)))
-                    ax.set_xlim(lims)
-                    ax.set_ylim(lims)
-                    ax.set_xlabel('Obs')
-                    ax.set_ylabel('Pred')
-                    ax.legend(frameon=False, loc='upper left')
-
-            fig.savefig(os.path.join(c_dir, c + 'forecst_time_' + str(t) + '.png'))
-            plt.close(fig)
-
+    print('Compare output ended')
 
     # best configuration of each model type by forecast time, crop type and y var
     # find out, for each of them, the best performing configuration y lead time, crop type and y var
-    bmc = mo.groupby(['Crop', var4time, 'Estimator']).apply(lambda x: x.sort_values([metric2use], ascending = sortAscending).head(1)).reset_index(drop=True)
-    bmc = bmc.sort_values(['Crop', var4time, metric2use], \
-                        ascending=[True, True, sortAscending])
-    bmc.to_csv(config.models_out_dir + '/' + 'best_conf_of_all_models.csv', index=False)
+    # bmc = mo.groupby(['Crop', var4time, 'Estimator']).apply(lambda x: x.sort_values([metric2use], ascending = sortAscending).head(1)).reset_index(drop=True)
+    # bmc = bmc.sort_values(['Crop', var4time, metric2use], \
+    #                     ascending=[True, True, sortAscending])
+    # bmc.to_csv(analysisOutputDir + '/' + 'best_conf_of_all_models.csv', index=False)
 
 
 
@@ -611,4 +499,3 @@ def compare_outputs (config, metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
 
     # Now for the best model and benchmark make scatter plot
     # teh refrence data is b1
-    print('Compare output ended')

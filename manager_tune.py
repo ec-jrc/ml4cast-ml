@@ -129,20 +129,26 @@ if __name__ == '__main__':
     and warn in case of jobs put on hold. This monitoring stops when there are no more jobs in the que,
     monitor_condor_q will check that all spec files used have a corresponding output file 
     """
+    ##########################################################################################
     # USER PARAMS
-    run_name = 'months45'
-    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
-    config_fn = r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
-    forecastingMonths = [4, 5] # here I am giving also the month after harvest
-    tune_on_condor = False
+    forecastingMonths = [4]  # month X means that all months up to X (included) are used, so this is possible in month X+1
+    env = 'pc'  # ['pc','jeo']
+    if env == 'pc':
+        config_fn = r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
+        run_name = 'months56'
+        tune_on_condor = False
+    else:
+        config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
+        run_name = ''
+        tune_on_condor = True
     # the class mlSettings of a10_config sets all the possible configuration to be tested.
     # The user can reduce the numbers of possible configuration in a given run by editing
     # the function config_reducer in  a10_config
-    # END OF USER PARAMS
 
+    # END OF USER PARAMS
+    ##########################################################################################
 
     config = a10_config.read(config_fn, run_name)
-    # DEBUG
     tuner.tune(run_name, config_fn, forecastingMonths, tune_on_condor)
     if tune_on_condor:
         print('Condor runs launched, start the monitoring')

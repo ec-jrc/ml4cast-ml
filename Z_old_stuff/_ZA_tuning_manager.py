@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
         # adjust the condor.submit template
         condSubPath = os.path.join(dir_condor_submit, 'condor.submit')
-        with open('G_HTCondor/condor.submit_template') as tmpl:
+        with open('../G_HTCondor/condor.submit_template') as tmpl:
             content = tmpl.read()
             content = content.format(AOI=config.AOI, root_dir=config.models_dir) #, shDestination=shDestination)
         with open(condSubPath, 'w') as out:

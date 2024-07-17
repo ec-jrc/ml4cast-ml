@@ -92,7 +92,7 @@ def save_model_specs(config, modelSettings):
             # debug
             print(runID, crop, algo, forecast_time, doOHE, feature_set, ft_sel, data_redct, addYieldTrend)
             with open(os.path.join(config.models_spec_dir, myID + '_' + crop + '_' + algo + '.json'), 'w') as fp:
-                json.dump(uset, fp)
+                json.dump(uset, fp, indent=4)#json.dump(uset, fp)
             runID = runID + 1
 
     # if not cst.is_condor:  # run locally

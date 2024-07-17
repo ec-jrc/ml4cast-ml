@@ -13,6 +13,7 @@ def get(model, search, param_grid, selected_features_names): #,nPeggedLeft, nPeg
         coefFit = ','.join(
             [i + ':' + str(round(j, 3)) for i, j in
              zip(selected_features_names, search.best_estimator_.coef_.tolist())])
+        coefFit ='Intercept: ' + str(search.best_estimator_.intercept_) + ','+  coefFit
     if model == 'RandomForest':
         hyperParams = '; '.join(str(key) + ':' + str(value) for key, value in search.best_params_.items())
         hyperParamsGrid = '; '.join(

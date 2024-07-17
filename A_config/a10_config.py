@@ -205,7 +205,16 @@ def config_reducer(modelSettings, run_name):
         # modelSettings.feature_selections = ['none']
         # modelSettings.addYieldTrend = [False]
         # modelSettings.dataReduction = ['none']
-    if run_name == 'months45': #North Darfur
+    elif run_name == 'test': #North Darfur
+        want_keys = ['rs_reduced']
+        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
+        modelSettings.doOHEs = ['none']
+        want_keys = ['Lasso'] #used in run month5
+        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
+        modelSettings.feature_selections = ['none']
+        modelSettings.addYieldTrend = [True]
+        modelSettings.dataReduction = ['none']
+    elif run_name == 'months45': #North Darfur
         want_keys = ['rs_met_reduced', 'rs_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
         modelSettings.doOHEs = ['none']
@@ -223,7 +232,7 @@ def config_reducer(modelSettings, run_name):
         modelSettings.feature_prct_grid = [5, 25, 50, 100]
         want_keys = ['XGBoost'] # used in run month5 month5_onlyXGB
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-    else: #soem default
+    else: #some default
         want_keys = ['Lasso', 'GPR', 'RandomForest','XGBoost', 'SVR_linear', 'SVR_rbf']  # used in run month5
         modelSettings.doOHEs = ['AU_level']
         modelSettings.feature_prct_grid = [5, 25, 50, 100]

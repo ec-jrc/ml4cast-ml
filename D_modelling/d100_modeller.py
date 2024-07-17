@@ -19,7 +19,7 @@ from D_modelling import d105_PCA_on_features, d110_benchmark_models, d120_set_hy
 
 # define a data class that it is used to preprocess the data (both in hidcasting and forecasting)
 class DataMixin:
-    def preprocess(self, config, runType):
+    def preprocess(self, config, runType, run2get_mres_only=False):
         # runType can be:
         # [tuning] tunes models with double LOYO loop (test various configuration)
         # [opeTune] tunes the best model on all available years
@@ -141,7 +141,8 @@ class DataMixin:
             columns=['AU_code', 'year', 'Yield'] + feature_names)
         myID = self.uset['runID']
         myID = f'{myID:06d}'
-        data.to_csv(os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+        if run2get_mres_only == False:
+            data.to_csv(os.path.join(config.models_out_dir, 'ID_' + str(myID) +
                                  '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] + '_yx_preprocData.csv'), index=False)
         # if runType == 'opeForecast':
         #     # yxData = yxData[yxData'['Year'] == year_out]

@@ -19,16 +19,26 @@ if __name__ == '__main__':
     '''
     pd.set_option('display.width', 5000)
     pd.set_option('display.max_columns', None)
-
-    # USER SETTINGS ###########################################################
-    # USE MODELS TUNED WITH THE FOLLOWING RUN
-    # run name
-    run_name = 'months56'
-    # config file to be used
-    config_fn = r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
-    forecastingMonth = 6
-    forecastingYear = 2023 # This year refer to time of EOS
+    ##########################################################################################
+    # USER PARAMS
+    forecastingMonth = 6  # month X means that all months up to X (included) are used, so this is possible in month X+1
+    forecastingYear = 2023  # This year refer to time of EOS
     metric_for_model_selection = 'RMSE_p'  # 'RMSE_val' MUST BE USED
+
+    env = 'pc'  # ['pc','jeo']
+    if env == 'pc':
+        config_fn = r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
+        run_name = 'months56'
+        tune_on_condor = False
+    else:
+        config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
+        run_name = ''
+        tune_on_condor = True
+    # END OF USER PARAMS
+    ##########################################################################################
+
+
+
     # END OF USER SETTINGS ##########################################################
 
     runType = 'opeForecast'  # ['tuning', 'opeForecast']
