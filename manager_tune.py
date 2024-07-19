@@ -9,6 +9,8 @@ import subprocess
 import pandas as pd
 from A_config import a10_config
 
+
+
 def monitor_condor_q(time_step_minutes, submitter, config, run_name):
   start_time = time.time()
   first_check = True
@@ -131,11 +133,11 @@ if __name__ == '__main__':
     """
     ##########################################################################################
     # USER PARAMS
-    forecastingMonths = [4]  # month X means that all months up to X (included) are used, so this is possible in month X+1
+    # be care forecstingMonths is in config!
     env = 'pc'  # ['pc','jeo']
     if env == 'pc':
-        config_fn = r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
-        run_name = 'months56'
+        config_fn = r'Z:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json' #r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
+        run_name = 'test_asap8'
         tune_on_condor = False
     else:
         config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
@@ -148,7 +150,10 @@ if __name__ == '__main__':
     # END OF USER PARAMS
     ##########################################################################################
 
+
+
     config = a10_config.read(config_fn, run_name)
+    forecastingMonths = config.forecastingMonths
     tuner.tune(run_name, config_fn, forecastingMonths, tune_on_condor)
     if tune_on_condor:
         print('Condor runs launched, start the monitoring')

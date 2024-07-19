@@ -12,7 +12,9 @@ import numpy as np
 from mrmr_loc.pandas import mrmr_regression
 import pandas as pd
 
-def setHyper(model, param_grid, inner_cv, nJobsForGridSearchCv, scoringMetric, n_features = 0):
+
+def setHyper(model, param_grid, inner_cv, nJobsForGridSearchCv, scoringMetric, n_features=0):
+
     if model == 'LassoCV':
         search = LassoCV(cv=inner_cv, random_state=0)  # max_iter
     elif model == 'Lasso':

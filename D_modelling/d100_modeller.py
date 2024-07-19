@@ -85,8 +85,9 @@ class DataMixin:
             yxData = yxData.filter(regex='|'.join(list2keep))
             if self.uset['algorithm'] == 'PeakNDVI':
                 # the only feature is max NDVI in the period
-                feature_names = ['NDpeak']
-                X = yxData.filter(like='NDmax').max(axis=1).to_numpy()
+                feature_names = ['FPpeak'] #['NDpeak']
+                #X = yxData.filter(like='NDmax').max(axis=1).to_numpy()
+                X = yxData.filter(regex=r'(NDmax|FPmax)').max(axis=1).to_numpy()
                 X = X.reshape((-1, 1))
             else:  # ML models and Lasso
                 # get the feature group values of the selected feature set
@@ -211,6 +212,7 @@ class YieldModeller(DataMixin, object):
                                                                    self.uset['nJobsForGridSearchCv'], self.uset['scoringMetric'], n_features=n_features)
                         # Tune hyperparameters
                         search.fit(X_train, y_train, groups=groups_train)
+
 
                     elif self.uset['feature_selection'] == 'MRMR':
                         # here feature selection (based on feature_prct_grid) is considered a hyperparam

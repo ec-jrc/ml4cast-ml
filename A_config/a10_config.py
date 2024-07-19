@@ -14,6 +14,7 @@ class read:
     self.AOI = jdict['AOI']
     self.year_start = int(jdict['year_start'])
     self.year_end = int(jdict['year_end'])
+    self. forecastingMonths = jdict['forecastingMonths']
     self.crops = jdict['crops']
     self.root_dir = jdict['root_dir']
     self.data_dir = os.path.join(self.root_dir, jdict['data_dir'])
@@ -67,7 +68,7 @@ class mlSettings:
 
     # feature groups to be considered
     rad_var = 'rad' #sometimes is 'Rad'
-    bio_var = 'ND' # could be FPAR... se config ivars and ivars short
+    bio_var = 'FP' # could be FP or ND ... se config ivars and ivars short
     self.feature_groups = {
       'rs_met': [bio_var, bio_var + 'max', rad_var, 'RainSum', 'T', 'Tmin', 'Tmax'],
       'rs_met_reduced': [bio_var, 'RainSum', 'T'],
@@ -226,13 +227,26 @@ def config_reducer(modelSettings, run_name):
         # modelSettings.feature_selections = ['none']
         # modelSettings.addYieldTrend = [False]
         # modelSettings.dataReduction = ['none']
-    elif run_name == 'month5_onlyXGB':
-        want_keys = ['rs_met_reduced', 'rs_reduced'] # sm not avail directly from asap
+    elif run_name == 'warnGPR':
+        want_keys = ['rs_met_reduced'] # sm not avail directly from asap
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
-        modelSettings.doOHEs = ['AU_level']
+        modelSettings.doOHEs = ['none']
         modelSettings.feature_prct_grid = [5, 25, 50, 100]
-        want_keys = ['XGBoost'] # used in run month5 month5_onlyXGB
+        want_keys = ['GPR'] # used in run month5 month5_onlyXGB
+        modelSettings.feature_selections = ['none']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
+        modelSettings.addYieldTrend = [False]
+        modelSettings.dataReduction = ['none']
+    elif run_name == 'test_asap8':
+        want_keys = ['rs_met_reduced']  # sm not avail directly from asap
+        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
+        modelSettings.doOHEs = ['none']
+        modelSettings.feature_prct_grid = [5, 25, 50, 100]
+        want_keys = ['Lasso']  # used in run month5 month5_onlyXGB
+        modelSettings.feature_selections = ['none']
+        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
+        modelSettings.addYieldTrend = [False]
+        modelSettings.dataReduction = ['none']
     else: #some default
         want_keys = ['Lasso', 'GPR', 'RandomForest','XGBoost', 'SVR_linear', 'SVR_rbf']  # used in run month5
         modelSettings.doOHEs = ['AU_level']

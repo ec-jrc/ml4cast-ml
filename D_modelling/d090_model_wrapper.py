@@ -3,6 +3,9 @@ import os
 import json
 from D_modelling import d100_modeller
 
+# to avoid all warnings (GPR was triggering ConvergenceWarnings)
+os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
+
 
 def fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False):
     # when called with run2get_mres_only = True it just return mres (for plotting)

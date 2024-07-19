@@ -48,13 +48,14 @@ def tune(run_name, config_fn, forecastingMonths, tune_on_condor):
         dir_condor_submit = config.models_dir
     # load model configurations to be tested
     modelSettings = a10_config.mlSettings(forecastingMonths=forecastingMonths) #[3,6]
-    # save model setting in the run dir (config.output_dir)
-    with open(os.path.join(config.output_dir, run_name + '_model_settings.json'), 'w') as fp:
-        json.dump(modelSettings, fp, indent=4)
+
 
     ##################################################################################################################
     # MODIFY in this function TO DO LESS TESTING
-    a10_config.config_reducer(modelSettings, run_name)
+    modelSettings = a10_config.config_reducer(modelSettings, run_name)
+    # save model setting in the run dir (config.output_dir)
+    with open(os.path.join(config.models_dir, run_name + '_model_settings.json'), 'w') as fp:
+        json.dump(modelSettings.__dict__, fp, indent=4)
     ###################################################################################################################
     print(modelSettings.__dict__)
     # Prepare input files
