@@ -16,15 +16,19 @@ class read:
     self.year_end = int(jdict['year_end'])
     self. forecastingMonths = jdict['forecastingMonths']
     self.crops = jdict['crops']
+    self.afi = jdict['afi']
+
     self.root_dir = jdict['root_dir']
     self.data_dir = os.path.join(self.root_dir, jdict['data_dir'])
+
     self.ope_data_dir = os.path.join(self.root_dir, jdict['ope_data_dir'])
-    self.output_dir = os.path.join(self.root_dir, jdict['output_dir'])
+    # self.output_dir = os.path.join(self.root_dir, jdict['output_dir'])
+    self.output_dir = os.path.join(self.root_dir, 'RUN_' + self.afi )
 
     # run_stamp = datetime.datetime.today().strftime('%Y%m%d')
-    self.ope_run_dir = os.path.join(self.output_dir, 'RUN_'+run_name +'_OPE')
+    self.ope_run_dir = os.path.join(self.output_dir, 'OPE_'+run_name +'_OPE')
     self.ope_run_out_dir = os.path.join(self.ope_run_dir, 'output')
-    self.models_dir = os.path.join(self.output_dir, 'RUN_'+ run_name + '_TUNING')
+    self.models_dir = os.path.join(self.output_dir, 'TUNE_' + run_name)
     self.models_spec_dir = os.path.join(self.models_dir, 'Specs')
     self.models_out_dir = os.path.join(self.models_dir, 'Output')
 
@@ -36,7 +40,7 @@ class read:
     self.yield_units = jdict['yield_units']
     self.area_unit =jdict['area_unit']
     # factor that divide production values to get production in desired units
-    self.production_scaler =jdict['production_scaler']
+    # self.production_scaler =jdict['production_scaler']
 
 
 

@@ -28,7 +28,7 @@ def remove_files(path):
 
 
 
-def tune(run_name, config_fn, forecastingMonths, tune_on_condor):
+def tune(run_name, config_fn, tune_on_condor):
     """
     PART A is run locally to generate data and spec files
     PART B tune each of the spec file and produce the output. it can be run locally or on HT Condor depending on tune_on_condor
@@ -39,6 +39,7 @@ def tune(run_name, config_fn, forecastingMonths, tune_on_condor):
     start_time = time.time()
     # load region specific data info
     config = a10_config.read(config_fn, run_name)
+    forecastingMonths = config.forecastingMonths
     # make necessary directories
     Path(config.output_dir).mkdir(parents=True, exist_ok=True)
     Path(config.models_dir).mkdir(parents=True, exist_ok=True)
@@ -53,9 +54,11 @@ def tune(run_name, config_fn, forecastingMonths, tune_on_condor):
     ##################################################################################################################
     # MODIFY in this function TO DO LESS TESTING
     modelSettings = a10_config.config_reducer(modelSettings, run_name)
-    # save model setting in the run dir (config.output_dir)
+    # save model setting and config in the run dir (config.output_dir)
     with open(os.path.join(config.models_dir, run_name + '_model_settings.json'), 'w') as fp:
         json.dump(modelSettings.__dict__, fp, indent=4)
+    with open(os.path.join(config.models_dir, run_name + '_config.json'), 'w') as fp:
+        json.dump(config.__dict__, fp, indent=4)
     ###################################################################################################################
     print(modelSettings.__dict__)
     # Prepare input files

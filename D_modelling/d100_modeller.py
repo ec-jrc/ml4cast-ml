@@ -26,9 +26,9 @@ class DataMixin:
         # [opeForecast] run the operational yield
 
         stats = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'))
-        # rescale Production units for better graphic and better models (if production is avail)
-        if 'Production' in stats.columns:
-            stats['Production'] = stats['Production'].div(config.production_scaler)
+        # # rescale Production units for better graphic and better models (if production is avail)
+        # if 'Production' in stats.columns:
+        #     stats['Production'] = stats['Production'].div(config.production_scaler)
 
         # Raw features for ope forecast are stored in a different dir to avoid overwrite of features used for training
         if runType == 'opeForecast':

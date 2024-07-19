@@ -23,9 +23,9 @@ def LoadPredictors_Save_Csv(config, runType):
         dirInOpe = config.ope_data_dir
         dirOut = config.ope_run_dir
         Path(dirOut).mkdir(parents=True, exist_ok=True)
-        df = pd.read_csv(os.path.join(dirInOpe, config.AOI + '_ASAP_data.csv'))
+        df = pd.read_csv(os.path.join(dirInOpe, config.afi + '.csv'))
     else:
-        df = pd.read_csv(os.path.join(dirIn, config.AOI + '_ASAP_data.csv'))
+        df = pd.read_csv(os.path.join(dirIn, config.afi + '.csv'))
 
     # General part
     df = df[df['class_name']=='crop']

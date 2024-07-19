@@ -136,7 +136,7 @@ if __name__ == '__main__':
     # be care forecstingMonths is in config!
     env = 'pc'  # ['pc','jeo']
     if env == 'pc':
-        config_fn = r'Z:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json' #r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
+        config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Multiple_Geoterra-South_Africa-ASAP_config.json' #r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
         run_name = 'test_asap8'
         tune_on_condor = False
     else:
@@ -154,7 +154,8 @@ if __name__ == '__main__':
 
     config = a10_config.read(config_fn, run_name)
     forecastingMonths = config.forecastingMonths
-    tuner.tune(run_name, config_fn, forecastingMonths, tune_on_condor)
+
+    tuner.tune(run_name, config_fn, tune_on_condor)
     if tune_on_condor:
         print('Condor runs launched, start the monitoring')
         # Start the monitoring loop in a separate thread to avoid blocking the main program
