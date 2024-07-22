@@ -253,9 +253,8 @@ def config_reducer(modelSettings, run_name):
         modelSettings.dataReduction = ['none']
     else: #some default
         want_keys = ['Lasso', 'GPR', 'RandomForest','XGBoost', 'SVR_linear', 'SVR_rbf']  # used in run month5
+        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         modelSettings.doOHEs = ['AU_level']
         modelSettings.feature_prct_grid = [5, 25, 50, 100]
-        # want_keys = ['XGBoost'] # used in run month5 month5_onlyXGB
-        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
 
     return modelSettings

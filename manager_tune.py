@@ -134,6 +134,7 @@ if __name__ == '__main__':
     ##########################################################################################
     # USER PARAMS
     # be care forecstingMonths is in config!
+    # month X means that all months up to X (included) are used, so this is possible in month X+1
     env = 'pc'  # ['pc','jeo']
     if env == 'pc':
         config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Multiple_Geoterra-South_Africa-ASAP_config.json' #r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
