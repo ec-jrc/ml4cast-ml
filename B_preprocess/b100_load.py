@@ -62,7 +62,7 @@ def build_features(config, runType):
     eosDek = config.eos
     sosMonth = int(np.ceil(sosDek/3))
     eosMonth = int(np.ceil(eosDek/3))
-    # open predictors
+    # open predictors 
     fn = os.path.join(dirOut, config.AOI + '_predictors.csv')
     df = pd.read_csv(fn)
     df["Datetime"] = pd.to_datetime(df.Date)

@@ -7,8 +7,9 @@ if __name__ == '__main__':
     metric = 'rRMSE_p' #metric for best model selection
     env = 'pc' #['pc','jeo']
     if env == 'pc':
-        config_fn = r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
-        run_name = 'months56'
+        # config_fn = r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
+        config_fn = r'V:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json'
+        run_name = 'RUN_final_jeo_ndvi_geoterra'
     else:
         config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
         run_name = ''

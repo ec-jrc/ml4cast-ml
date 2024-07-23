@@ -1,2 +1,3 @@
 2024 06 18
 - fix info leakage when using trend
+- Skforecast (optuna) insteda of grid search (https://towardsdatascience.com/forecasting-in-the-age-of-foundation-models-8cd4eea0079d)

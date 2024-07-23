@@ -137,8 +137,8 @@ if __name__ == '__main__':
     # month X means that all months up to X (included) are used, so this is possible in month X+1
     env = 'pc'  # ['pc','jeo']
     if env == 'pc':
-        config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Multiple_Geoterra-South_Africa-ASAP_config.json' #r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
-        run_name = 'test_asap8'
+        config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json' #r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
+        run_name = 'test'
         tune_on_condor = False
     else:
         config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'

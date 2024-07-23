@@ -122,7 +122,7 @@ class mlSettings:
     # Feature selection
     self.feature_selections = ['none', 'MRMR']
     # percentage of features to be selected (as grid to be tested)
-    self.feature_prct_grid = [5, 25, 50, 75, 100]
+    self.feature_prct_grid = [5, 25, 50, 75]
 
     # Data reduction with PCA
     self.dataReduction = ['none', 'PCA']
@@ -187,8 +187,10 @@ class mlSettings:
                        XGBoost = {'learning_rate': [0.01,0.05, 0.1, 0.2, 0.3],
                                   'max_depth': [2, 4, 6, 8, 10, 12],
                                   'min_child_weight': [1, 3, 5, 10],
-                                  'gamma': [0, 1, 2, 4, 6],
-                                  'n_estimators': [50, 100, 250, 500]} #new 2024
+                                  'gamma': [0, 1, 2, 4],
+                                  'lambda': [0.5, 1, 2, 4],
+                                  'subsample': [0.25, 0.5, 0.75, 1.0],
+                                  'n_estimators': [50, 100, 250, 500, 750]} #new 2024
                                   #'gamma': [1, 2, 4, 6]}
                                  #'n_estimators': [50, 100, 250, 500],
                        )
@@ -252,9 +254,9 @@ def config_reducer(modelSettings, run_name):
         modelSettings.addYieldTrend = [False]
         modelSettings.dataReduction = ['none']
     else: #some default
-        want_keys = ['Lasso', 'GPR', 'RandomForest','XGBoost', 'SVR_linear', 'SVR_rbf']  # used in run month5
+        want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf']
+        # debug test za new data
+        want_keys = ['Lasso']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        modelSettings.doOHEs = ['AU_level']
-        modelSettings.feature_prct_grid = [5, 25, 50, 100]
-
+        want_keys = ['rs_met_sm_reduced',  'rs',  'rs_reduced', 'rs_sm_reduced', 'met_sm_reduced']
     return modelSettings
