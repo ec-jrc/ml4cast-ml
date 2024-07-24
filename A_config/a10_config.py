@@ -7,7 +7,7 @@ import json
 
 
 class read:
-  def __init__(self, full_path_config, run_name):
+  def __init__(self, full_path_config, run_name, run_type=None):
 
     with open(full_path_config, 'r') as fp:
         jdict = json.load(fp)
@@ -30,7 +30,10 @@ class read:
     self.ope_run_out_dir = os.path.join(self.ope_run_dir, 'output')
     self.models_dir = os.path.join(self.output_dir, 'TUNE_' + run_name)
     self.models_spec_dir = os.path.join(self.models_dir, 'Specs')
-    self.models_out_dir = os.path.join(self.models_dir, 'Output')
+    if run_type == 'fast_tuning':
+        self.models_out_dir = os.path.join(self.models_dir, 'Output_fast_tuning')
+    else:
+        self.models_out_dir = os.path.join(self.models_dir, 'Output')
 
     self.ivars = jdict['ivars']
     self.ivars_short = jdict['ivars_short']
