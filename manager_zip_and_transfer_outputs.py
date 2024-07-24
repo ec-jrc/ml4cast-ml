@@ -19,11 +19,12 @@ if __name__ == '__main__':
     condor_log_root = '/mnt/jeoproc/log/ml4castproc/' + config.AOI + '/'
 
     # zip and transfer logs
-    output_filename = os.path.join(jeo_share_root, config.AOI + '_logs')
-    dir_name = condor_log_root
-    shutil.make_archive(output_filename, 'zip', dir_name)
+    # output_filename = os.path.join(jeo_share_root, config.AOI + '_logs')
+    # dir_name = condor_log_root
+    # shutil.make_archive(output_filename, 'zip', dir_name)
 
     # zip and transfer outputs
     output_filename = os.path.join(jeo_share_root, config.AOI + '_model_outputs')
     dir_name = config.models_dir
+    dir_name = "/eos/jeodpp/data/projects/ML4CAST/ZAsummer/MLYF/RUN_month5and8_TUNING/"
     shutil.make_archive(output_filename, 'zip', dir_name)

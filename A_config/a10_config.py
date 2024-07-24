@@ -213,7 +213,7 @@ def config_reducer(modelSettings, run_name):
         # modelSettings.feature_selections = ['none']
         # modelSettings.addYieldTrend = [False]
         # modelSettings.dataReduction = ['none']
-    elif run_name == 'test':
+    elif run_name == 'test_quick':
         want_keys = ['rs_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
         modelSettings.doOHEs = ['none']

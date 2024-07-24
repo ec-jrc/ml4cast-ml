@@ -135,15 +135,15 @@ if __name__ == '__main__':
     # USER PARAMS
     # be care forecstingMonths is in config!
     # month X means that all months up to X (included) are used, so this is possible in month X+1
-    env = 'pc'  # ['pc','jeo']
+    env = 'jeo'  # ['pc','jeo']
     if env == 'pc':
         config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json' #r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
         run_name = 'test_quick'
         runType = 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = False
     else:
-        config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
-        run_name = ''
+        config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+        run_name = 'test_quick'
         runType = 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = True
     # the class mlSettings of a10_config sets all the possible configuration to be tested.

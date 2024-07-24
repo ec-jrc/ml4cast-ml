@@ -7,6 +7,7 @@ def launcher(fn, config_fn, run_name, runType):
     d090_model_wrapper.fit_and_validate_single_model(fn, config, runType)
 
 
+
 if __name__ == '__main__':
     #print('Arrived in condor_launcher')
     uset_file = r'{}'.format(sys.argv[1])

@@ -35,8 +35,6 @@ def tune(run_name, config_fn, tune_on_condor, runType):
     """
     # ----------------------------------------------------------------------------------------------------------
     # PART A
-
-    # fast_tuning do not perform nested loop, only outer one
     start_time = time.time()
     # load region specific data info
     config = a10_config.read(config_fn, run_name)
@@ -93,7 +91,7 @@ def tune(run_name, config_fn, tune_on_condor, runType):
             print('HT_condor_task_arguments.txt already exists')
             print('>Jobs that produced already outputs will be skipped')
             print('Log files will be deleted, move to a named dir if you want to keep them')
-            pro = input('Type Y to proceed')
+            pro = input('Type Y to proceed\n')
             if pro == 'Y':
                 fn_rename = fn_condor_task_list.split('.')[0] + '_all.txt'
                 os.rename(condor_task_list_fn, os.path.join(config.models_dir, fn_rename))
