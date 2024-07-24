@@ -22,7 +22,7 @@ class DataMixin:
     def preprocess(self, config, runType, run2get_mres_only=False):
         # runType can be:
         # [tuning] tunes models with double LOYO loop (test various configuration)
-        # [opeTune] tunes the best model on all available years
+        # [fast_tuning] skip inner loop and does not provide error estimates
         # [opeForecast] run the operational yield
 
         stats = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'))
@@ -178,91 +178,83 @@ class YieldModeller(DataMixin, object):
 
         # Df to store predictions
         mRes = pd.DataFrame() #pd.DataFrame(columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year'])
-        if runType == 'tuning':
-            # Outer loop for testing model performances, teh groups are years
+        # if runType == 'tuning':
+        if ((runType == 'tuning') or (runType == 'fast_tuning')):
+            # Outer loop for testing model performances, the groups are years
             outer_cv = LeaveOneGroupOut()
             gen_outer_cv = outer_cv.split(X, y, groups=groups)
             scoring_metric_on_val = []
             nIterationOuterLoop = 1
-            for train_index, test_index in gen_outer_cv:
-                #print('Iteration outer loop = ' + str(nIterationOuterLoop))
-                X_train, X_test, groups_train, AU_code_train = X[train_index], X[test_index], groups[train_index], AU_codes[train_index]
-                y_train, y_test, groups_test, AU_code_test = y[train_index], y[test_index], groups[test_index], AU_codes[test_index]
-                # Not implemented:
-                # Exclude records (year - AU) with missing nan
-                # train set
-                nas = np.isnan(y_train)
-                y_train = y_train[~nas]
-                X_train = X_train[~nas, :]
-                groups_train = groups_train[~nas]
-                AU_code_train = AU_code_train[~nas]
-                # for the test set do nothing, missing values are not an issue (the model does not have to be tuned)
+            if ((runType == 'fast_tuning') and (not (self.uset['algorithm'] in ['Null_model', 'Trend', 'PeakNDVI']))):
+                # in case it fast_tuning and it is a ML mode:
+                # hyper tuning is made on the full set (outer loop), no error stats are saved
+                # the inner loop is not executed
+                pass
+            else:
+                for train_index, test_index in gen_outer_cv:
+                    #print('Iteration outer loop = ' + str(nIterationOuterLoop))
+                    X_train, X_test, groups_train, AU_code_train = X[train_index], X[test_index], groups[train_index], AU_codes[train_index]
+                    y_train, y_test, groups_test, AU_code_test = y[train_index], y[test_index], groups[test_index], AU_codes[test_index]
+                    # Not implemented:
+                    # Exclude records (year - AU) with missing data
+                    # train set
+                    nas = np.isnan(y_train)
+                    y_train = y_train[~nas]
+                    X_train = X_train[~nas, :]
+                    groups_train = groups_train[~nas]
+                    AU_code_train = AU_code_train[~nas]
+                    # for the test set do nothing, missing values are not an issue (the model does not have to be tuned)
 
-                if self.uset['algorithm'] in ['Null_model', 'Trend', 'PeakNDVI']:
-                    outLoopRes = d110_benchmark_models.run_LOYO(self.uset['algorithm'], X_train, X_test, y_train, y_test, AU_code_train, AU_code_test, groups_test)
-                    tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year'])
-                    mRes = pd.concat([mRes, tmp])
-                    #mRes = mRes.append(pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year']))
-                else:
-                    # DEFINE THE INNER LOOP, ITS COMMON TO ALL THE OTHER (ML/LASSO) METHODS
-                    inner_cv = LeaveOneGroupOut()
-                    if self.uset['feature_selection'] == 'none':
-                        n_features = X_train.shape[1]  # used by GPR only
-                        search = d120_set_hyper.setHyper(self.uset['algorithm'], self.uset['hyperGrid'], inner_cv,
-                                                                   self.uset['nJobsForGridSearchCv'], self.uset['scoringMetric'], n_features=n_features)
-                        # Tune hyperparameters
-                        search.fit(X_train, y_train, groups=groups_train)
-
-
-                    elif self.uset['feature_selection'] == 'MRMR':
-                        # here feature selection (based on feature_prct_grid) is considered a hyperparam
-                        selected_features_names, prct_selected, n_selected, X_test, search = d120_set_hyper.setHyper_ft_sel(
-                            X_train, y_train, X_test,
-                            self.uset['prct_features2select_grid'], featureNames, groups_train,
-                            self.uset['algorithm'], self.uset['hyperGrid'], inner_cv,
-                            self.uset['nJobsForGridSearchCv'], self.uset['scoringMetric'])
+                    if self.uset['algorithm'] in ['Null_model', 'Trend', 'PeakNDVI']:
+                        outLoopRes = d110_benchmark_models.run_LOYO(self.uset['algorithm'], X_train, X_test, y_train, y_test, AU_code_train, AU_code_test, groups_test)
+                        tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year'])
+                        mRes = pd.concat([mRes, tmp])
+                        #mRes = mRes.append(pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year']))
                     else:
-                        print('Feature selection type not implemented in d100')
-                        exit()
-                    scoring_metric_on_val.append(search.best_score_)
-                    # #############################
-                    # Now predict the left outs with tuned hypers and store the prediction for the left-out (all years)
-                    # if self.uset['algorithm'] == 'XGBoost':
-                    #     # final tuning with early stop
-                    #     model = search.best_estimator_
-                    #     model.early_stopping_rounds = 10
-                    #     from sklearn.model_selection import train_test_split
-                    #     X_tr, X_te, y_tr, y_te = train_test_split(X_train, y_train, train_size= 0.95, random_state=0)
-                    #     model.fit(X_tr, y_tr, eval_set=[(X_te, y_te)])
-                    #     outLoopRes = [model.predict(X_test).tolist(), y_test.tolist(), AU_code_test.tolist(),
-                    #                   np.unique(groups_test).tolist() * len(AU_code_test.tolist())]
-                    # else:
-                    #     outLoopRes = [search.predict(X_test).tolist(), y_test.tolist(), AU_code_test.tolist(),
-                    #               np.unique(groups_test).tolist() * len(AU_code_test.tolist())]
-                    outLoopRes = [search.predict(X_test).tolist(), y_test.tolist(), AU_code_test.tolist(),
-                                  np.unique(groups_test).tolist() * len(AU_code_test.tolist())]
-                    tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year'])
-                    mRes = pd.concat([mRes, tmp])
-                    # check and store if best params are pegged to boundaries
-                    if nIterationOuterLoop == 1:
-                        # Define variable to keep track on pegging to grid boundaries
-                        nPeggedLeft = dict((el, 0) for el in self.uset['hyperGrid'].keys())
-                        nPeggedRight = copy.deepcopy(nPeggedLeft)
-                    keys = list(search.best_params_.keys())
-                    for k in keys:
-                        if not isinstance(self.uset['hyperGrid'][k], int):
-                            if search.best_params_[k] == self.uset['hyperGrid'][k][0]:
-                                nPeggedLeft[k] = nPeggedLeft[k] + 1
-                            if search.best_params_[k] == self.uset['hyperGrid'][k][-1]:
-                                nPeggedRight[k] = nPeggedRight[k] + 1
+                        # DEFINE THE INNER LOOP, ITS COMMON TO ALL THE OTHER (ML/LASSO) METHODS
+                        inner_cv = LeaveOneGroupOut()
+                        if self.uset['feature_selection'] == 'none':
+                            n_features = X_train.shape[1]  # used by GPR only
+                            search = d120_set_hyper.setHyper(self.uset['algorithm'], self.uset['hyperGrid'], inner_cv,
+                                                                       self.uset['nJobsForGridSearchCv'], self.uset['scoringMetric'], n_features=n_features)
+                            # Tune hyperparameters
+                            search.fit(X_train, y_train, groups=groups_train)
+                        elif self.uset['feature_selection'] == 'MRMR':
+                            # here feature selection (based on feature_prct_grid) is considered a hyperparam
+                            selected_features_names, prct_selected, n_selected, X_test, search = d120_set_hyper.setHyper_ft_sel(
+                                X_train, y_train, X_test,
+                                self.uset['prct_features2select_grid'], featureNames, groups_train,
+                                self.uset['algorithm'], self.uset['hyperGrid'], inner_cv,
+                                self.uset['nJobsForGridSearchCv'], self.uset['scoringMetric'])
                         else:
-                            if search.best_params_[k] == self.uset['hyperGrid'][k].low:
-                                nPeggedLeft[k] = nPeggedLeft[k] + 1
-                            if search.best_params_[k] == self.uset['hyperGrid'][k].high:
-                                nPeggedRight[k] = nPeggedRight[k] + 1
+                            print('Feature selection type not implemented in d100')
+                            exit()
 
-                nIterationOuterLoop += 1
-                # End of outer script
+                        scoring_metric_on_val.append(search.best_score_)
+                        outLoopRes = [search.predict(X_test).tolist(), y_test.tolist(), AU_code_test.tolist(),
+                                      np.unique(groups_test).tolist() * len(AU_code_test.tolist())]
+                        tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year'])
+                        mRes = pd.concat([mRes, tmp])
+                        # check and store if best params are pegged to boundaries
+                        if nIterationOuterLoop == 1:
+                            # Define variable to keep track on pegging to grid boundaries
+                            nPeggedLeft = dict((el, 0) for el in self.uset['hyperGrid'].keys())
+                            nPeggedRight = copy.deepcopy(nPeggedLeft)
+                        keys = list(search.best_params_.keys())
+                        for k in keys:
+                            if not isinstance(self.uset['hyperGrid'][k], int):
+                                if search.best_params_[k] == self.uset['hyperGrid'][k][0]:
+                                    nPeggedLeft[k] = nPeggedLeft[k] + 1
+                                if search.best_params_[k] == self.uset['hyperGrid'][k][-1]:
+                                    nPeggedRight[k] = nPeggedRight[k] + 1
+                            else:
+                                if search.best_params_[k] == self.uset['hyperGrid'][k].low:
+                                    nPeggedLeft[k] = nPeggedLeft[k] + 1
+                                if search.best_params_[k] == self.uset['hyperGrid'][k].high:
+                                    nPeggedRight[k] = nPeggedRight[k] + 1
+
+                    nIterationOuterLoop += 1
+                    # End of outer script
 
         #print('d100 end of outer loop')
         # Here the outer loop (activate in tuining) is concluded and I have all results
@@ -300,6 +292,7 @@ class YieldModeller(DataMixin, object):
                                                            self.uset['scoringMetric'], n_features=n_features)
                 # Tune hyperparameters
                 search.fit(X, y, groups=groups)
+                scoring_metric_on_fit = - search.best_score_
                 Fit_R2 = metrics.r2_score(y, search.predict(X))
                 # selected_features_names = featureNames
             elif self.uset['feature_selection'] == 'MRMR':
@@ -310,6 +303,7 @@ class YieldModeller(DataMixin, object):
                     groups,
                     self.uset['algorithm'], self.uset['hyperGrid'], outer_cv,
                     self.uset['nJobsForGridSearchCv'], self.uset['scoringMetric'])
+                scoring_metric_on_fit = - search.best_score_
                 Fit_R2 = metrics.r2_score(y, search.predict(X_2use))  # It is X test because it is X with only the selected features
             # now get hyperparams (each model has its own)
             if runType == 'tuning':
@@ -329,31 +323,41 @@ class YieldModeller(DataMixin, object):
                 avg_scoring_metric_on_val = np.nan
             hyperParams, hyperParamsGrid, coefFit = d130_get_hyper.get(self.uset['algorithm'], search, self.uset['hyperGrid'],
                                        selected_features_names)
-
+        if ((runType == 'fast_tuning') and (not (self.uset['algorithm'] in ['Null_model', 'Trend', 'PeakNDVI']))):
+            avg_scoring_metric_on_val = scoring_metric_on_fit
         #print(self.__dict__)
         #print('d100 YieldModeller ended')
         return hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, selected_features_names, prct_selected, n_selected, avg_scoring_metric_on_val, search
 
     def validate(self, hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, runTimeH, featureNames,
-                 selected_features_names, prct_selected, n_selected, avg_scoring_metric_on_val, config, save_file=True,
+                 selected_features_names, prct_selected, n_selected, avg_scoring_metric_on_val, config, runType, save_file=True,
                  save_figs=False):
-        error_spatial = d140_modelStats.allStats_spatial(mRes) #this must be used for LOO stats
-        error_overall = d140_modelStats.allStats_overall(mRes)
-        # mean of temporal R2 of each AU
-        meanAUR2 = d140_modelStats.meanAUR2(mRes)  # equivalent to R2 within
-        # National level stats
-        stats = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'))
-        # national yield using subnat yield weighted by area
-        tmp = stats[stats['Crop_name'] == self.uset['crop']][['Region_ID', 'Area']]
-        # get avg area
-        avg_area = tmp.groupby('Region_ID').mean()
-        def weighed_average(grp):
-            return grp._get_numeric_data().multiply(grp['Area'], axis=0).sum() / grp['Area'].sum()
+        if runType == 'fast_tuning':
+            lbl = 'n.a., fast_tuning'
+            error_spatial = {'Pred_R2': lbl, 'Pred_MAE': lbl, 'rel_Pred_MAE':lbl, 'Pred_ME': lbl, 'Pred_RMSE':  lbl, 'rel_Pred_RMSE': lbl}
+            error_overall = {'Pred_R2': lbl, 'Pred_MAE': lbl, 'rel_Pred_MAE': lbl, 'Pred_ME': lbl, 'Pred_RMSE': lbl, 'rel_Pred_RMSE': lbl}
+            error_Country_level ={'Pred_R2': lbl, 'Pred_MAE': lbl, 'Pred_ME': lbl, 'Pred_RMSE': lbl, 'rel_Pred_MAE': lbl, 'rel_Pred_RMSE': lbl, 'Pred_RMSE_FQ': lbl, 'Pred_rRMSE_FQ': lbl}
+            prctPegged = {'left': lbl, 'right': lbl}
+            meanAUR2 = lbl
+        else:
 
-        mRes = pd.merge(mRes, avg_area, how='left', left_on=['AU_code'], right_on=['Region_ID'])
-        mCountryRes = mRes.groupby('Year')[['yLoo_pred', 'yLoo_true', 'Area']].apply(weighed_average).drop(
-            ['Area'], axis=1)
-        error_Country_level = d140_modelStats.allStats_country(mCountryRes)
+            error_spatial = d140_modelStats.allStats_spatial(mRes) #this must be used for LOO stats
+            error_overall = d140_modelStats.allStats_overall(mRes)
+            # mean of temporal R2 of each AU
+            meanAUR2 = d140_modelStats.meanAUR2(mRes)  # equivalent to R2 within
+            # National level stats
+            stats = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'))
+            # national yield using subnat yield weighted by area
+            tmp = stats[stats['Crop_name'] == self.uset['crop']][['Region_ID', 'Area']]
+            # get avg area
+            avg_area = tmp.groupby('Region_ID').mean()
+            def weighed_average(grp):
+                return grp._get_numeric_data().multiply(grp['Area'], axis=0).sum() / grp['Area'].sum()
+
+            mRes = pd.merge(mRes, avg_area, how='left', left_on=['AU_code'], right_on=['Region_ID'])
+            mCountryRes = mRes.groupby('Year')[['yLoo_pred', 'yLoo_true', 'Area']].apply(weighed_average).drop(
+                ['Area'], axis=1)
+            error_Country_level = d140_modelStats.allStats_country(mCountryRes)
 
         # store results in dataframe
         outdict = {'runID': str(self.uset['runID']),

@@ -8,7 +8,7 @@ os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
 
 
 def fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False):
-    # when called with run2get_mres_only = True it just return mres (for plotting)
+    # when called with run2get_mres_only = True it just returns mres (for plotting)
     # and does not write anything
     tic = time.time()
     with open(fn, 'r') as fp:
@@ -34,6 +34,6 @@ def fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False):
         # error stats
         hindcaster.validate(hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, runTimeH, feature_names,
                             selected_features_names,
-                            prct_selected, n_selected, avg_scoring_metric_on_val, config, save_file=True, save_figs=False)
+                            prct_selected, n_selected, avg_scoring_metric_on_val, config, runType, save_file=True, save_figs=False)
     else:
         print(myID + ' output files already exist')

@@ -28,14 +28,15 @@ def remove_files(path):
 
 
 
-def tune(run_name, config_fn, tune_on_condor):
+def tune(run_name, config_fn, tune_on_condor, runType):
     """
     PART A is run locally to generate data and spec files
     PART B tune each of the spec file and produce the output. it can be run locally or on HT Condor depending on tune_on_condor
     """
     # ----------------------------------------------------------------------------------------------------------
     # PART A
-    runType = 'tuning'  # this is fixed fr tuning ['tuning', 'opeForecast']
+
+    # fast_tuning do not perform nested loop, only outer one
     start_time = time.time()
     # load region specific data info
     config = a10_config.read(config_fn, run_name)
@@ -118,7 +119,7 @@ def tune(run_name, config_fn, tune_on_condor):
             os.remove(condor_task_list_fn)
         f_obj = open(condor_task_list_fn, 'a')
         for el in spec_files_list:
-            f_obj.write(f'{str(el)} {config_fn} {run_name}\n')
+            f_obj.write(f'{str(el)} {config_fn} {run_name} {runType}\n')
         f_obj.close()
         # Make sure that the run.sh in this project is executable (# chmod 755 run.sh)
 

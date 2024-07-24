@@ -213,14 +213,14 @@ def config_reducer(modelSettings, run_name):
         # modelSettings.feature_selections = ['none']
         # modelSettings.addYieldTrend = [False]
         # modelSettings.dataReduction = ['none']
-    elif run_name == 'test': #North Darfur
+    elif run_name == 'test':
         want_keys = ['rs_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
         modelSettings.doOHEs = ['none']
         want_keys = ['Lasso'] #used in run month5
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         modelSettings.feature_selections = ['none']
-        modelSettings.addYieldTrend = [True]
+        modelSettings.addYieldTrend = [False]
         modelSettings.dataReduction = ['none']
     elif run_name == 'months45': #North Darfur
         want_keys = ['rs_met_reduced', 'rs_reduced']
@@ -255,8 +255,6 @@ def config_reducer(modelSettings, run_name):
         modelSettings.dataReduction = ['none']
     else: #some default
         want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf']
-        # debug test za new data
-        want_keys = ['Lasso']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         want_keys = ['rs_met_sm_reduced',  'rs',  'rs_reduced', 'rs_sm_reduced', 'met_sm_reduced']
     return modelSettings

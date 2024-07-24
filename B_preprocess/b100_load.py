@@ -43,6 +43,11 @@ def LoadPredictors_Save_Csv(config, runType):
     df = df.drop(['var_id','classset_name','classesset_id','class_name','class_id','date'], axis=1)
     # add dekad of the year
     #df['dek'] = df['Date'].map(f_dek_utilities.f_datetime2dek)
+    # as of today (2024-07-23, SM no yet gap filled), SM may have missing data in 2002 and 2002, use linear interpolation to fix
+    for au in df['ASAP1_ID'].unique():
+        df.loc[(df['ASAP1_ID'] == au) & (df['variable_name'] == 'soil_moisture'), 'mean'] =  df.loc[(df['ASAP1_ID'] == au) & (df['variable_name'] == 'soil_moisture'), 'mean'].interpolate(method='linear', axis=0)
+        #df[(df['ASAP1_ID'] == au) & (df['variable_name'] == 'soil_moisture')]['interpol_SM'] = df[(df['ASAP1_ID'] == au) & (df['variable_name'] == 'soil_moisture')]['mean'].interpolate(method='linear', axis=0)
+        #print(au)
     # save files
     df.to_csv(os.path.join(dirOut, config.AOI + '_predictors.csv'), index=False)
 
@@ -62,7 +67,7 @@ def build_features(config, runType):
     eosDek = config.eos
     sosMonth = int(np.ceil(sosDek/3))
     eosMonth = int(np.ceil(eosDek/3))
-    # open predictors 
+    # open predictors
     fn = os.path.join(dirOut, config.AOI + '_predictors.csv')
     df = pd.read_csv(fn)
     df["Datetime"] = pd.to_datetime(df.Date)
@@ -75,19 +80,13 @@ def build_features(config, runType):
                                 Date=('Date', 'first'), mean=('mean', 'mean'),  # Year=('Year','first'),Month=('Month','first'),
                                 min=('mean', 'min'), max=('mean', 'max'), sum=('mean', 'sum'))
     df_month = df_month.reset_index()
+    df_month = df_month.drop(columns=['reg0_name'])
     if sosMonth < eosMonth:
         months = list(range(sosMonth, eosMonth+1))
     else:
         months = list(range(sosMonth, 12 + 1)) + list(range(1, eosMonth + 1))
     month_index = list(range(1, len(months)+1))
-    #remove months that are not used
     df_month = df_month.loc[df_month['Month'].isin(months)]
-    df_month['First'] = df_month.groupby(['Year'])['Month'].transform('min')
-    df_month['Last'] = df_month.groupby(['Year'])['Month'].transform('max')
-    # keep only complete years
-    if runType == 'tuning':
-        df_month = df_month.loc[(df_month['First'] <= sosMonth) & (df_month['Last'] >= eosMonth)]
-    df_month = df_month.drop(columns=['First', 'Last','reg0_name'])
     di = dict(zip(months, month_index))
     df_month['Month_index'] = df_month['Month'].map(di)
     df_month.insert(2, "Month_index", df_month.pop("Month_index"))
@@ -96,10 +95,21 @@ def build_features(config, runType):
         df_month['YearOfEOS'] = df_month['Year']
     else:
         df_month['YearOfEOS'] = df_month['Year']
-        df_month.loc[(df_month['Month'] <= 12) & (df_month['Month'] > eosMonth), 'YearOfEOS'] = df_month['YearOfEOS'] + 1
-
-
+        # df_month.loc[(df_month['Month'] <= 12) & (df_month['Month'] > eosMonth), 'YearOfEOS'] = df_month['YearOfEOS'] + 1
+        df_month.loc[df_month['Month'] > eosMonth, 'YearOfEOS'] = df_month['YearOfEOS'] + 1
     df_month.insert(2, "YearOfEOS", df_month.pop("YearOfEOS"))
+
+    # At the beginning of the time series, keep only full series (MODIS starts in 2000 05 21), so month 5 is the first
+    # a season going from month 1 to 7 is incomplete for YearOfEOS 2000
+    # a seson going from dek 4 year Y to dek 2 year Y+1 is incomplete for YearOfEOS 2000 and 2001
+    # ->this first two year must be checked
+    YearOfEOS2check = df_month["YearOfEOS"].sort_values().unique()[0:2]
+    for year2check in YearOfEOS2check:
+        month_list = df_month[df_month["YearOfEOS"] == year2check]["Month"].unique()
+        if len(month_list) != len(months):
+            df_month = df_month[df_month["YearOfEOS"] != year2check]
+
+
     df_month.to_csv(os.path.join(dirOut, config.AOI + '_monthly_features.csv'), index=False)
 
 
@@ -187,7 +197,7 @@ def LoadLabel_Exclude_Missing(config, save_csv = True, plot_fig= False, verbose=
     if verbose:
         print('**************')
     if save_csv:
-        stats.to_csv(os.path.join(config.output_dir, config.AOI + '_stats_missing_excluded.csv'), index=False)
+        stats.to_csv(os.path.join(config.output_dir, config.AOI + '_stats_loaded.csv'), index=False)
     if plot_fig:
         #plot remaining regioms
         g = sns.relplot(
