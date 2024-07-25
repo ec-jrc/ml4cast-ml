@@ -91,7 +91,9 @@ def monitor_condor_q(time_step_minutes, submitter, config, run_name):
         jobRequested = len(df)
     else:
         with open(fn_output, 'a') as f:
+            f.write('Check at: ' + str(datetime.datetime.now()) + '\n')
             f.write('Jobs submitted: ' + str(jobRequested) + '\n')
+            print('Check at: ' + str(datetime.datetime.now()))
             print('Jobs submitted: ' + str(jobRequested))
     with open(fn_output, 'a') as f:
         f.write('Jobs in que: ' + str(len(df)) + '\n')
@@ -125,6 +127,7 @@ if __name__ == '__main__':
     run_name: a name that will be used to create output directory
     config_fn: the json file with essential info of the data (variables, phenology, crops to be included, etc)
     forecastingMonths: a list of forecasting times (remember that month 1 is the month of SOS)
+    runType: can be "tuning" (double loop) or "fast_tuning" (only outer loop, no error stats, much faster)
     tune_on_condor: boolean, how to tune: sequentially on a machine or parallel on bdap
     
     If condor run is requested it set up a condor monitoring routine (monitor_condor_q) to follow progress
@@ -143,7 +146,7 @@ if __name__ == '__main__':
         tune_on_condor = False
     else:
         config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-        run_name = 'test_quick'
+        run_name = 'month5and7'
         runType = 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = True
     # the class mlSettings of a10_config sets all the possible configuration to be tested.
@@ -157,10 +160,10 @@ if __name__ == '__main__':
 
     config = a10_config.read(config_fn, run_name, run_type=runType)
     forecastingMonths = config.forecastingMonths
-
-    tuner.tune(run_name, config_fn, tune_on_condor, runType)
+    spec_files_list = tuner.tuneA(run_name, config_fn, tune_on_condor, runType)
+    tuner.tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list)
     if tune_on_condor:
         print('Condor runs launched, start the monitoring')
         # Start the monitoring loop in a separate thread to avoid blocking the main program
-        thread = threading.Thread(target=monitor_condor_q, args=(1, 'ml4castproc', config, run_name)) #60 is min to wait for checking
+        thread = threading.Thread(target=monitor_condor_q, args=(60, 'ml4castproc', config, run_name)) #60 is min to wait for checking
         thread.start()

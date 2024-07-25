@@ -28,14 +28,14 @@ def remove_files(path):
 
 
 
-def tuneA(run_name, config_fn, tune_on_condor, runType):
+def tune(run_name, config_fn, tune_on_condor, runType):
     """
     PART A is run locally to generate data and spec files
     PART B tune each of the spec file and produce the output. it can be run locally or on HT Condor depending on tune_on_condor
     """
     # ----------------------------------------------------------------------------------------------------------
     # PART A
-
+    start_time = time.time()
     # load region specific data info
     config = a10_config.read(config_fn, run_name, run_type=runType)
     forecastingMonths = config.forecastingMonths
@@ -44,7 +44,8 @@ def tuneA(run_name, config_fn, tune_on_condor, runType):
     Path(config.models_dir).mkdir(parents=True, exist_ok=True)
     Path(config.models_spec_dir).mkdir(parents=True, exist_ok=True)
     Path(config.models_out_dir).mkdir(parents=True, exist_ok=True)
-
+    if tune_on_condor:
+        dir_condor_submit = config.models_dir
     # load model configurations to be tested
     modelSettings = a10_config.mlSettings(forecastingMonths=forecastingMonths) #[3,6]
 
@@ -66,15 +67,10 @@ def tuneA(run_name, config_fn, tune_on_condor, runType):
     # prepare json files specifying the details of each run to be tested
     c100_save_model_specs.save_model_specs(config, modelSettings)
     # print(config.__dict__)
-    spec_files_list = glob.glob(os.path.join(config.models_spec_dir, '*.json'))
-    return spec_files_list
 
-def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
     # ----------------------------------------------------------------------------------------------------------
     # PART B
-    start_time = time.time()
-    config = a10_config.read(config_fn, run_name, run_type=runType)
-
+    spec_files_list = glob.glob(os.path.join(config.models_spec_dir, '*.json'))
     if tune_on_condor == False:
         # get the produced spec file list
         for fn in spec_files_list:
@@ -84,7 +80,6 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
         print("--- %s seconds ---" % (time.time() - start_time))
     else:
         # running with condor
-        dir_condor_submit = config.models_dir
         # make the task list (id, filename full path)
         fn_condor_task_list = 'HT_condor_task_arguments.txt'
         condor_task_list_fn = os.path.join(config.models_dir, fn_condor_task_list)

@@ -47,6 +47,42 @@ def gather_output(config):
         print('There is no a single output file')
     print('End of printing missing files')
 
+
+def compare_fast_outputs(config, n, metric2use='rRMSE_p'):  # RMSE_p' #'R2_p'
+    # get some vars from mlSettings class
+    mlsettings = a10_config.mlSettings(forecastingMonths=0)
+    # includeTrendModel = True   #for Algeria run ther is no trend model
+    # addCECmodel = False #only for South Africa
+
+    analysisOutputDir = os.path.join(config.models_out_dir, 'Analysis')
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', 400)  # width is = 400
+
+    if metric2use == 'R2_p':
+        sortAscending = False
+    elif metric2use == 'RMSE_p':
+        sortAscending = True
+    elif metric2use == 'RMSE_val':
+        sortAscending = True
+    elif metric2use == 'rRMSE_p':
+        sortAscending = True
+    else:
+        print('The metric is not coded, compare_outputs cannot be executed')
+        sys.exit()
+    var4time = 'forecast_time'
+
+    mo = pd.read_csv(analysisOutputDir + '/' + 'all_model_output.csv')
+    # get best n ML configurations by lead time, crop type and y var PLUS benchmarks
+    moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
+    bn = moML.groupby(['Crop', var4time]).apply(
+        lambda x: x.sort_values([metric2use], ascending=sortAscending).head(n)).reset_index(drop=True)
+    # always add the benchmarks
+
+    bn = bn.sort_values([var4time, 'Crop', metric2use], \
+                        ascending=[True, True, sortAscending])
+    bn.to_csv(analysisOutputDir + '/' + 'ML_models_to_run_with_tuning.csv', index=False)
+    return  bn['runID'].tolist()
+
 def compare_outputs (config, metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
     #get some vars from mlSettings class
     mlsettings = a10_config.mlSettings(forecastingMonths=0)
