@@ -142,9 +142,9 @@ class DataMixin:
             columns=['AU_code', 'year', 'Yield'] + feature_names)
         myID = self.uset['runID']
         myID = f'{myID:06d}'
-        if run2get_mres_only == False:
-            data.to_csv(os.path.join(config.models_out_dir, 'ID_' + str(myID) +
-                                 '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] + '_yx_preprocData.csv'), index=False)
+        # if run2get_mres_only == False:
+        #     data.to_csv(os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+        #                          '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] + '_yx_preprocData.csv'), index=False)
         # if runType == 'opeForecast':
         #     # yxData = yxData[yxData'['Year'] == year_out]
         #     ind = groups == year_out
