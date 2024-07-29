@@ -77,11 +77,11 @@ def monitor_condor_q(time_step_minutes, submitter, config, run_name):
             with open(fn_output, 'a') as f:
                 f.write(str(len(new_file_list)) + ' files with no output:' + '\n')
                 f.write("List of files with no output:" + '\n')
-                for i in spec_files_list:
+                for i in new_file_list:
                     f.write(i + '\n')
             print(str(len(new_file_list)) + ' files with no output:')
             print('List of files with no output:')
-            print(*spec_files_list, sep='\n')
+            print(*new_file_list, sep='\n')
         break
     with open(fn_output, 'a') as f:
         f.write('Condor stats on ' + str(datetime.datetime.now()) + '\n')
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     # USER PARAMS
     # be care forecstingMonths is in config!
     # month X means that all months up to X (included) are used, so this is possible in month X+1
-    env = 'pc'  # ['pc','jeo']
+    env = 'jeo'  # ['pc','jeo']
     if env == 'pc':
         config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json' #r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
         run_name = 'months5and7'#'test_quick'
@@ -146,10 +146,10 @@ if __name__ == '__main__':
         tune_on_condor = False
     else:
         config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-        run_name = 'test_quick'
+        run_name = 'months5and7'
         runType = 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = True
-        time_step_check = 1 #in minutes
+        time_step_check = 30 #in minutes
     # the class mlSettings of a10_config sets all the possible configuration to be tested.
     # The user can reduce the numbers of possible configuration in a given run by editing
     # the function config_reducer in  a10_config
