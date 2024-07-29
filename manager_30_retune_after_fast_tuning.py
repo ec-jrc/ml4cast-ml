@@ -21,20 +21,22 @@ if __name__ == '__main__':
     env = 'pc' #['pc','jeo']
     if env == 'pc':
         config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'  # r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
-        run_name = 'test_quick'  # 'test_quick'
-        runType = 'fast_tuning'  # 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
+        run_name = 'months5and7'  # 'test_quick'
+        # runType = 'fast_tuning'  # 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = False
     else:
         config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
         run_name = 'month5and7'
-        runType = 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
+        # runType = 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = True
     # END OF USER PARAMS
+
+
     print('Make sure that all output files were produced (as confirmed by manager_20_tune. If not rerun manager_20_tune')
     # pro = input('Type Y to proceed\n')
     # if pro != 'Y':
     #     sys.exit()
-    config = a10_config.read(config_fn, run_name, run_type=runType)
+    config = a10_config.read(config_fn, run_name, run_type='fast_tuning') #only to get where the fast tuning was stored
     out_fast = config.models_out_dir
     F100_analyze_hindcast_output.gather_output(config)
     runIDs2rerun = F100_analyze_hindcast_output.compare_fast_outputs(config, n, metric2use=metric)

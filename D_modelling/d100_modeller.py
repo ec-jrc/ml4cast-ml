@@ -332,7 +332,7 @@ class YieldModeller(DataMixin, object):
     def validate(self, hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, runTimeH, featureNames,
                  selected_features_names, prct_selected, n_selected, avg_scoring_metric_on_val, config, runType, save_file=True,
                  save_figs=False):
-        if runType == 'fast_tuning':
+        if ((runType == 'fast_tuning') and (not (self.uset['algorithm'] in ['Null_model', 'Trend', 'PeakNDVI']))):
             lbl = 'n.a., fast_tuning'
             error_spatial = {'Pred_R2': lbl, 'Pred_MAE': lbl, 'rel_Pred_MAE':lbl, 'Pred_ME': lbl, 'Pred_RMSE':  lbl, 'rel_Pred_RMSE': lbl}
             error_overall = {'Pred_R2': lbl, 'Pred_MAE': lbl, 'rel_Pred_MAE': lbl, 'Pred_ME': lbl, 'Pred_RMSE': lbl, 'rel_Pred_RMSE': lbl}
