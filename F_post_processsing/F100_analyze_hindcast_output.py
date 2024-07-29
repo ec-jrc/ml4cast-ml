@@ -83,7 +83,7 @@ def compare_fast_outputs(config, n, metric2use='rRMSE_p'):  # RMSE_p' #'R2_p'
     bn.to_csv(analysisOutputDir + '/' + 'ML_models_to_run_with_tuning.csv', index=False)
     return  bn['runID'].tolist()
 
-def compare_outputs (config, metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
+def compare_outputs (config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0', metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
     #get some vars from mlSettings class
     mlsettings = a10_config.mlSettings(forecastingMonths=0)
     # includeTrendModel = True   #for Algeria run ther is no trend model
@@ -134,7 +134,7 @@ def compare_outputs (config, metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
     e100_eval_figs.bars_by_forecast_time(b1, metric2use, mlsettings, var4time, analysisOutputDir)
 
     # plot scatter of Ml and bechmark, on eplot per crop and forecasting time
-    e100_eval_figs.scatter_plots(b1, config, var4time, analysisOutputDir)
+    e100_eval_figs.scatter_plots_and_maps(b1, config, var4time, analysisOutputDir,fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column=gdf_gaul0_column)
 
     print('Compare output ended')
 

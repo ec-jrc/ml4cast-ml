@@ -1,5 +1,6 @@
 import sklearn.metrics as metrics
 import numpy as np
+import pandas as pd
 
 def mean_error_nan(y_true, y_pred):
     y_true = np.array(y_true)
@@ -134,7 +135,14 @@ def allStats_spatial(mRes):
     return res
 
 
-
+def statsByAdmin(mRes):
+    avgs = mRes.groupby('AU_code').mean()
+    rmse = mRes.groupby('AU_code').apply(lambda x: rmse_nan(x['yLoo_true'], x['yLoo_pred']))
+    rmse = rmse.to_frame('rmse')
+    rmse_rrmse = pd.merge(rmse, avgs, left_index=True, right_index=True)
+    rmse_rrmse['rrmse_prct'] = rmse_rrmse['rmse']/rmse_rrmse['yLoo_true']*100
+    rmse_rrmse.drop(['yLoo_true', 'yLoo_pred', 'Year'], axis=1, inplace=True)
+    return rmse_rrmse.reset_index()
 
 def meanAUR2(mRes):
     # Compute the mean of the tempral R2 computed by AU

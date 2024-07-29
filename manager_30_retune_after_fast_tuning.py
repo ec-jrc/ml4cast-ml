@@ -33,9 +33,9 @@ if __name__ == '__main__':
 
 
     print('Make sure that all output files were produced (as confirmed by manager_20_tune. If not rerun manager_20_tune')
-    # pro = input('Type Y to proceed\n')
-    # if pro != 'Y':
-    #     sys.exit()
+    pro = input('Type Y to proceed\n')
+    if pro != 'Y':
+        sys.exit()
     config = a10_config.read(config_fn, run_name, run_type='fast_tuning') #only to get where the fast tuning was stored
     out_fast = config.models_out_dir
     F100_analyze_hindcast_output.gather_output(config)
