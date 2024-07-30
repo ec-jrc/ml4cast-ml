@@ -114,7 +114,10 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                         new_file_list.append(el)
                 spec_files_list = new_file_list
                 print('List of files with no output:')
-                print(*spec_files_list, sep='\n')
+                scount = 0
+                for s in spec_files_list:
+                    print(str(scount), s)
+                    scount = scount + 1
             else:
                 sys.exit('Tuner terminated by user')
 
