@@ -1,3 +1,4 @@
+import sys
 from F_post_processsing import F100_analyze_hindcast_output
 from A_config import a10_config
 
@@ -6,8 +7,9 @@ if __name__ == '__main__':
     # USER PARAMS
     metric = 'rRMSE_p' #metric for best model selection
     country_name_in_shp_file = 'South Africa'
-    env = 'pc' #['pc','jeo']
-    if env == 'pc':
+    # env = 'pc' #['pc','jeo']
+    # if env == 'pc':
+    if 'win' in sys.platform:
         # config_fn = r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
         # config_fn = r'V:\foodsec\Projects\SNYF\ZA_test_new_code\ZAsummer_config.json'
         # run_name = 'RUN_final_jeo_ndvi_geoterra'

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import sys
 
 from A_config import a10_config
 from B_preprocess import b100_load
@@ -25,8 +26,9 @@ if __name__ == '__main__':
     forecastingYear = 2023  # This year refer to time of EOS
     metric_for_model_selection = 'RMSE_p'  # 'RMSE_val' MUST BE USED
 
-    env = 'pc'  # ['pc','jeo']
-    if env == 'pc':
+    #env = 'pc'  # ['pc','jeo']
+    #if env == 'pc':
+    if 'win' in sys.platform:
         config_fn = r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
         run_name = 'months56'
         tune_on_condor = False
@@ -37,11 +39,7 @@ if __name__ == '__main__':
     # END OF USER PARAMS
     ##########################################################################################
 
-
-
-    # END OF USER SETTINGS ##########################################################
-
-    runType = 'opeForecast'  # ['tuning', 'opeForecast']
+    runType = 'opeForecast'
     start_time = time.time()
     # load region specific data info
     config = a10_config.read(config_fn, run_name)

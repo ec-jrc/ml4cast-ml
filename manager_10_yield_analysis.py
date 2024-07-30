@@ -10,8 +10,9 @@ if __name__ == '__main__':
     ##########################################################################################
     # USER PARAMS
     country_name_in_shp_file = 'South Africa' #'Benin' #'South Africa'
-    env = 'pc'  # ['pc','jeo']
-    if env == 'pc':
+    # env = 'pc'  # ['pc','jeo']
+    # if env == 'pc':
+    if 'win' in sys.platform:
         fn_shape_gaul1 = r'F:\DATA\ASAP ref data\2023 06\gaul1_asap_v04\gaul1_asap.shp'
         #config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\BE\main\Maize_(corn)_WC-Benin-ASAP.json'
         config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
