@@ -187,13 +187,14 @@ class mlSettings:
                            'max_depth': [10, 20, 40],
                            'n_estimators': [100, 250, 500],
                            'min_samples_split': np.linspace(0.1, 0.8, 6, endpoint=True).tolist()},
-                       XGBoost = {'learning_rate': [0.01,0.05, 0.1, 0.2, 0.3],
-                                  'max_depth': [2, 4, 6, 8, 10, 12],
-                                  'min_child_weight': [1, 3, 5, 10],
-                                  'gamma': [0, 1, 2, 4],
-                                  'lambda': [0.5, 1, 2, 4],
-                                  'subsample': [0.25, 0.5, 0.75, 1.0],
-                                  'n_estimators': [50, 100, 250, 500, 750]} #new 2024
+                       # https://stackoverflow.com/questions/69786993/tuning-xgboost-hyperparameters-with-randomizedsearchcv
+                       XGBoost = {'learning_rate': [0.05, 0.1, 0.2],
+                                  'max_depth': [3, 6, 9],
+                                  'min_child_weight': [1, 5, 10],
+                                  # 'gamma': [0, 1, 2, 4],
+                                  # 'lambda': [0.5, 1, 2, 4],
+                                  # 'subsample': [0.25, 0.5, 0.75, 1.0],
+                                  'n_estimators': [50, 100, 400, 800]} #new 2024
                                   #'gamma': [1, 2, 4, 6]}
                                  #'n_estimators': [50, 100, 250, 500],
                        )

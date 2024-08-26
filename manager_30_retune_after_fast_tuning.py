@@ -17,7 +17,7 @@ if __name__ == '__main__':
     """
     # USER PARAMS
     metric = 'RMSE_val' #metric for best model selection, RMSE_val is the only one avail in fast_tuning
-    n = 5 # ml models to rerun
+    n = 4 # ml models to rerun
     # env = 'pc' #['pc','jeo']
     # if env == 'pc':
     if 'win' in sys.platform:
