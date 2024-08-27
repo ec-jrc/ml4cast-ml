@@ -27,7 +27,7 @@ if __name__ == '__main__':
         tune_on_condor = False
     else:
         config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-        run_name = 'month5and7'
+        run_name = 'months5onlyMaize' #'month5and7'
         # runType = 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = True
     # END OF USER PARAMS

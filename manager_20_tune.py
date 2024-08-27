@@ -77,11 +77,11 @@ def monitor_condor_q(time_step_minutes, submitter, config, run_name):
         if len(new_file_list) > 0:
             with open(fn_output, 'a') as f:
                 f.write(str(len(new_file_list)) + ' files with no output:' + '\n')
-                f.write("List of files with no output:" + '\n')
+                f.write("List of files with no output (or to be rerun in case of previous fast tuning):" + '\n')
                 for i in new_file_list:
                     f.write(i + '\n')
             print(str(len(new_file_list)) + ' files with no output:')
-            print('List of files with no output:')
+            print('List of files with no output (or to be rerun in case of previous fast tuning):')
             print(*new_file_list, sep='\n')
         break
     with open(fn_output, 'a') as f:
@@ -144,11 +144,11 @@ if __name__ == '__main__':
     if 'win' in sys.platform:
         config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json' #r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
         run_name = 'months5and7'#'test_quick'
-        runType = 'fast_tuning'#'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
+        runType = 'fast_tuning' #'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = False
     else:
         config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-        run_name = 'months5and7'
+        run_name = 'months5onlyMaize'
         runType = 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = True
         time_step_check = 30 #in minutes
