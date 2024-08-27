@@ -37,87 +37,87 @@ def monitor_condor_q(time_step_minutes, submitter, config, run_name):
             f.write('\n')
             print('ERR', p.stderr)
         #raise Exception('Step subprocess error')
-    # print(p.stdout)
-    # make it a df
-    # Split the string into lines
-    lines = p.stdout.splitlines()
-    # Define a list to store data for the DataFrame
-    data_list = []
-    # Loop through each line and extract relevant information
-    for line in lines:
-        # Split the line by whitespace (considering multiple spaces with `\s+`)
-        parts = line.split()
-        data_list.append([parts[0], int(parts[1]), parts[2], int(parts[3])])
-    # Create the DataFrame with column names
-    df = pd.DataFrame(data_list, columns=["BatchName", "ProcID", "GlobalJobId", "Status"])
-    # map meaning of state
-    statesDict = {1: 'Idle', 2: 'Running', 3: 'Removed', 4: 'Completed', 5: 'Held', 6: 'Transferring'}
-    df['StatusString'] = df['Status'].map(statesDict)
-    if len(df) == 0:
-        with open(fn_output, 'a') as f:
-            f.write("###################################" + '\n')
-            f.write("nothing on Condor anymore, the monitoring will stop" + '\n')
-            f.write("--- %s Hours ---" % str((time.time() - start_time)/(60*60)))
-            f.write('\n')
-        print('nothing on Condor anymore, the monitoring will stop')
-        print("--- %s Hours ---" % str((time.time() - start_time)/(60*60)))
-        # here add a check that all specs have a corresponding output
-        spec_files_list = glob.glob(os.path.join(config.models_spec_dir, '*.json'))
-        new_file_list = []
-        for el in spec_files_list:
-            # make the expected output name
-            with open(el, 'r') as fp:
-                uset = json.load(fp)
-            myID = uset['runID']
-            myID = f'{myID:06d}'
-            fn_to_check = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
-                                       '_crop_' + uset['crop'] + '_Yield_' + uset['algorithm'] + '_output.csv')
-            if not os.path.isfile(fn_to_check):
-                new_file_list.append(el)
-        if len(new_file_list) > 0:
-            with open(fn_output, 'a') as f:
-                f.write(str(len(new_file_list)) + ' files with no output:' + '\n')
-                f.write("List of files with no output (or to be rerun in case of previous fast tuning):" + '\n')
-                for i in new_file_list:
-                    f.write(i + '\n')
-            print(str(len(new_file_list)) + ' files with no output:')
-            print('List of files with no output (or to be rerun in case of previous fast tuning):')
-            print(*new_file_list, sep='\n')
-        break
-    with open(fn_output, 'a') as f:
-        f.write('Condor stats on ' + str(datetime.datetime.now()) + '\n')
-    # print('Condor stats on ' + str(datetime.datetime.now()))
-    if first_check:
-        first_check = False
-        jobRequested = len(df)
     else:
+        # make it a df
+        # Split the string into lines
+        lines = p.stdout.splitlines()
+        # Define a list to store data for the DataFrame
+        data_list = []
+        # Loop through each line and extract relevant information
+        for line in lines:
+            # Split the line by whitespace (considering multiple spaces with `\s+`)
+            parts = line.split()
+            data_list.append([parts[0], int(parts[1]), parts[2], int(parts[3])])
+        # Create the DataFrame with column names
+        df = pd.DataFrame(data_list, columns=["BatchName", "ProcID", "GlobalJobId", "Status"])
+        # map meaning of state
+        statesDict = {1: 'Idle', 2: 'Running', 3: 'Removed', 4: 'Completed', 5: 'Held', 6: 'Transferring'}
+        df['StatusString'] = df['Status'].map(statesDict)
+        if len(df) == 0:
+            with open(fn_output, 'a') as f:
+                f.write("###################################" + '\n')
+                f.write("nothing on Condor anymore, the monitoring will stop" + '\n')
+                f.write("--- %s Hours ---" % str((time.time() - start_time)/(60*60)))
+                f.write('\n')
+            print('nothing on Condor anymore, the monitoring will stop')
+            print("--- %s Hours ---" % str((time.time() - start_time)/(60*60)))
+            # here add a check that all specs have a corresponding output
+            spec_files_list = glob.glob(os.path.join(config.models_spec_dir, '*.json'))
+            new_file_list = []
+            for el in spec_files_list:
+                # make the expected output name
+                with open(el, 'r') as fp:
+                    uset = json.load(fp)
+                myID = uset['runID']
+                myID = f'{myID:06d}'
+                fn_to_check = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+                                           '_crop_' + uset['crop'] + '_Yield_' + uset['algorithm'] + '_output.csv')
+                if not os.path.isfile(fn_to_check):
+                    new_file_list.append(el)
+            if len(new_file_list) > 0:
+                with open(fn_output, 'a') as f:
+                    f.write(str(len(new_file_list)) + ' files with no output:' + '\n')
+                    f.write("List of files with no output (or to be rerun in case of previous fast tuning):" + '\n')
+                    for i in new_file_list:
+                        f.write(i + '\n')
+                print(str(len(new_file_list)) + ' files with no output:')
+                print('List of files with no output (or to be rerun in case of previous fast tuning):')
+                print(*new_file_list, sep='\n')
+            break
         with open(fn_output, 'a') as f:
-            f.write('Check at: ' + str(datetime.datetime.now()) + '\n')
-            f.write('Jobs submitted: ' + str(jobRequested) + '\n')
-            print('Check at: ' + str(datetime.datetime.now()))
-            print('Jobs submitted: ' + str(jobRequested))
-    with open(fn_output, 'a') as f:
-        f.write('Jobs in que: ' + str(len(df)) + '\n')
-        f.write('Jobs running: ' + str(len(df[df['StatusString']=='Running']))+ '\n')
-        f.write('Jobs idle: ' + str(len(df[df['StatusString'] == 'Idle']))+ '\n')
-        f.write('Jobs held: ' + str(len(df[df['StatusString'] == 'Held']))+ '\n')
-    print('Jobs in que: ' + str(len(df)))
-    print('Jobs running: ' + str(len(df[df['StatusString']=='Running'])))
-    print('Jobs idle: ' + str(len(df[df['StatusString'] == 'Idle'])))
-    print('Jobs held: ' + str(len(df[df['StatusString'] == 'Held'])))
-    if len(df[df['StatusString'] == 'Held']) > 0:
+            f.write('Condor stats on ' + str(datetime.datetime.now()) + '\n')
+        # print('Condor stats on ' + str(datetime.datetime.now()))
+        if first_check:
+            first_check = False
+            jobRequested = len(df)
+        else:
+            with open(fn_output, 'a') as f:
+                f.write('Check at: ' + str(datetime.datetime.now()) + '\n')
+                f.write('Jobs submitted: ' + str(jobRequested) + '\n')
+                print('Check at: ' + str(datetime.datetime.now()))
+                print('Jobs submitted: ' + str(jobRequested))
         with open(fn_output, 'a') as f:
-            f.write('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' + '\n')
-            f.write(print('JOBS HELD') + '\n')
-            f.write(f[df['StatusString'] == 'Held'].to_string() + '\n')
-            f.write('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'+ '\n')
-        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-        print('JOBS HELD')
-        print(df[df['StatusString'] == 'Held'])
-        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    # print(df)
-    # print('here')
-    # Sleep for n minutes
+            f.write('Jobs in que: ' + str(len(df)) + '\n')
+            f.write('Jobs running: ' + str(len(df[df['StatusString']=='Running']))+ '\n')
+            f.write('Jobs idle: ' + str(len(df[df['StatusString'] == 'Idle']))+ '\n')
+            f.write('Jobs held: ' + str(len(df[df['StatusString'] == 'Held']))+ '\n')
+        print('Jobs in que: ' + str(len(df)))
+        print('Jobs running: ' + str(len(df[df['StatusString']=='Running'])))
+        print('Jobs idle: ' + str(len(df[df['StatusString'] == 'Idle'])))
+        print('Jobs held: ' + str(len(df[df['StatusString'] == 'Held'])))
+        if len(df[df['StatusString'] == 'Held']) > 0:
+            with open(fn_output, 'a') as f:
+                f.write('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' + '\n')
+                f.write(print('JOBS HELD') + '\n')
+                f.write(f[df['StatusString'] == 'Held'].to_string() + '\n')
+                f.write('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'+ '\n')
+            print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            print('JOBS HELD')
+            print(df[df['StatusString'] == 'Held'])
+            print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        # print(df)
+        # print('here')
+        # Sleep for n minutes
     time.sleep(time_step_minutes*60)
 
 
@@ -148,8 +148,8 @@ if __name__ == '__main__':
         tune_on_condor = False
     else:
         config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-        run_name = 'months5onlyMaize'
-        runType = 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
+        run_name = 'TUNE_months5onlyMaizeStandardTune'
+        runType = 'tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = True
         time_step_check = 30 #in minutes
     # the class mlSettings of a10_config sets all the possible configuration to be tested.

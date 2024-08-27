@@ -14,7 +14,7 @@ class read:
     self.AOI = jdict['AOI']
     self.year_start = int(jdict['year_start'])
     self.year_end = int(jdict['year_end'])
-    self. forecastingMonths = jdict['forecastingMonths']
+    self.forecastingMonths = jdict['forecastingMonths']
     self.crops = jdict['crops']
     self.afi = jdict['afi']
 

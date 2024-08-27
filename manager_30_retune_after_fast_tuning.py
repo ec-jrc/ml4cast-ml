@@ -64,7 +64,7 @@ if __name__ == '__main__':
         print('Condor runs launched, start the monitoring')
         # Start the monitoring loop in a separate thread to avoid blocking the main program
         thread = threading.Thread(target=monitor_condor_q,
-                                  args=(1, 'ml4castproc', config, run_name))  # 60 is min to wait for checking
+                                  args=(10, 'ml4castproc', config, run_name))  # 60 is min to wait for checking
         thread.start()
     print('end')
 
