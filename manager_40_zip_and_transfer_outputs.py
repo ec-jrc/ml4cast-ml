@@ -20,7 +20,7 @@ if __name__ == '__main__':
     condor_log_root = '/mnt/jeoproc/log/ml4castproc/' + config.AOI + '/'
 
     # zip and transfer logs
-    output_filename = os.path.join(jeo_share_root, config.AOI + '_logs')
+    output_filename = os.path.join(jeo_share_root, config.AOI + '_' + run_name + '_logs')
     dir_name = condor_log_root
     shutil.make_archive(output_filename, 'zip', dir_name)
 
