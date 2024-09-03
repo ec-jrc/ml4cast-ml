@@ -143,7 +143,7 @@ if __name__ == '__main__':
     # if env == 'pc':
     if 'win' in sys.platform:
         config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json' #r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
-        run_name = 'months5and7'#'test_quick'
+        run_name = 'months5and7zz'#'test_quick'
         runType = 'fast_tuning' #'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = False
     else:
