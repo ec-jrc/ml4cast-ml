@@ -1,5 +1,6 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import cm
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -27,10 +28,11 @@ def output_row_to_ML_info_string(df, metric2use):
     dr = df.Data_reduction.values[0] if df.Data_reduction.values[0] != 'none' else ''
     info_string3 = addStringIfNotEmpty('', dr)
     fs = df.Ft_selection.values[0] if df.Ft_selection.values[0] != 'none' else ''
-    info_string3 = addStringIfNotEmpty('', fs)
+    info_string3 = addStringIfNotEmpty(info_string3, fs)
     prct= round(df.Prct_selected_fit.values[0]) if fs != '' else ''
     info_string3 = addStringIfNotEmpty(info_string3, prct, sep=':')
     return [info_string0, info_string1, info_string2, info_string3]
+
 def bars_by_forecast_time(b1, metric2use, mlsettings, var4time, outputDir):
     # in order to assign the same colors and keep a defined order I have to do some workaround
     b1['tmp_est'] = b1['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
@@ -82,6 +84,8 @@ def scatter_plots_and_maps(b1, config, var4time, OutputDir, fn_shape_gaul1, coun
         for t in forcTimes:
             fig, axs = plt.subplots(2, 2, figsize=(10, 10), constrained_layout=True)
             axs = axs.flatten()
+            fig2, axs2 = plt.subplots(2, 2, figsize=(10, 10), constrained_layout=True)
+            axs2 = axs2.flatten()
             df_c_t = b1[(b1['Crop'] == c) & (b1[var4time] == t)].copy()
             sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
             df_c_t['pltOrder'] = df_c_t['tmp_est'].map(sort_dict)
@@ -107,7 +111,7 @@ def scatter_plots_and_maps(b1, config, var4time, OutputDir, fn_shape_gaul1, coun
                     x = df[df['AU_code'] == au_code]['yLoo_true'].values
                     y = df[df['AU_code'] == au_code]['yLoo_pred'].values
                     lbl = df_regNames[df_regNames['AU_code'] == au_code.astype('int')]['AU_name'].values[0]
-                    axs[index].scatter(x, y, label=lbl)
+                    axs[index].scatter(x, y, label=lbl, edgecolor='k', linewidth=0.5)
                     axs[index].plot(lims, lims, color='black', linewidth=0.5)
                     axs[index].set_title(est + ',R2p=' + str(np.round(r2p, 2)))
                     axs[index].set_xlim(lims)
@@ -115,12 +119,75 @@ def scatter_plots_and_maps(b1, config, var4time, OutputDir, fn_shape_gaul1, coun
                     axs[index].set_xlabel('Obs')
                     axs[index].set_ylabel('Pred')
                     axs[index].legend(frameon=False, loc='upper left')
+                color = iter(cm.gist_ncar(np.linspace(0, 1, len(df['Year'].unique())))) # rainbow too small, gist_rainbow
+                for yr in df['Year'].unique():
+                    clr = next(color)
+                    x = df[df['Year'] == yr]['yLoo_true'].values
+                    y = df[df['Year'] == yr]['yLoo_pred'].values
+                    lbl = str(int(yr))
+                    axs2[index].scatter(x, y, label=lbl, c=clr, edgecolor='k', linewidth=0.5)
+                    axs2[index].plot(lims, lims, color='black', linewidth=0.5)
+                    axs2[index].set_title(est + ',R2p=' + str(np.round(r2p, 2)))
+                    axs2[index].set_xlim(lims)
+                    axs2[index].set_ylim(lims)
+                    axs2[index].set_xlabel('Obs')
+                    axs2[index].set_ylabel('Pred')
+                    axs2[index].legend(frameon=False, ncol=4, loc='upper left', prop={'size':10}, handletextpad=0.005, columnspacing=0.02, labelspacing=0.05)
             fig.tight_layout()
-            plt.savefig(OutputDir + '/' + 'all_model_best1_forecast_time_' + str(t) + '_' + c +'_scatter.png')
+            fig2.tight_layout()
+            fig.savefig(OutputDir + '/' + 'all_model_best1_forecast_time_' + str(t) + '_' + c +'_scatter_by_admin.png')
+            fig2.savefig(OutputDir + '/' + 'all_model_best1_forecast_time_' + str(t) + '_' + c + '_scatter_by_year.png')
             plt.close(fig)
+            plt.close(fig2)
 
-def map_errors(a, b, c):
-    print ('pippo')
+
+# def scatter_plots_and_maps(b1, config, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'): #onfig, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'
+#     df_regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
+#     crops = b1['Crop'].unique()
+#     forcTimes = b1[var4time].unique()
+#     fp = fn_shape_gaul1
+#     gdf = gpd.read_file(fp)
+#     gdf_gaul1_id = "asap1_id"
+#     for c in crops:
+#         for t in forcTimes:
+#             fig, axs = plt.subplots(2, 2, figsize=(10, 10), constrained_layout=True)
+#             axs = axs.flatten()
+#             df_c_t = b1[(b1['Crop'] == c) & (b1[var4time] == t)].copy()
+#             sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
+#             df_c_t['pltOrder'] = df_c_t['tmp_est'].map(sort_dict)
+#             df_c_t = df_c_t.sort_values('pltOrder').reset_index()
+#             # iterate over pandas df
+#             for index, row in df_c_t.iterrows():
+#                 # get run_id
+#                 runID = row['runID']
+#                 est = row['Estimator']
+#                 myID = f'{runID:06d}'
+#                 fn_spec = os.path.join(pathlib.Path(config.models_spec_dir), myID + '_' + c + '_' + est + '.json')
+#                 print(fn_spec)
+#                 df = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning' , run2get_mres_only=True)
+#                 statsByAdmin = d140_modelStats.statsByAdmin(df)
+#                 statsByAdmin = statsByAdmin.merge(df_regNames, how='left', left_on='AU_code', right_on='AU_code')
+#                 fig_name = OutputDir + '/' + 'all_model_best1_forecast_time_' + str(t) + '_' + c +'_AU_rrmse.png'
+#                 e50_yield_data_analysis.mapDfColumn(statsByAdmin, 'ASAP1_ID', 'rrmse_prct', 'AU_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
+#                 'rRMSE (%)', cmap='tab20b', minmax=None, fn_fig=fig_name, ax=None)
+#                 lims = [np.floor(np.min([df['yLoo_true'].values, df['yLoo_pred'].values])),
+#                         np.ceil(np.max([df['yLoo_true'].values, df['yLoo_pred'].values]))]
+#                 r2p = d140_modelStats.r2_nan(df['yLoo_true'].values, df['yLoo_pred'].values)
+#                 for au_code in df['AU_code'].unique():
+#                     x = df[df['AU_code'] == au_code]['yLoo_true'].values
+#                     y = df[df['AU_code'] == au_code]['yLoo_pred'].values
+#                     lbl = df_regNames[df_regNames['AU_code'] == au_code.astype('int')]['AU_name'].values[0]
+#                     axs[index].scatter(x, y, label=lbl)
+#                     axs[index].plot(lims, lims, color='black', linewidth=0.5)
+#                     axs[index].set_title(est + ',R2p=' + str(np.round(r2p, 2)))
+#                     axs[index].set_xlim(lims)
+#                     axs[index].set_ylim(lims)
+#                     axs[index].set_xlabel('Obs')
+#                     axs[index].set_ylabel('Pred')
+#                     axs[index].legend(frameon=False, loc='upper left')
+#             fig.tight_layout()
+#             plt.savefig(OutputDir + '/' + 'all_model_best1_forecast_time_' + str(t) + '_' + c +'_scatter.png')
+#             plt.close(fig)
 
 
 def accuracy_over_time(mRes, mCountryRes, filename=None):

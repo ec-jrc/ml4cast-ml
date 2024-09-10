@@ -22,15 +22,13 @@ if __name__ == '__main__':
     pd.set_option('display.max_columns', None)
     ##########################################################################################
     # USER PARAMS
-    forecastingMonth = 6  # month X means that all months up to X (included) are used, so this is possible in month X+1
+    forecastingMonth = 5  # month X means that all months up to X (included) are used, so this is possible in month X+1
     forecastingYear = 2023  # This year refer to time of EOS
     metric_for_model_selection = 'RMSE_p'  # 'RMSE_val' MUST BE USED
 
-    #env = 'pc'  # ['pc','jeo']
-    #if env == 'pc':
     if 'win' in sys.platform:
-        config_fn = r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
-        run_name = 'months56'
+        config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'  # r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
+        run_name = 'months5onlyMaizeStandardTune'
         tune_on_condor = False
     else:
         config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
@@ -51,9 +49,10 @@ if __name__ == '__main__':
     b100_load.build_features(config, runType)
 
     # Load model configuration to be tuned on all data
-    df_best = pd.read_csv(os.path.join(config.models_out_dir, 'all_model_output.csv'))
+    output_analysis_dir = os.path.join(config.models_out_dir, 'Analysis')
+    df_best = pd.read_csv(os.path.join(output_analysis_dir, 'all_model_output.csv'))
     print('####################################')
-    print('Using best conf file: ' + os.path.join(config.models_out_dir, 'all_model_output.csv'))
+    print('Using best conf file: ' + os.path.join(output_analysis_dir, 'all_model_output.csv'))
     print('make sure all is correct and updated')
     df_best_time = df_best[df_best['forecast_time'] == forecastingMonth]
     # Tune best model, lasso and peakNDVI on all data
