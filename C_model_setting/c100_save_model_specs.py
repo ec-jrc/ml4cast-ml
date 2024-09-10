@@ -49,7 +49,7 @@ def save_model_specs(config, modelSettings):
          modelSettings.doOHEs, feature_sets, modelSettings.feature_selections, modelSettings.dataReduction, modelSettings.addYieldTrend]
     combs = list(itertools.product(*a))
     # sort comb to have MRMR cases first, as they are the slowest
-    combs = sorted(combs, key=lambda x: x[5])
+    # combs = sorted(combs, key=lambda x: x[5])
 
     # And loop over
     for crop, algo, forecast_time, doOHE, feature_set, ft_sel, data_redct, addYieldTrend in combs:

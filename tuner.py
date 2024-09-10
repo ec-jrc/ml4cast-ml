@@ -26,7 +26,25 @@ def remove_files(path):
       # Skip directories
       pass
 
-
+def write_time_info(config, run_name):
+    fn_output = os.path.join(config.models_dir, 'time_info_readme_' + run_name + '.txt')
+    with open(fn_output, 'a') as f:
+        f.write('Year start: ' + str(config.year_start) + '\n')
+        f.write('Year end: ' + str(config.year_end) + '\n')
+        f.write('Forecasting months: ' + str(config.forecastingMonths) + '\n')
+        f.write('SOS: ' + str(config.sos) + '\n')
+        f.write('SOS month (month 1): ' + str(config.sosMonth) + '\n')
+        f.write('EOS: ' + str(config.eos) + '\n')
+        f.write('EOS month (last 1): ' + str(config.eosMonth) + '\n')
+        f.write('Calendar_Month, Forecasting_Month, Progress_from_months' + '\n')
+        if config.sosMonth < config.eosMonth:
+            cal_months = list(range(int(config.sosMonth), int(config.eosMonth+1)))
+        else:
+            cal_months = list(range(int(config.sosMonth), 12 + 1)) + list(range(1, int(config.eosMonth) + 1))
+        fm = 1
+        for cm in cal_months:
+            f.write(str(cm) + ', ' + str(fm) + ', ' + str(fm/len(cal_months)) + '\n')
+            fm = fm + 1
 
 def tuneA(run_name, config_fn, tune_on_condor, runType):
     """
@@ -59,6 +77,10 @@ def tuneA(run_name, config_fn, tune_on_condor, runType):
         json.dump(config.__dict__, fp, indent=4)
     ###################################################################################################################
     print(modelSettings.__dict__)
+
+    # write time information (sos, eos, months of tuning) in a time readme file in the tune directory
+    write_time_info(config, run_name)
+
     # Prepare input files
     b100_load.LoadPredictors_Save_Csv(config, runType)
     b100_load.build_features(config, runType)

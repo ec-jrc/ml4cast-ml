@@ -63,10 +63,10 @@ def build_features(config, runType):
     if runType == 'opeForecast':
         dirOut = config.ope_run_dir
 
-    sosDek = config.sos
-    eosDek = config.eos
-    sosMonth = int(np.ceil(sosDek/3)) # Take the full month of the dekad
-    eosMonth = int(np.ceil(eosDek/3)) #same here
+    # sosDek = config.sos
+    # eosDek = config.eos
+    sosMonth = config.sosMonth #int(np.ceil(sosDek/3)) # Take the full month of the dekad
+    eosMonth = config.eosMonth #int(np.ceil(eosDek/3)) #same here
     # open predictors
     fn = os.path.join(dirOut, config.AOI + '_predictors.csv')
     df = pd.read_csv(fn)

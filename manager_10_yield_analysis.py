@@ -25,6 +25,6 @@ if __name__ == '__main__':
     config = a10_config.read(config_fn, 'dummy_name')
 
     prct2retain = 100
-    # b50_yield_data_analysis.saveYieldStats(config, prct2retain=prct2retain)
-    # e50_yield_data_analysis.mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_column='name0', prct2retain=prct2retain)
+    b50_yield_data_analysis.saveYieldStats(config, prct2retain=prct2retain)
+    e50_yield_data_analysis.mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_column='name0', prct2retain=prct2retain)
     e50_yield_data_analysis.trend_anlysis(config)

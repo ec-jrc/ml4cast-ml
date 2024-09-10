@@ -14,7 +14,7 @@ class read:
     self.AOI = jdict['AOI']
     self.year_start = int(jdict['year_start'])
     self.year_end = int(jdict['year_end'])
-    self.forecastingMonths = jdict['forecastingMonths']
+    #self.forecastingMonths = jdict['forecastingMonths'] obsolete, now %
     self.crops = jdict['crops']
     self.afi = jdict['afi']
 
@@ -40,11 +40,25 @@ class read:
     self.ivars_units = jdict['ivars_units']
     self.sos = int(jdict['sos'])
     self.eos = int(jdict['eos'])
+    # take all the month where SOS fall in
+    self.sosMonth = int(np.ceil(self.sos / 3)) # note ceil makes it correct, think about it
+    # take all the month where SOS fall in
+    self.eosMonth = int(np.ceil(self.eos / 3))  # same here
     self.yield_units = jdict['yield_units']
     self.area_unit =jdict['area_unit']
     # factor that divide production values to get production in desired units
     # self.production_scaler =jdict['production_scaler']
-
+    # get forecasting months from season%
+    self.forecastingPrct = jdict['forecastingPrct']
+    if self.sosMonth < self.eosMonth:
+        real_months = list(range(int(self.sosMonth), int(self.eosMonth + 1)))
+    else:
+        real_months = list(range(int(self.sosMonth), 12 + 1)) + list(range(1, int(self.eosMonth) + 1))
+    id_months = np.array(range(1,len(real_months)+1))
+    prct_months = id_months/len(id_months)*100
+    self.forecastingMonths = []
+    for prct in self.forecastingPrct:
+        self.forecastingMonths = self.forecastingMonths + list([int(id_months[np.argmin(np.abs(prct_months-float(prct)))])])
 
 
 class mlSettings:

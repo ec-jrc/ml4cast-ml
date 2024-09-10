@@ -144,14 +144,14 @@ if __name__ == '__main__':
     if 'win' in sys.platform:
         config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json' #r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
         run_name = 'months5and7zz'#'test_quick'
-        runType = 'fast_tuning' #'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
+        runType = 'tuning' #'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = False
     else:
         config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
         run_name = 'TUNE_months5onlyMaizeStandardTune'
         runType = 'tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
         tune_on_condor = True
-        time_step_check = 30 #in minutes
+        time_step_check = 60 #in minutes
     # the class mlSettings of a10_config sets all the possible configuration to be tested.
     # The user can reduce the numbers of possible configuration in a given run by editing
     # the function config_reducer in  a10_config
