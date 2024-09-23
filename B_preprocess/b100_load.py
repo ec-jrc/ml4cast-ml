@@ -30,11 +30,11 @@ def LoadPredictors_Save_Csv(config, runType):
     # General part
     df = df[df['class_name']=='crop']
     df = df[df['classset_name'] == 'static masks']
-    # read the table with id and wilaya name
+    # read the table with id and region name
     regNames = pd.read_csv(os.path.join(dirIn, config.AOI + '_REGION_id.csv'))
     # now link it with AU_code and name
     df = pd.merge(df, regNames, left_on=['reg0_id'], right_on=['ASAP1_ID'])
-    # get first NDVI time and drop everything before
+    # get first NDVI or FPAR time and drop everything before
     minDate = df[(df['variable_name'] == 'NDVI') | (df['variable_name'] == 'FPAR')]['date'].min()
     df = df[df['date'] >= minDate]
     # fidf date, add a column with date
@@ -43,7 +43,8 @@ def LoadPredictors_Save_Csv(config, runType):
     df = df.drop(['var_id','classset_name','classesset_id','class_name','class_id','date'], axis=1)
     # add dekad of the year
     #df['dek'] = df['Date'].map(f_dek_utilities.f_datetime2dek)
-    # as of today (2024-07-23, SM no yet gap filled), SM may have missing data in 2002 and 2002, use linear interpolation to fix
+    # as of today (2024-07-23, SM no yet gap filled), SM may have missing data in 2001 and 2002, use linear interpolation to fix
+    # Now (2024 09 13) this is kept to run old versions, can be dismissed once th testing is finished
     for au in df['ASAP1_ID'].unique():
         df.loc[(df['ASAP1_ID'] == au) & (df['variable_name'] == 'soil_moisture'), 'mean'] =  df.loc[(df['ASAP1_ID'] == au) & (df['variable_name'] == 'soil_moisture'), 'mean'].interpolate(method='linear', axis=0)
         #df[(df['ASAP1_ID'] == au) & (df['variable_name'] == 'soil_moisture')]['interpol_SM'] = df[(df['ASAP1_ID'] == au) & (df['variable_name'] == 'soil_moisture')]['mean'].interpolate(method='linear', axis=0)

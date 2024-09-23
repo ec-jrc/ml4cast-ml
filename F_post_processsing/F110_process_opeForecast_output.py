@@ -34,18 +34,19 @@ def to_csv(config, uset, regions, forecasts, rMAE_p_hindcasting, runID=''):
                                 'fyield_rMAEp_hindcasting': rMAE_p_hindcasting,
                                 'fyield_percentile': np.nan,
                                 'avg_obs_yield': np.nan,
+                                'avg_obs_yield_last5yrs': np.nan,
                                 'min_obs_yield': np.nan,
                                 'max_obs_yield': np.nan,
                                 'fyield_diff_pct (last 5 yrs in data avail)': np.nan,
-                                'avg_obs_area': np.nan,
-                                'fproduction(fyield*avg_obs_area)': np.nan,
+                                'avg_obs_area_last5yrs': np.nan,
+                                'fproduction(fyield*avg_obs_area_last5yrs)': np.nan,
                                 'fproduction_percentile': np.nan,
                                 'algorithm': uset['algorithm'],
                                 'runID': runID})
 
     # get yield stats
-    stats = b100_load.LoadLabel_Exclude_Missing(config, save_csv = False, plot_fig= False, verbose= False)
-    # stats = pd.read_pickle(os.path.join(cst.odir, self.aoi, f'{self.aoi}_stats.pkl'))
+    #stats = b100_load.LoadLabel_Exclude_Missing(config, save_csv = False, plot_fig= False, verbose= False)
+    stats = b100_load.LoadLabel(config, save_csv=False, plot_fig=False)
     stats = stats[stats['Crop_name'] == uset['crop']]
 
     for region in regions:
@@ -57,16 +58,17 @@ def to_csv(config, uset, regions, forecasts, rMAE_p_hindcasting, runID=''):
             percentile_below(stats_region['Yield'], fyield_region)
         df_forecast.loc[df_forecast['Region_ID'] == region, 'Region_name'] = \
             stats_region.iloc[0]['AU_name']
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction(fyield*avg_obs_area)'] = \
+        df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction(fyield*avg_obs_area_last5yrs)'] = \
             df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield'] * stats_region['Area'][-5::].mean()
         df_forecast.loc[df_forecast['Region_ID'] == region, 'avg_obs_yield'] = stats_region['Yield'].mean()
+        df_forecast.loc[df_forecast['Region_ID'] == region, 'avg_obs_yield_last5yrs'] = stats_region['Yield'][-5::].mean() #avg_obs_yield_last5yrs
         df_forecast.loc[df_forecast['Region_ID'] == region, 'min_obs_yield'] = stats_region['Yield'].min()
         df_forecast.loc[df_forecast['Region_ID'] == region, 'max_obs_yield'] = stats_region['Yield'].max()
         df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield_diff_pct (last 5 yrs in data avail)'] = \
             100 * ((fyield_region - stats_region['Yield'][-5::].mean()) / stats_region['Yield'][-5::].mean()  )  # ADDED LAST 5 YEARS
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'avg_obs_area'] = stats_region['Area'][-5::].mean()
+        df_forecast.loc[df_forecast['Region_ID'] == region, 'avg_obs_area_last5yrs'] = stats_region['Area'][-5::].mean()
         df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction_percentile'] = \
-            percentile_below(stats_region['Production'], df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction(fyield*avg_obs_area)'].values)
+            percentile_below(stats_region['Production'], df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction(fyield*avg_obs_area_last5yrs)'].values)
 
     forecast_fn = os.path.join(config.ope_run_out_dir, datetime.datetime.today().strftime('%Y%m%d') + '_' +
                                uset['crop'] + '-forecast_time_' + str(uset['forecast_time']) + '_' + uset['algorithm'] +
@@ -75,21 +77,33 @@ def to_csv(config, uset, regions, forecasts, rMAE_p_hindcasting, runID=''):
 
 def combine_models_consistency_check(fns):
     # compare best model, lasso and peak and adjust extreme predictions, if any
-    # Avoid very low estimates
+    # Avoid very low or high estimates
+    # For very low
     # if y_prct of best is <= 0.1 and lasso have a larger one, take that of lasso and put in best
-    # if y_prct of new best (can be best or lasso) is still <= 0.1 and peak have a larger one, take that of lasso and put in best
-    # Avoid very high estimates
-    # same on 0.9 percentile
-    # check if still y_percent < 0.1 and forecast < min yield) --> min  Yield or  > 0.9 -- > max Yield
+    # if y_prct of new best (can be best or lasso) is still <= 0.1 and peak have a larger one, take that of peak and put in best
+    # For high estimates
+    # .. same on 0.9 percentile
+    # check if still y_percent < 0.1  --> min  Yield
+    # or  > 0.9 and -- > max Yield
     # in that case use min or max observed yield as forecasted yield
 
+    # first plot all model resulst
+    # load all results
+    listDFs = []
+    for fn in fns:
+        listDFs.append(pd.read_csv(fn, index_col=0))
+    df = pd.concat(listDFs, axis=0, ignore_index=True)
+    # make the graph
+
+
     if len([x for x in fns if 'Lasso' not in x and 'PeakNDVI' not in x]) > 0: # there is a best model that is not Lasso or Peak
+        # get the name of the non lasso and non peak
         fn_1 = [x for x in fns if 'Lasso' not in x and 'PeakNDVI' not in x][0]
         df_best = pd.read_csv(fn_1, index_col=0)
-
+        #get lasso
         fn_2 = [x for x in fns if 'Lasso' in x][0]
         df_lasso = pd.read_csv(fn_2, index_col=0)
-
+        #get peak
         fn_3 = [x for x in fns if 'PeakNDVI' in x][0]
         df_peak = pd.read_csv(fn_3, index_col=0)
 
@@ -106,7 +120,6 @@ def combine_models_consistency_check(fns):
             df_lasso.loc[(df_best.fyield_percentile >= 0.9) & (df_best.fyield_percentile > df_lasso.fyield_percentile), :]
         df_best.loc[(df_best.fyield_percentile >= 0.9) & (df_best.fyield_percentile > df_peak.fyield_percentile), :] = \
             df_peak.loc[(df_best.fyield_percentile >= 0.9) & (df_best.fyield_percentile > df_peak.fyield_percentile), :]
-
     elif len([x for x in fns if 'Lasso' not in x and 'PeakNDVI' not in x]) == 0: # there is only Lasso or Peak
         # same if lasso was already best
         fn_1 = [x for x in fns if 'Lasso' in x][0]
@@ -121,7 +134,7 @@ def combine_models_consistency_check(fns):
     else:
         print('Inconsistent number of files. End of the world. Stopping now')
         AssertionError
-    # check if still y_percent < 0.1 and forecast < min yield) --> min  Yield or  > 0.9 -- > max Yield
+    # check if still y_percent < 0.1  --> min  Yield or  > 0.9 -- > max Yield
     if sum(df_best.fyield_percentile <= 0.1) > 0:
         # min
         select_rows_min = (df_best.fyield < df_best.min_obs_yield) & (df_best.fyield_percentile <= 0.1)
@@ -134,8 +147,8 @@ def combine_models_consistency_check(fns):
         df_best.loc[select_rows_min, 'yield_diff_pct'] = 100 * (df_best.loc[select_rows_min, 'fyield'] -
                                                              df_best.loc[select_rows_min, 'avg_obs_yield']) / \
                                                       df_best.loc[select_rows_min, 'avg_obs_yield']
-        df_best.loc[select_rows_min, 'fproduction(fyield*avg_obs_area)'] = \
-            df_best.loc[select_rows_min, 'fyield'] * df_best.loc[select_rows_min, 'avg_obs_area']
+        df_best.loc[select_rows_min, 'fproduction(fyield*avg_obs_area_last5yrs)'] = \
+            df_best.loc[select_rows_min, 'fyield'] * df_best.loc[select_rows_min, 'avg_obs_area_last5yrs']
         df_best.loc[select_rows_min, 'fproduction_percentile'] = np.nan
 
         # max
@@ -149,8 +162,8 @@ def combine_models_consistency_check(fns):
         df_best.loc[select_rows_max, 'yield_diff_pct'] = 100 * (df_best.loc[select_rows_max, 'fyield'] -
                                                              df_best.loc[select_rows_max, 'avg_obs_yield']) / \
                                                       df_best.loc[select_rows_max, 'avg_obs_yield']
-        df_best.loc[select_rows_max, 'fproduction(fyield*avg_obs_area)'] = \
-            df_best.loc[select_rows_max, 'fyield'] * df_best.loc[select_rows_max, 'avg_obs_area']
+        df_best.loc[select_rows_max, 'fproduction(fyield*avg_obs_area_last5yrs)'] = \
+            df_best.loc[select_rows_max, 'fyield'] * df_best.loc[select_rows_max, 'avg_obs_area_last5yrs']
         df_best.loc[select_rows_max, 'fproduction_percentile'] = np.nan
 
     return df_best
@@ -158,38 +171,43 @@ def combine_models_consistency_check(fns):
 
 def make_consolidated_ope(config):
     """
-    Gather crop-specific forecasts and generate a nation-scale forecast
+    Gather crop-specific and unit level forecasts and generate a nation-scale forecast
     """
-
+    # get pipeline specific forecast files, all crops here
     fns = [x for x in glob.glob(os.path.join(config.ope_run_out_dir, '*')) if 'national' not in x and 'consolidated' not in x]
     # get yield stats
-    df_stats = b100_load.LoadLabel_Exclude_Missing(config, save_csv=False, plot_fig=False, verbose=False)
+    #df_stats = b100_load.LoadLabel_Exclude_Missing(config, save_csv=False, plot_fig=False, verbose=False)
+    df_stats = b100_load.LoadLabel(config, save_csv=False, plot_fig=False)
     crop_list, production, ppercentile, yields, yieldsdiff = [], [], [], [], []
-    crop_Names = list(df_stats['Crop_name'].unique())
-    for crop_name in crop_Names:
+    # crop_Names = list(df_stats['Crop_name'].unique())
+    # for crop_name in crop_Names: # by crop
+    for crop_name in config.crops:
         print(crop_name)
         fns_crop = [x for x in fns if crop_name in x]
+        # here I have the models make the bar plot. x= different regions, for each reagion YF and YF diff with previous 5 years
         df_f = combine_models_consistency_check(fns_crop)
         fn_out = '_'.join(fns_crop[0].split('_')[0:-1] + ['consolidated.csv'])
         # Subset stats
         df_stats_i = df_stats[df_stats['Crop_name'] == crop_name]
         df_stats_i = df_stats_i[df_stats_i['AU_name'].isin(df_f['Region_name'])]
 
-        # Recompute production percentile
+        # Recompute production percentile (because if min or max are used, they do not have percentiles?)
         for region in df_f['Region_name']:
             if df_f.loc[df_f['Region_name'] == region, 'fproduction_percentile'].isna().sum() == 1:
                 stats_region = df_stats_i[df_stats_i['AU_name'] == region]
                 df_f.loc[df_f['Region_name'] == region, 'fproduction_percentile'] = \
                     percentile_below(stats_region['Production'],
-                    df_f.loc[df_f['Region_name'] == region, 'fproduction(fyield*avg_obs_area)'].values)
+                    df_f.loc[df_f['Region_name'] == region, 'fproduction(fyield*avg_obs_area_last5yrs)'].values)
         # Save updated values
         df_f.to_csv(fn_out)
         # compute national stats
-        prod = df_f['fproduction(fyield*avg_obs_area)'].sum()
-        area = df_f['avg_obs_area'].sum()
+        prod = df_f['fproduction(fyield*avg_obs_area_last5yrs)'].sum()
+        area = df_f['avg_obs_area_last5yrs'].sum()
 
         # Define a lambda function to compute the weighted mean:
         wm = lambda x: np.average(x, weights=df_stats_i.loc[x.index, "Area"])
+
+        # Note: the weighted sum of Yi, is exactly the same of Y_nat = Prod_nat / Area_nat
 
         df_stats_sum = df_stats_i.groupby(['Year']).agg(
             Production=pd.NamedAgg(column="Production", aggfunc="sum"),
@@ -205,7 +223,7 @@ def make_consolidated_ope(config):
     df = pd.DataFrame({'Crop_Name': crop_list,
                        'fyield': yields,
                        'yield_diff_pct': yieldsdiff,
-                       'fproduction(fyield*avg_obs_area)': production,
+                       'fproduction(fyield*avg_obs_area_last5yrs)': production,
                        'fproduction_percentile': ppercentile})
 
 

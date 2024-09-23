@@ -5,6 +5,8 @@ import os
 if __name__ == '__main__':
     """
     Main function getting outputs once condor has terminated
+    Files are zipped and copied here on bdap: /mnt/cidstorage/cidportal/data/cid-bulk22/Shared/tmp/projectData/ML4CAST/
+    On offcie pc I can find it here: U:\data\cid-bulk22\Shared\tmp\projectData\ML4CAST
     """
     ##########################################################################################
     # USER PARAMS
@@ -20,11 +22,11 @@ if __name__ == '__main__':
     condor_log_root = '/mnt/jeoproc/log/ml4castproc/' + config.AOI + '/'
 
     # zip and transfer logs
-    output_filename = os.path.join(jeo_share_root, config.AOI + '_' + run_name + '_logs')
+    output_filename = os.path.join(jeo_share_root, 'TUNE_' + run_name + '_logs')
     dir_name = condor_log_root
     shutil.make_archive(output_filename, 'zip', dir_name)
 
     # zip and transfer outputs
-    output_filename = os.path.join(jeo_share_root, config.AOI + '_' + run_name + '_model_outputs')
+    output_filename = os.path.join(jeo_share_root, 'TUNE_' + run_name) #config.AOI + '_' + run_name + '_model_outputs')
     dir_name = config.models_dir
     shutil.make_archive(output_filename, 'zip', run_dir)
