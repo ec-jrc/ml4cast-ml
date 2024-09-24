@@ -11,7 +11,7 @@ if __name__ == '__main__':
     ##########################################################################################
     # USER PARAMS
     config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-    run_name = 'months5onlyMaize'
+    run_name = '20240920_50_maize'
     # END OF USER PARAMS
     ##########################################################################################
     config = a10_config.read(config_fn, run_name, run_type='fast_tuning')  # only to get root dir
