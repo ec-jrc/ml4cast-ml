@@ -107,6 +107,11 @@ def compare_outputs (config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul
     var4time = 'forecast_time'
 
     mo = pd.read_csv(analysisOutputDir + '/' + 'all_model_output.csv')
+    # add the calendar month at which teh forcast can be done
+    di = dict(zip(config.forecastingMonths, config.forecastingCalendarMonths))
+    mo['forecast_issue_calendar_month'] = mo['forecast_time'].replace(di)
+    mo['forecast_issue_calendar_month'] = mo['forecast_issue_calendar_month'].astype(int) + 1 #add one month as forecast are made beginiing of the month after
+    mo.loc[mo['forecast_issue_calendar_month'] > 12, ['forecast_issue_calendar_month']]= mo['forecast_issue_calendar_month'] -12
     # get best 4 ML configurations by lead time, crop type and y var PLUS benchmarks
     moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
     b4 = moML.groupby(['Crop', var4time]).apply(lambda x: x.sort_values([metric2use], ascending = sortAscending).head(4)).reset_index(drop=True)

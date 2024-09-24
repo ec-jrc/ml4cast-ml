@@ -20,13 +20,15 @@ class read:
 
     self.root_dir = jdict['root_dir']
     self.data_dir = os.path.join(self.root_dir, jdict['data_dir'])
+    self.fn_reference_shape = jdict['fn_reference_shape']
+    self.country_name_in_shp_file = jdict['country_name_in_shp_file']
 
     self.ope_data_dir = os.path.join(self.root_dir, jdict['ope_data_dir'])
     # self.output_dir = os.path.join(self.root_dir, jdict['output_dir'])
     self.output_dir = os.path.join(self.root_dir, 'RUN_' + self.afi )
 
     # run_stamp = datetime.datetime.today().strftime('%Y%m%d')
-    self.ope_run_dir = os.path.join(self.output_dir, 'OPE_'+run_name +'_OPE')
+    self.ope_run_dir = os.path.join(self.output_dir, 'OPE_'+run_name)
     self.ope_run_out_dir = os.path.join(self.ope_run_dir, 'output')
     self.models_dir = os.path.join(self.output_dir, 'TUNE_' + run_name)
     self.models_spec_dir = os.path.join(self.models_dir, 'Specs')
@@ -42,7 +44,7 @@ class read:
     self.eos = int(jdict['eos'])
     # take all the month where SOS fall in
     self.sosMonth = int(np.ceil(self.sos / 3)) # note ceil makes it correct, think about it
-    # take all the month where SOS fall in
+    # take all the month where EOS fall in
     self.eosMonth = int(np.ceil(self.eos / 3))  # same here
     self.yield_units = jdict['yield_units']
     self.area_unit =jdict['area_unit']
@@ -54,12 +56,14 @@ class read:
         real_months = list(range(int(self.sosMonth), int(self.eosMonth + 1)))
     else:
         real_months = list(range(int(self.sosMonth), 12 + 1)) + list(range(1, int(self.eosMonth) + 1))
+
     id_months = np.array(range(1,len(real_months)+1))
     prct_months = id_months/len(id_months)*100
     self.forecastingMonths = []
+    self.forecastingCalendarMonths = []
     for prct in self.forecastingPrct:
         self.forecastingMonths = self.forecastingMonths + list([int(id_months[np.argmin(np.abs(prct_months-float(prct)))])])
-
+        self.forecastingCalendarMonths =self.forecastingCalendarMonths + list([int(real_months[np.argmin(np.abs(prct_months-float(prct)))])])
 
 class mlSettings:
   def __init__(self, forecastingMonths):

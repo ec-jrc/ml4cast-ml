@@ -6,6 +6,7 @@ import pandas as pd
 import geopandas as gpd
 import os
 import pathlib
+import calendar
 from D_modelling import d090_model_wrapper, d140_modelStats
 from D_modelling import d140_modelStats
 from E_viz import e50_yield_data_analysis
@@ -40,6 +41,8 @@ def bars_by_forecast_time(b1, metric2use, mlsettings, var4time, outputDir):
     colors = {'ML': "#0000FF", 'Null_model': "#969696", 'PeakNDVI': "#FF0000", 'Trend': "#009600"}
     for t in b1[var4time].unique():
         crops = b1['Crop'].unique()
+        # get forecast_issue_calendar_month
+        forecast_issue_calendar_month = calendar.month_abbr[b1[b1[var4time] == t]['forecast_issue_calendar_month'].iloc[0]]
         fig, axs = plt.subplots(ncols=max(len(crops),2), figsize=(14, 6)) #need two at least for the loop below
         ax_c = 0  # ax counter
         # get mas metirc
@@ -70,7 +73,7 @@ def bars_by_forecast_time(b1, metric2use, mlsettings, var4time, outputDir):
         h, l = p.get_legend_handles_labels()
         plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
         fig.tight_layout()
-        plt.savefig(outputDir + '/' + 'all_model_best1_forecast_time_' + str(t) + '.png')
+        plt.savefig(outputDir + '/' + 'all_model_best1_forecast_month_season_' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '.png')
         plt.close(fig)
 
 def scatter_plots_and_maps(b1, config, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'): #onfig, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'
@@ -82,6 +85,8 @@ def scatter_plots_and_maps(b1, config, var4time, OutputDir, fn_shape_gaul1, coun
     gdf_gaul1_id = "asap1_id"
     for c in crops:
         for t in forcTimes:
+            # get forecast_issue_calendar_month
+            forecast_issue_calendar_month = calendar.month_abbr[b1[b1[var4time] == t]['forecast_issue_calendar_month'].iloc[0]]
             fig, axs = plt.subplots(2, 2, figsize=(10, 10), constrained_layout=True)
             axs = axs.flatten()
             fig2, axs2 = plt.subplots(2, 2, figsize=(10, 10), constrained_layout=True)
@@ -101,7 +106,7 @@ def scatter_plots_and_maps(b1, config, var4time, OutputDir, fn_shape_gaul1, coun
                 df = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning' , run2get_mres_only=True)
                 statsByAdmin = d140_modelStats.statsByAdmin(df)
                 statsByAdmin = statsByAdmin.merge(df_regNames, how='left', left_on='AU_code', right_on='AU_code')
-                fig_name = OutputDir + '/' + 'all_model_best1_forecast_time_' + str(t) + '_' + c +'_AU_rrmse.png'
+                fig_name = OutputDir + '/' + 'all_model_best1_forecast_month_season_' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_' + c +'_AU_rrmse.png'
                 e50_yield_data_analysis.mapDfColumn(statsByAdmin, 'ASAP1_ID', 'rrmse_prct', 'AU_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
                 'rRMSE (%)', cmap='tab20b', minmax=None, fn_fig=fig_name, ax=None)
                 lims = [np.floor(np.min([df['yLoo_true'].values, df['yLoo_pred'].values])),
@@ -135,8 +140,9 @@ def scatter_plots_and_maps(b1, config, var4time, OutputDir, fn_shape_gaul1, coun
                     axs2[index].legend(frameon=False, ncol=4, loc='upper left', prop={'size':10}, handletextpad=0.005, columnspacing=0.02, labelspacing=0.05)
             fig.tight_layout()
             fig2.tight_layout()
-            fig.savefig(OutputDir + '/' + 'all_model_best1_forecast_time_' + str(t) + '_' + c +'_scatter_by_admin.png')
-            fig2.savefig(OutputDir + '/' + 'all_model_best1_forecast_time_' + str(t) + '_' + c + '_scatter_by_year.png')
+            fig.savefig(OutputDir + '/' + 'all_model_best1_forecast_month_season_' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_' + c +'_scatter_by_admin.png')
+            fig2.savefig(OutputDir + '/' + 'all_model_best1_forecast_month_season_' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_' + c + '_scatter_by_year.png')
+
             plt.close(fig)
             plt.close(fig2)
 
