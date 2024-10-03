@@ -269,9 +269,6 @@ def make_consolidated_ope(config):
         df.to_csv(fn_out, index=False)
         # here I have the models make the bar plot. x= different regions, for each reagion YF and YF diff with previous 5 years
         df_f = combine_models_consistency_check(fns_crop)
-        # map it
-        e110_ope_figs.map(df_f, config, '', config.ope_run_out_dir, config.fn_reference_shape, config.country_name_in_shp_file)
-
         fn_out = '_'.join(fns_crop[0].split('_')[0:-1] + ['consolidated.csv'])
         # Subset stats
         df_stats_i = df_stats[df_stats['Crop_name'] == crop_name]
@@ -305,6 +302,13 @@ def make_consolidated_ope(config):
         yields.append(prod / area)
         yieldsdiff.append(100 * ((prod / area) - df_stats_sum['nat_yield'].mean()) / df_stats_sum['nat_yield'].mean())
         ppercentile.append(percentile_below(df_stats_sum['Production'], prod))
+
+        # map consolidated and text about national production
+        national_text = crop_name + ',' + config.country_name_in_shp_file + ', aggregated yield forecast = ' + \
+                        str(np.round(prod / area, 2)) + ', \n % difference with last avail. 5 years = '  + \
+                        str(np.round(100 * ((prod / area) - df_stats_sum['nat_yield'].mean()) / df_stats_sum['nat_yield'].mean(),2))
+        e110_ope_figs.map(df_f, config, '', config.ope_run_out_dir, config.fn_reference_shape,
+                          config.country_name_in_shp_file, title=national_text)
 
     df = pd.DataFrame({'Crop_Name': crop_list,
                        'fyield': yields,
