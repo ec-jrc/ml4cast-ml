@@ -72,8 +72,8 @@ def add_yield_trend_estimate(yxDatac, ny):
     yxDatac['YieldFromTrend'] = np.nan
     # treat each crop / region separately as the stat availability may be different (there should be only one crop here)
     for c in yxDatac['Crop_ID'].unique():
-        for r in yxDatac['AU_code'].unique():
-            df = yxDatac[(yxDatac['Crop_ID'] == c) & (yxDatac['AU_code'] == r)]
+        for r in yxDatac['adm_id'].unique():
+            df = yxDatac[(yxDatac['Crop_ID'] == c) & (yxDatac['adm_id'] == r)]
             minYearStats = df.dropna(subset=[yvar])['Year'].min()
             minYearFeats = df.dropna(subset=df.columns[~df.columns.isin(['YieldFromTrend'])].values)['Year'].min()
             #add year columns
@@ -89,5 +89,5 @@ def add_yield_trend_estimate(yxDatac, ny):
                 # trend estimated using larger time series (left or right)
                 df.loc[:, 'YieldFromTrend'] = df.apply(trend2, args=(ny, minYearFeats, df['Year'].tolist()), axis=1)
             # add the trend to yxDatac
-            yxDatac.loc[(yxDatac['Crop_ID'] == c) & (yxDatac['AU_code'] == r), 'YieldFromTrend'] = df['YieldFromTrend']
+            yxDatac.loc[(yxDatac['Crop_ID'] == c) & (yxDatac['adm_id'] == r), 'YieldFromTrend'] = df['YieldFromTrend']
     return yxDatac

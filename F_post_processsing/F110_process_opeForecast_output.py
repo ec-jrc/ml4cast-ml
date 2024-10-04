@@ -26,8 +26,8 @@ def percentile_below(x, xt):
 
 # def to_csv(self, regions, forecasts, funcertainty, fmae, runID = ''):
 def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, rMAE_p_hindcasting, runID=''):
-    df_forecast = pd.DataFrame({'ASAP1_ID': np.nan,
-                                'Region_ID': regions,
+    df_forecast = pd.DataFrame({'adm_id': np.nan,
+                                'adm_id': regions,
                                 'Region_name': np.nan,
                                 'Crop_name': uset['crop'],
                                 'fyield': forecasts,
@@ -52,24 +52,24 @@ def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, rMAE
 
     for region in regions:
         # get stats for region and sort by yera (*)to take last 5)
-        stats_region = stats[stats['Region_ID'] == region].sort_values(by=['Year'])
-        fyield_region = df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield'].values
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'ASAP1_ID'] = stats_region.iloc[0]['ASAP1_ID']
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield_percentile'] = \
+        stats_region = stats[stats['adm_id'] == region].sort_values(by=['Year'])
+        fyield_region = df_forecast.loc[df_forecast['adm_id'] == region, 'fyield'].values
+        df_forecast.loc[df_forecast['adm_id'] == region, 'adm_id'] = stats_region.iloc[0]['adm_id']
+        df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_percentile'] = \
             percentile_below(stats_region['Yield'], fyield_region)
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'Region_name'] = \
-            stats_region.iloc[0]['AU_name']
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction(fyield*avg_obs_area_last5yrs)'] = \
-            df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield'] * stats_region['Area'][-5::].mean()
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'avg_obs_yield'] = stats_region['Yield'].mean()
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'avg_obs_yield_last5yrs'] = stats_region['Yield'][-5::].mean() #avg_obs_yield_last5yrs
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'min_obs_yield'] = stats_region['Yield'].min()
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'max_obs_yield'] = stats_region['Yield'].max()
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'fyield_diff_pct (last 5 yrs in data avail)'] = \
+        df_forecast.loc[df_forecast['adm_id'] == region, 'Region_name'] = \
+            stats_region.iloc[0]['adm_name']
+        df_forecast.loc[df_forecast['adm_id'] == region, 'fproduction(fyield*avg_obs_area_last5yrs)'] = \
+            df_forecast.loc[df_forecast['adm_id'] == region, 'fyield'] * stats_region['Area'][-5::].mean()
+        df_forecast.loc[df_forecast['adm_id'] == region, 'avg_obs_yield'] = stats_region['Yield'].mean()
+        df_forecast.loc[df_forecast['adm_id'] == region, 'avg_obs_yield_last5yrs'] = stats_region['Yield'][-5::].mean() #avg_obs_yield_last5yrs
+        df_forecast.loc[df_forecast['adm_id'] == region, 'min_obs_yield'] = stats_region['Yield'].min()
+        df_forecast.loc[df_forecast['adm_id'] == region, 'max_obs_yield'] = stats_region['Yield'].max()
+        df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_diff_pct (last 5 yrs in data avail)'] = \
             100 * ((fyield_region - stats_region['Yield'][-5::].mean()) / stats_region['Yield'][-5::].mean()  )  # ADDED LAST 5 YEARS
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'avg_obs_area_last5yrs'] = stats_region['Area'][-5::].mean()
-        df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction_percentile'] = \
-            percentile_below(stats_region['Production'], df_forecast.loc[df_forecast['Region_ID'] == region, 'fproduction(fyield*avg_obs_area_last5yrs)'].values)
+        df_forecast.loc[df_forecast['adm_id'] == region, 'avg_obs_area_last5yrs'] = stats_region['Area'][-5::].mean()
+        df_forecast.loc[df_forecast['adm_id'] == region, 'fproduction_percentile'] = \
+            percentile_below(stats_region['Production'], df_forecast.loc[df_forecast['adm_id'] == region, 'fproduction(fyield*avg_obs_area_last5yrs)'].values)
 
     forecast_fn = os.path.join(config.ope_run_out_dir, datetime.datetime.today().strftime('%Y%m%d') + '_' +
                                uset['crop'] + '_forecast_month_season_' + str(uset['forecast_time'])
@@ -272,12 +272,12 @@ def make_consolidated_ope(config):
         fn_out = '_'.join(fns_crop[0].split('_')[0:-1] + ['consolidated.csv'])
         # Subset stats
         df_stats_i = df_stats[df_stats['Crop_name'] == crop_name]
-        df_stats_i = df_stats_i[df_stats_i['AU_name'].isin(df_f['Region_name'])]
+        df_stats_i = df_stats_i[df_stats_i['adm_name'].isin(df_f['Region_name'])]
 
         # Recompute production percentile (because if min or max are used, they do not have percentiles?)
         for region in df_f['Region_name']:
             if df_f.loc[df_f['Region_name'] == region, 'fproduction_percentile'].isna().sum() == 1:
-                stats_region = df_stats_i[df_stats_i['AU_name'] == region]
+                stats_region = df_stats_i[df_stats_i['adm_name'] == region]
                 df_f.loc[df_f['Region_name'] == region, 'fproduction_percentile'] = \
                     percentile_below(stats_region['Production'],
                     df_f.loc[df_f['Region_name'] == region, 'fproduction(fyield*avg_obs_area_last5yrs)'].values)

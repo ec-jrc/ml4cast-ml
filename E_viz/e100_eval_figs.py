@@ -105,17 +105,17 @@ def scatter_plots_and_maps(b1, config, var4time, OutputDir, fn_shape_gaul1, coun
                 print(fn_spec)
                 df = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning' , run2get_mres_only=True)
                 statsByAdmin = d140_modelStats.statsByAdmin(df)
-                statsByAdmin = statsByAdmin.merge(df_regNames, how='left', left_on='AU_code', right_on='AU_code')
+                statsByAdmin = statsByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
                 fig_name = OutputDir + '/' + 'all_model_best1_forecast_month_season_' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_' + c +'_AU_rrmse.png'
-                e50_yield_data_analysis.mapDfColumn(statsByAdmin, 'ASAP1_ID', 'rrmse_prct', 'AU_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
+                e50_yield_data_analysis.mapDfColumn(statsByAdmin, 'adm_id', 'rrmse_prct', 'adm_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
                 'rRMSE (%)', cmap='tab20b', minmax=None, fn_fig=fig_name, ax=None)
                 lims = [np.floor(np.min([df['yLoo_true'].values, df['yLoo_pred'].values])),
                         np.ceil(np.max([df['yLoo_true'].values, df['yLoo_pred'].values]))]
                 r2p = d140_modelStats.r2_nan(df['yLoo_true'].values, df['yLoo_pred'].values)
-                for au_code in df['AU_code'].unique():
-                    x = df[df['AU_code'] == au_code]['yLoo_true'].values
-                    y = df[df['AU_code'] == au_code]['yLoo_pred'].values
-                    lbl = df_regNames[df_regNames['AU_code'] == au_code.astype('int')]['AU_name'].values[0]
+                for au_code in df['adm_id'].unique():
+                    x = df[df['adm_id'] == au_code]['yLoo_true'].values
+                    y = df[df['adm_id'] == au_code]['yLoo_pred'].values
+                    lbl = df_regNames[df_regNames['adm_id'] == au_code.astype('int')]['adm_name'].values[0]
                     axs[index].scatter(x, y, label=lbl, edgecolor='k', linewidth=0.5)
                     axs[index].plot(lims, lims, color='black', linewidth=0.5)
                     axs[index].set_title(est + ',R2p=' + str(np.round(r2p, 2)))
@@ -172,17 +172,17 @@ def scatter_plots_and_maps(b1, config, var4time, OutputDir, fn_shape_gaul1, coun
 #                 print(fn_spec)
 #                 df = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning' , run2get_mres_only=True)
 #                 statsByAdmin = d140_modelStats.statsByAdmin(df)
-#                 statsByAdmin = statsByAdmin.merge(df_regNames, how='left', left_on='AU_code', right_on='AU_code')
+#                 statsByAdmin = statsByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
 #                 fig_name = OutputDir + '/' + 'all_model_best1_forecast_time_' + str(t) + '_' + c +'_AU_rrmse.png'
-#                 e50_yield_data_analysis.mapDfColumn(statsByAdmin, 'ASAP1_ID', 'rrmse_prct', 'AU_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
+#                 e50_yield_data_analysis.mapDfColumn(statsByAdmin, 'adm_id', 'rrmse_prct', 'adm_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
 #                 'rRMSE (%)', cmap='tab20b', minmax=None, fn_fig=fig_name, ax=None)
 #                 lims = [np.floor(np.min([df['yLoo_true'].values, df['yLoo_pred'].values])),
 #                         np.ceil(np.max([df['yLoo_true'].values, df['yLoo_pred'].values]))]
 #                 r2p = d140_modelStats.r2_nan(df['yLoo_true'].values, df['yLoo_pred'].values)
-#                 for au_code in df['AU_code'].unique():
-#                     x = df[df['AU_code'] == au_code]['yLoo_true'].values
-#                     y = df[df['AU_code'] == au_code]['yLoo_pred'].values
-#                     lbl = df_regNames[df_regNames['AU_code'] == au_code.astype('int')]['AU_name'].values[0]
+#                 for au_code in df['adm_id'].unique():
+#                     x = df[df['adm_id'] == au_code]['yLoo_true'].values
+#                     y = df[df['adm_id'] == au_code]['yLoo_pred'].values
+#                     lbl = df_regNames[df_regNames['adm_id'] == au_code.astype('int')]['adm_name'].values[0]
 #                     axs[index].scatter(x, y, label=lbl)
 #                     axs[index].plot(lims, lims, color='black', linewidth=0.5)
 #                     axs[index].set_title(est + ',R2p=' + str(np.round(r2p, 2)))
@@ -213,14 +213,14 @@ def accuracy_over_time(mRes, mCountryRes, filename=None):
                         (5, 1, 1, 1)]
     dash_styles = dash_base_styles * 100
     # dash_styles = dash_styles[0:len(mRes)]
-    dash_styles = dash_styles[0:len(mRes['AU_code'].unique())]
+    dash_styles = dash_styles[0:len(mRes['adm_id'].unique())]
 
     # line plot
     fig, axs = plt.subplots(nrows=2, figsize=(12, 6))
     minV, maxV = mRes[['yLoo_true', 'yLoo_pred']].values.min(), mRes[
         ['yLoo_true', 'yLoo_pred']].values.max()
     margin = (maxV - minV) / 20.0
-    g = sns.lineplot(x="Year", y="yLoo_true", hue="AU_code", style="AU_code", data=mRes, ax=axs[0], dashes=dash_styles,
+    g = sns.lineplot(x="Year", y="yLoo_true", hue="adm_id", style="adm_id", data=mRes, ax=axs[0], dashes=dash_styles,
                      palette="Spectral", legend='full')
     axs[0].plot(mCountryRes.index, mCountryRes['yLoo_true'], color='green', linewidth=3, linestyle='dashed')
     axs[0].set_ylim(minV - margin, maxV + margin)
@@ -231,7 +231,7 @@ def accuracy_over_time(mRes, mCountryRes, filename=None):
     # Put a legend to the right side
     g.legend(loc='upper left', bbox_to_anchor=(1, 1), ncol=1)
 
-    g = sns.lineplot(x="Year", y="yLoo_pred", hue="AU_code", style="AU_code", data=mRes, ax=axs[1], dashes=dash_styles,
+    g = sns.lineplot(x="Year", y="yLoo_pred", hue="adm_id", style="adm_id", data=mRes, ax=axs[1], dashes=dash_styles,
                      palette="Spectral", legend='full')
     axs[1].plot(mCountryRes.index, mCountryRes['yLoo_pred'], color='green', linewidth=3, linestyle='dashed')
     axs[1].set_ylim(minV - margin, maxV + margin)
@@ -264,7 +264,7 @@ def scatter_plot_accuracy(mRes, title_R2, color_factor, filename=None):
                         (5, 1, 1, 1)]
     dash_styles = dash_base_styles * 100
     # dash_styles = dash_styles[0:len(mRes)]
-    dash_styles = dash_styles[0:len(mRes['AU_code'].unique())]
+    dash_styles = dash_styles[0:len(mRes['adm_id'].unique())]
 
     #scatter plot
     fig = plt.figure(figsize = (6,6))
@@ -274,7 +274,7 @@ def scatter_plot_accuracy(mRes, title_R2, color_factor, filename=None):
     markers = markers[0:len(mRes[color_factor].unique())]
     g = sns.scatterplot(x="yLoo_true", y="yLoo_pred", hue=color_factor, style=color_factor, data=mRes, palette = "Spectral", markers=markers, legend='full')
     sns.regplot(x="yLoo_true", y="yLoo_pred", data=mRes, color='k', scatter_kws={"alpha": 0.0})
-    #sns.jointplot(x="yLoo_true", y="yLoo_pred", hue="AU_code", data=mRes)
+    #sns.jointplot(x="yLoo_true", y="yLoo_pred", hue="adm_id", data=mRes)
     minV, maxV = mRes[['yLoo_true', 'yLoo_pred']].values.min(), mRes[['yLoo_true', 'yLoo_pred']].values.max()
     margin = (maxV-minV)/20.0
     plt.ylim(minV-margin, maxV+margin)

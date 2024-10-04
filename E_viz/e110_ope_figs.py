@@ -23,7 +23,7 @@ def map(b1, config, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_fil
     gdf_gaul0_column = 'name0'
     for c in crops:
         df_c = b1[(b1['Crop_name'] == c)].copy()
-        # statsByAdmin = df_c.merge(df_regNames, how='left', left_on='ASAP1_ID', right_on='AU_code')
+        # statsByAdmin = df_c.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
         fig, axs = plt.subplots(1, 2, figsize=(10, 6))
         axs = axs.flatten()
         fig_name = OutputDir + '/' + datetime.today().strftime('%Y-%m-%d') + '_' + config.country_name_in_shp_file + '_AU_forecasts.png'
@@ -31,11 +31,11 @@ def map(b1, config, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_fil
 
         lbl = 'Yield forecast'
         # def min max and color table
-        e50_yield_data_analysis.mapDfColumn(df_c, 'ASAP1_ID', 'fyield', 'Region_name', gdf, gdf_gaul1_id, gdf_gaul0_column,
+        e50_yield_data_analysis.mapDfColumn(df_c, 'adm_id', 'fyield', 'Region_name', gdf, gdf_gaul1_id, gdf_gaul0_column,
                     country_name_in_shp_file, lbl, cmap='tab20b', fn_fig=None, ax=axs[0])
         lbl = "YF % difference with last avail. 5 years"
         minmax = [-df_c['fyield_diff_pct (last 5 yrs in data avail)'].abs().max(), df_c['fyield_diff_pct (last 5 yrs in data avail)'].abs().max()]
-        e50_yield_data_analysis.mapDfColumn(df_c, 'ASAP1_ID', 'fyield_diff_pct (last 5 yrs in data avail)', 'Region_name', gdf, gdf_gaul1_id,
+        e50_yield_data_analysis.mapDfColumn(df_c, 'adm_id', 'fyield_diff_pct (last 5 yrs in data avail)', 'Region_name', gdf, gdf_gaul1_id,
                     gdf_gaul0_column, country_name_in_shp_file, lbl, cmap='bwr', fn_fig=None, ax=axs[1], minmax=minmax)
         fig.suptitle(title, fontsize=14)
         fig.tight_layout()

@@ -46,7 +46,7 @@ def rmse_nan(x, y):
 # def mean_rel_abs_error(w):
 #     """Mean Absolute Percentage Error"""
 #     # mean (|y(year,au)-y_pred(year,au)| / mean(y(year,au) * 100)
-#     w = w.join(w.groupby('AU_code')['yLoo_true'].mean(), on='AU_code', rsuffix='_mean')
+#     w = w.join(w.groupby('adm_id')['yLoo_true'].mean(), on='adm_id', rsuffix='_mean')
 #
 #     w['mean_rel_abs_error'] = ((w['yLoo_true' ] -w['yLoo_pred']).abs() /w['yLoo_true_mean' ] *100)
 #     return ((w['yLoo_true' ] -w['yLoo_pred']).abs() /w['yLoo_true_mean' ] *100).mean()
@@ -136,8 +136,8 @@ def allStats_spatial(mRes):
 
 
 def statsByAdmin(mRes):
-    avgs = mRes.groupby('AU_code').mean()
-    rmse = mRes.groupby('AU_code').apply(lambda x: rmse_nan(x['yLoo_true'], x['yLoo_pred']))
+    avgs = mRes.groupby('adm_id').mean()
+    rmse = mRes.groupby('adm_id').apply(lambda x: rmse_nan(x['yLoo_true'], x['yLoo_pred']))
     rmse = rmse.to_frame('rmse')
     rmse_rrmse = pd.merge(rmse, avgs, left_index=True, right_index=True)
     rmse_rrmse['rrmse_prct'] = rmse_rrmse['rmse']/rmse_rrmse['yLoo_true']*100
@@ -152,6 +152,6 @@ def meanAUR2(mRes):
         #return metrics.r2_score(g['yLoo_true'], g['yLoo_pred'])
         return r2_nan(x, y)
 
-    res = mRes.groupby('AU_code').apply(r2_au)
+    res = mRes.groupby('adm_id').apply(r2_au)
     return res.mean()
 

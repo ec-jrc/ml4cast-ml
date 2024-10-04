@@ -75,7 +75,7 @@ if __name__ == '__main__':
             # set spec
             forecaster = d100_modeller.YieldModeller(uset)
             # preprocess data according to spec
-            X, y, groups, feature_names, AU_codes = forecaster.preprocess(config, runType)
+            X, y, groups, feature_names, adm_ids = forecaster.preprocess(config, runType)
             # X, y, groups extend beyond the years for which I have yield data (at least one year more, the year being forecasted):
             # the years used for training (from year_start to year_end) in the config json.
             # here I split X, y in two set, the fitting and the forecasting one.
@@ -84,12 +84,12 @@ if __name__ == '__main__':
             # fit
             hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, \
                 selected_features_names, prct_selected, n_selected, \
-                avg_scoring_metric_on_val, fitted_model = forecaster.fit(X[fit_indices, :], y[fit_indices], groups[fit_indices], feature_names, AU_codes[fit_indices], runType)
+                avg_scoring_metric_on_val, fitted_model = forecaster.fit(X[fit_indices, :], y[fit_indices], groups[fit_indices], feature_names, adm_ids[fit_indices], runType)
             # The ft to used are stored selected_features_names, extract them from X
             ind2retain = [np.where(np.array(feature_names)==item)[0][0] for item in selected_features_names]
             # apply the fitted model to forecast data
             forecasts = fitted_model.predict(X[forecast_indices, :][:, np.array(ind2retain)]).tolist()
-            au_codes = AU_codes[forecast_indices].tolist()
+            au_codes = adm_ids[forecast_indices].tolist()
             F110_process_opeForecast_output.to_csv(config, forecaster.uset, au_codes, forecasts, df_run['rMAE_p'].values[0],runID = runID)
 
     F110_process_opeForecast_output.make_consolidated_ope(config)

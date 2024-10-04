@@ -32,8 +32,11 @@ def LoadPredictors_Save_Csv(config, runType):
     df = df[df['classset_name'] == 'static masks']
     # read the table with id and region name
     regNames = pd.read_csv(os.path.join(dirIn, config.AOI + '_REGION_id.csv'))
-    # now link it with AU_code and name
-    df = pd.merge(df, regNames, left_on=['reg0_id'], right_on=['ASAP1_ID'])
+    # now link it with adm_id and name
+    df = pd.merge(df, regNames, left_on=['adm_id'], right_on=['adm_id'])
+    # remove the admin name form extraction, not needed, use th eone from region file
+    df = df.rename(columns={'adm_name_x': 'adm_name_extraction', 'adm_name_y': 'adm_name'})
+    df.drop('adm_name_extraction', axis=1, inplace=True)
     # get first NDVI or FPAR time and drop everything before
     minDate = df[(df['variable_name'] == 'NDVI') | (df['variable_name'] == 'FPAR')]['date'].min()
     df = df[df['date'] >= minDate]
@@ -45,9 +48,9 @@ def LoadPredictors_Save_Csv(config, runType):
     #df['dek'] = df['Date'].map(f_dek_utilities.f_datetime2dek)
     # as of today (2024-07-23, SM no yet gap filled), SM may have missing data in 2001 and 2002, use linear interpolation to fix
     # Now (2024 09 13) this is kept to run old versions, can be dismissed once th testing is finished
-    for au in df['ASAP1_ID'].unique():
-        df.loc[(df['ASAP1_ID'] == au) & (df['variable_name'] == 'soil_moisture'), 'mean'] =  df.loc[(df['ASAP1_ID'] == au) & (df['variable_name'] == 'soil_moisture'), 'mean'].interpolate(method='linear', axis=0)
-        #df[(df['ASAP1_ID'] == au) & (df['variable_name'] == 'soil_moisture')]['interpol_SM'] = df[(df['ASAP1_ID'] == au) & (df['variable_name'] == 'soil_moisture')]['mean'].interpolate(method='linear', axis=0)
+    for au in df['adm_id'].unique():
+        df.loc[(df['adm_id'] == au) & (df['variable_name'] == 'soil_moisture'), 'mean'] =  df.loc[(df['adm_id'] == au) & (df['variable_name'] == 'soil_moisture'), 'mean'].interpolate(method='linear', axis=0)
+        #df[(df['adm_id'] == au) & (df['variable_name'] == 'soil_moisture')]['interpol_SM'] = df[(df['adm_id'] == au) & (df['variable_name'] == 'soil_moisture')]['mean'].interpolate(method='linear', axis=0)
         #print(au)
     # save files
     df.to_csv(os.path.join(dirOut, config.AOI + '_predictors.csv'), index=False)
@@ -75,13 +78,14 @@ def build_features(config, runType):
     df["Year"] = df.Datetime.dt.year
     df["Month"] = df.Datetime.dt.month
     df_month = df.groupby(by=[df.Year, df.Month,
-                              df.variable_name, df.reg0_name]).agg(
-                                AU_name=('AU_name', 'first'), AU_code=('AU_code', 'first'),
-                                ASAP1_ID=('ASAP1_ID', 'first'),
+                              df.variable_name, df.adm_name]).agg(
+                                # adm_name=('adm_name', 'first'),
+                                adm_id=('adm_id', 'first'),
+                                #adm_id=('adm_id', 'first'),
                                 Date=('Date', 'first'), mean=('mean', 'mean'),  # Year=('Year','first'),Month=('Month','first'),
                                 min=('mean', 'min'), max=('mean', 'max'), sum=('mean', 'sum'))
     df_month = df_month.reset_index()
-    df_month = df_month.drop(columns=['reg0_name'])
+    # df_month = df_month.drop(columns=['adm_name'])
     if sosMonth < eosMonth:
         months = list(range(sosMonth, eosMonth+1))
     else:
@@ -119,16 +123,16 @@ def build_features(config, runType):
     MonthSep = 'M'
     ivars = config.ivars
     ivars_short = config.ivars_short
-    AU_list = df_month['AU_code'].unique()
+    AU_list = df_month['adm_id'].unique()
     init = 0
     for au in AU_list:
-        df_au = df_month[df_month['AU_code'] == au]
-        # dfM_au = k[k['AU_code'] == au]
+        df_au = df_month[df_month['adm_id'] == au]
+        # dfM_au = k[k['adm_id'] == au]
         YY_list = df_au['YearOfEOS'].unique()
         for yy in YY_list:
             df_au_yy =  df_au[df_au['YearOfEOS'] == yy]
-            row = [au,df_au['ASAP1_ID'].iloc[0],df_au['AU_name'].iloc[0], df_au_yy['YearOfEOS'].iloc[0]]
-            columns = ['AU_code', 'ASAP1_ID', 'AU_name', 'YearOfEOS']
+            row = [df_au['adm_id'].iloc[0],df_au['adm_name'].iloc[0], df_au_yy['YearOfEOS'].iloc[0]]
+            columns = ['adm_id', 'adm_name', 'YearOfEOS']
             for v, vs in zip(ivars, ivars_short):
                 df_au_yy_v = df_au_yy[df_au_yy['variable_name'] == v]
                 if len(df_au_yy_v) == 0:
@@ -167,15 +171,15 @@ def LoadLabel_Exclude_Missing(config, save_csv = True, plot_fig= False, verbose=
 
     # get yield stats
     stats = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_stats.csv'))
-    #'AU_name' may not be present
-    if ('AU_name' in stats.columns) == False:
+    #'adm_name' may not be present
+    if ('adm_name' in stats.columns) == False:
         names = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
-        stats = pd.merge(stats, names, how='left', left_on=['Region_ID'], right_on=['AU_code'])
+        stats = pd.merge(stats, names, how='left', left_on=['adm_id'], right_on=['adm_id'])
     if ('Crop_name' in stats.columns) == False:
         names = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
         stats = pd.merge(stats, names, how='left', left_on=['Crop_ID'], right_on=['Crop_ID'])
     # drop years before period of interest
-    stats = stats.drop(stats[stats['Year'] < config.year_start].index).sort_values('AU_name')
+    stats = stats.drop(stats[stats['Year'] < config.year_start].index).sort_values('adm_name')
 
 
     crops = stats['Crop_ID'].unique()
@@ -186,10 +190,10 @@ def LoadLabel_Exclude_Missing(config, save_csv = True, plot_fig= False, verbose=
         statsC = stats[stats['Crop_ID'] == c]
         tmp = statsC[statsC['Yield'].isnull()]
         if len(tmp) !=0:
-            tmp = tmp.set_index('AU_name')['Yield'].isna().groupby(level=0).sum()
+            tmp = tmp.set_index('adm_name')['Yield'].isna().groupby(level=0).sum()
             print(tmp)
             listRegionToDrop = tmp.index.to_list()
-            stats = stats.drop(stats[(stats['Crop_ID'] == c) & (stats['AU_name'].isin(listRegionToDrop))].index)
+            stats = stats.drop(stats[(stats['Crop_ID'] == c) & (stats['adm_name'].isin(listRegionToDrop))].index)
         if verbose:
             print('**************')
             print(statsC['Crop_name'].iloc[0])
@@ -203,7 +207,7 @@ def LoadLabel_Exclude_Missing(config, save_csv = True, plot_fig= False, verbose=
         #plot remaining regioms
         g = sns.relplot(
                 data=stats,
-                x="Year", y="Yield", col="AU_name",  hue="Crop_name",
+                x="Year", y="Yield", col="adm_name",  hue="Crop_name",
                 kind="line", linewidth=2, #zorder=5,
                 col_wrap=5, height=1, aspect=2, #legend=False,
             )
@@ -219,15 +223,15 @@ def LoadLabel(config, save_csv = True, plot_fig= False):
 
     # get yield stats
     stats = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_STATS.csv'))
-    #'AU_name' may not be present
-    if ('AU_name' in stats.columns) == False:
+    #'adm_name' may not be present
+    if ('adm_name' in stats.columns) == False:
         names = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
-        stats = pd.merge(stats, names, how='left', left_on=['Region_ID'], right_on=['AU_code'])
+        stats = pd.merge(stats, names, how='left', left_on=['adm_id'], right_on=['adm_id'])
     if ('Crop_name' in stats.columns) == False:
         names = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
         stats = pd.merge(stats, names, how='left', left_on=['Crop_ID'], right_on=['Crop_ID'])
     # drop years before period of interest
-    stats = stats.drop(stats[stats['Year'] < config.year_start].index).sort_values('AU_name')
+    stats = stats.drop(stats[stats['Year'] < config.year_start].index).sort_values('adm_name')
     stats.drop(stats.filter(regex="Unnamed"), axis=1, inplace=True)
 
     if save_csv:
@@ -236,7 +240,7 @@ def LoadLabel(config, save_csv = True, plot_fig= False):
         #plot remaining regioms
         g = sns.relplot(
                 data=stats,
-                x="Year", y="Yield", col="AU_name",  hue="Crop_name",
+                x="Year", y="Yield", col="adm_name",  hue="Crop_name",
                 kind="line", linewidth=2, #zorder=5,
                 col_wrap=5, height=1, aspect=2, #legend=False,
             )

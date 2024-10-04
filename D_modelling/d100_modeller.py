@@ -33,32 +33,32 @@ class DataMixin:
         # Raw features for ope forecast are stored in a different dir to avoid overwrite of features used for training
         if runType == 'opeForecast':
             raw_features = pd.read_csv(os.path.join(config.ope_run_dir, config.AOI + '_features4scikit.csv'))
-            # drop AU_name, not needed and will be duplicated in merge
-            raw_features = raw_features.drop(['AU_name','ASAP1_ID'], axis=1)
-            # keep only AU_code that are in stats (some regions may have been dropped because have missing data)
-            raw_features = raw_features[raw_features['AU_code'].isin(stats['AU_code'].unique())]
+            # drop adm_name, not needed and will be duplicated in merge
+            #raw_features = raw_features.drop(['adm_name','adm_id'], axis=1)
+            # keep only adm_id that are in stats (some regions may have been dropped because have missing data)
+            raw_features = raw_features[raw_features['adm_id'].isin(stats['adm_id'].unique())]
             # the result of merge has year with only features as one record per year while I need one record per crop
-            statsDistinct = stats.drop_duplicates(["AU_code", "Crop_ID"])[
-                ['Region_ID', 'Crop_ID', 'AU_code', 'AU_name', 'ASAP1_ID', 'Crop_name']]
-            raw_features = pd.merge(raw_features, statsDistinct, how='left', left_on=['AU_code'], right_on=['AU_code'])
+            statsDistinct = stats.drop_duplicates(["adm_id", "Crop_ID"])[
+                ['adm_id', 'Crop_ID', 'adm_id', 'adm_name', 'adm_id', 'Crop_name']]
+            raw_features = pd.merge(raw_features, statsDistinct, how='left', left_on=['adm_id', 'adm_name'], right_on=['adm_id', 'adm_name'])
             # hoin to keep also feature records that have label
-            yxData = pd.merge(stats, raw_features, how='outer', left_on=['AU_code', 'Year', 'Crop_ID'],
-                              right_on=['AU_code', 'YearOfEOS', 'Crop_ID'])
-            yxData[['Region_ID_x', 'AU_name_x', 'ASAP1_ID_x','Crop_name_x']] = yxData[['Region_ID_y', 'AU_name_y', 'ASAP1_ID_y','Crop_name_y']]
-            yxData = yxData.drop(['Region_ID_y', 'AU_name_y', 'ASAP1_ID_y','Crop_name_y'], axis=1)
-            yxData.rename(columns={'Region_ID_x': 'Region_ID', 'AU_name_x': 'AU_name', 'ASAP1_ID_x': 'ASAP1_ID', 'Crop_name_x': 'Crop_name'}, inplace=True)
+            yxData = pd.merge(stats, raw_features, how='outer', left_on=['adm_id', 'Year', 'Crop_ID'],
+                              right_on=['adm_id', 'YearOfEOS', 'Crop_ID'])
+            yxData[['adm_id_x', 'adm_name_x', 'adm_id_x','Crop_name_x']] = yxData[['adm_id_y', 'adm_name_y', 'adm_id_y','Crop_name_y']]
+            yxData = yxData.drop(['adm_id_y', 'adm_name_y', 'adm_id_y','Crop_name_y'], axis=1)
+            yxData.rename(columns={'adm_id_x': 'adm_id', 'adm_name_x': 'adm_name', 'adm_id_x': 'adm_id', 'Crop_name_x': 'Crop_name'}, inplace=True)
             # transfer year of features to year of stats to have it working with trend
             yxData.loc[yxData['Year'].isna(), "Year"] = yxData["YearOfEOS"].astype('int32')
         else: #tuning or opeTune
             raw_features = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_features4scikit.csv'))
-            # drop AU_name, not needed and will be duplicated in merge
-            raw_features = raw_features.drop(['AU_name','ASAP1_ID'], axis=1)
+            # drop adm_name, not needed and will be duplicated in merge
+            #raw_features = raw_features.drop(['adm_name','adm_id'], axis=1)
             # left join to keep only features with labels
-            yxData = pd.merge(stats, raw_features, how='left', left_on=['AU_code', 'Year'], right_on=['AU_code', 'YearOfEOS'])
+            yxData = pd.merge(stats, raw_features, how='left', left_on=['adm_id', 'Year', 'adm_name'], right_on=['adm_id', 'YearOfEOS', 'adm_name'])
 
         # retain only the crop to analysed
         yxData = yxData[yxData['Crop_name'] == self.uset['crop']]
-        yxData.sort_values(['AU_name', 'Crop_name', 'Year'], ascending=[True, True, True], inplace=True)
+        yxData.sort_values(['adm_name', 'Crop_name', 'Year'], ascending=[True, True, True], inplace=True)
 
         # Add a trend feature (the yield estimate for a year-admin unit)
         if self.uset['algorithm'] == 'Trend' or self.uset['addYieldTrend'] == True:
@@ -66,7 +66,7 @@ class DataMixin:
         #yxData.to_csv(os.path.join(config.models_dir, 'buttami.csv'), index=False)
 
         years = yxData['Year']
-        AU_codes = yxData['AU_code']
+        adm_ids = yxData['adm_id']
         y = yxData['Yield'].to_numpy()
         #############################################
         # retain features based on feature set/method
@@ -107,12 +107,12 @@ class DataMixin:
                     X = scaler.fit_transform(X)
                     y = scaler.fit_transform(y.reshape(-1, 1)).reshape(-1)  # set in back to (n,)
                 elif self.uset['dataScaling']== 'z_fl_au': # scale by AU (both scaling functions checked with xls)
-                    y = yxData['Yield'].subtract(yxData.groupby(yxData['AU_code'])['Yield'].transform(np.mean)) \
-                        .divide(yxData.groupby(yxData['AU_code'])['Yield'].transform(np.std))
+                    y = yxData['Yield'].subtract(yxData.groupby(yxData['adm_id'])['Yield'].transform(np.mean)) \
+                        .divide(yxData.groupby(yxData['adm_id'])['Yield'].transform(np.std))
                     y = y.to_numpy()
                     X = yxData[feature_names].subtract(
-                        yxData.groupby(yxData['AU_code'])[feature_names].transform(np.mean)) \
-                        .divide(yxData.groupby(yxData['AU_code'])[feature_names].transform(np.std))
+                        yxData.groupby(yxData['adm_id'])[feature_names].transform(np.mean)) \
+                        .divide(yxData.groupby(yxData['adm_id'])[feature_names].transform(np.std))
                     X = X.to_numpy()
                 else:
                     print('Data scaling non implemented:  ' + self.uset['dataScaling'])
@@ -124,7 +124,7 @@ class DataMixin:
                     X, feature_names = d105_PCA_on_features.getPCA(self, feature_names, X)
                 # Perform One-Hot Encoding for AU if requested
             if self.uset['doOHE'] == 'AU_level':
-                OHE = pd.get_dummies(AU_codes, columns=['AU_code'], prefix='OHE_AU')
+                OHE = pd.get_dummies(adm_ids, columns=['adm_id'], prefix='OHE_AU')
                 feature_names = feature_names + OHE.columns.to_list()
                 X = np.concatenate((X, OHE), axis=1)
             # End of pre-processing of input data -------------------------------------------
@@ -135,11 +135,11 @@ class DataMixin:
         # now prepare data for hindcasting
         # We use the year as a group (for leave one group out at a time)
         groups = years.to_numpy()
-        AU_codes = AU_codes.to_numpy()
+        adm_ids = adm_ids.to_numpy()
         # save the data actually used by the model
         data = pd.DataFrame(
-            np.concatenate([AU_codes.reshape((-1, 1)), groups.reshape((-1, 1)), y.reshape((-1, 1)), X], axis=1),
-            columns=['AU_code', 'year', 'Yield'] + feature_names)
+            np.concatenate([adm_ids.reshape((-1, 1)), groups.reshape((-1, 1)), y.reshape((-1, 1)), X], axis=1),
+            columns=['adm_id', 'year', 'Yield'] + feature_names)
         myID = self.uset['runID']
         myID = f'{myID:06d}'
         # if run2get_mres_only == False:
@@ -151,8 +151,8 @@ class DataMixin:
         #     groups = groups[ind]
         #     X = X[ind, :]
         #     y = y[ind]
-        #     AU_codes = AU_codes[ind]
-        return X, y, groups, feature_names, AU_codes
+        #     adm_ids = adm_ids[ind]
+        return X, y, groups, feature_names, adm_ids
 
 
 
@@ -166,7 +166,7 @@ class YieldModeller(DataMixin, object):
         # print(self.__dict__)
         # print('after YieldModeller init')
 
-    def fit(self, X, y, groups, featureNames, AU_codes, runType):
+    def fit(self, X, y, groups, featureNames, adm_ids, runType):
         # tune and test a model with double loop to avoid information leak
 
         # X: the feature matrix (n_sample, n_feature)
@@ -177,7 +177,7 @@ class YieldModeller(DataMixin, object):
         # au_codes: an array with ancillary data, the AU code for example (n_sample)
 
         # Df to store predictions
-        mRes = pd.DataFrame() #pd.DataFrame(columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year'])
+        mRes = pd.DataFrame() #pd.DataFrame(columns=['yLoo_pred', 'yLoo_true', 'adm_id', 'Year'])
         # if runType == 'tuning':
         if ((runType == 'tuning') or (runType == 'fast_tuning')):
             # Outer loop for testing model performances, the groups are years
@@ -193,8 +193,8 @@ class YieldModeller(DataMixin, object):
             else:
                 for train_index, test_index in gen_outer_cv:
                     #print('Iteration outer loop = ' + str(nIterationOuterLoop))
-                    X_train, X_test, groups_train, AU_code_train = X[train_index], X[test_index], groups[train_index], AU_codes[train_index]
-                    y_train, y_test, groups_test, AU_code_test = y[train_index], y[test_index], groups[test_index], AU_codes[test_index]
+                    X_train, X_test, groups_train, adm_id_train = X[train_index], X[test_index], groups[train_index], adm_ids[train_index]
+                    y_train, y_test, groups_test, adm_id_test = y[train_index], y[test_index], groups[test_index], adm_ids[test_index]
                     # Not implemented:
                     # Exclude records (year - AU) with missing data
                     # train set
@@ -202,12 +202,12 @@ class YieldModeller(DataMixin, object):
                     y_train = y_train[~nas]
                     X_train = X_train[~nas, :]
                     groups_train = groups_train[~nas]
-                    AU_code_train = AU_code_train[~nas]
+                    adm_id_train = adm_id_train[~nas]
                     # for the test set do nothing, missing values are not an issue (the model does not have to be tuned)
 
                     if self.uset['algorithm'] in ['Null_model', 'Trend', 'PeakNDVI']:
-                        outLoopRes = d110_benchmark_models.run_LOYO(self.uset['algorithm'], X_train, X_test, y_train, y_test, AU_code_train, AU_code_test, groups_test)
-                        tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year'])
+                        outLoopRes = d110_benchmark_models.run_LOYO(self.uset['algorithm'], X_train, X_test, y_train, y_test, adm_id_train, adm_id_test, groups_test)
+                        tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'adm_id', 'Year'])
                         mRes = pd.concat([mRes, tmp])
                         #mRes = mRes.append(pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year']))
                     else:
@@ -231,9 +231,9 @@ class YieldModeller(DataMixin, object):
                             exit()
 
                         scoring_metric_on_val.append(search.best_score_)
-                        outLoopRes = [search.predict(X_test).tolist(), y_test.tolist(), AU_code_test.tolist(),
-                                      np.unique(groups_test).tolist() * len(AU_code_test.tolist())]
-                        tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year'])
+                        outLoopRes = [search.predict(X_test).tolist(), y_test.tolist(), adm_id_test.tolist(),
+                                      np.unique(groups_test).tolist() * len(adm_id_test.tolist())]
+                        tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'adm_id', 'Year'])
                         mRes = pd.concat([mRes, tmp])
                         # check and store if best params are pegged to boundaries
                         if nIterationOuterLoop == 1:
@@ -274,7 +274,7 @@ class YieldModeller(DataMixin, object):
         prctPegged = {'left': '', 'right': ''}
 
         if (self.uset['algorithm']  == 'PeakNDVI'):
-            y_true, y_pred, search = d110_benchmark_models.run_fit(self.uset['algorithm'], X, y, AU_codes)
+            y_true, y_pred, search = d110_benchmark_models.run_fit(self.uset['algorithm'], X, y, adm_ids)
             # search is the model to be used in prediction
             Fit_R2 = d140_modelStats.r2_nan(np.array(y_true), np.array(y_pred))
         elif not(self.uset['algorithm'] in ['Null_model', 'Trend']): #it is a ML model
@@ -348,13 +348,13 @@ class YieldModeller(DataMixin, object):
             # National level stats
             stats = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'))
             # national yield using subnat yield weighted by area
-            tmp = stats[stats['Crop_name'] == self.uset['crop']][['Region_ID', 'Area']]
+            tmp = stats[stats['Crop_name'] == self.uset['crop']][['adm_id', 'Area']]
             # get avg area
-            avg_area = tmp.groupby('Region_ID').mean()
+            avg_area = tmp.groupby('adm_id').mean()
             def weighed_average(grp):
                 return grp._get_numeric_data().multiply(grp['Area'], axis=0).sum() / grp['Area'].sum()
 
-            mRes = pd.merge(mRes, avg_area, how='left', left_on=['AU_code'], right_on=['Region_ID'])
+            mRes = pd.merge(mRes, avg_area, how='left', left_on=['adm_id'], right_on=['adm_id'])
             mCountryRes = mRes.groupby('Year')[['yLoo_pred', 'yLoo_true', 'Area']].apply(weighed_average).drop(
                 ['Area'], axis=1)
             error_Country_level = d140_modelStats.allStats_country(mCountryRes)

@@ -56,12 +56,12 @@ if __name__ == '__main__':
         #print(uset)
         hindcaster = d100_modeller.YieldModeller(uset)
         # preprocess
-        X, y, groups, feature_names, AU_codes = hindcaster.preprocess(config, runType)
+        X, y, groups, feature_names, adm_ids = hindcaster.preprocess(config, runType)
         tic = time.time()
         # fit and put results in a dict
         hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, \
             selected_features_names, prct_selected, n_selected, \
-            avg_scoring_metric_on_val = hindcaster.fit(X, y, groups, feature_names, AU_codes)
+            avg_scoring_metric_on_val = hindcaster.fit(X, y, groups, feature_names, adm_ids)
         runTimeH = (time.time() - tic) / (60 * 60)
         print(f'Model fitted in {runTimeH} hours')
         hindcaster.validate(hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, runTimeH, feature_names, selected_features_names,

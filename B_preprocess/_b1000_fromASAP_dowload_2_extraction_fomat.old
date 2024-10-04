@@ -12,7 +12,7 @@ if __name__ == '__main__':
     df3 = pd.read_csv(files2import[3])
     df = pd.concat([df0, df1, df2, df3], axis=0)
     df.insert(0, 'reg0_name', df['region_name'])
-    df.insert(0, 'reg0_id', df['region_id'])
+    df.insert(0, 'adm_id', df['region_id'])
     df = df.drop(['country_name', 'region_name', 'region_id', 'country_id'], axis=1)
     df = df.rename(columns={'variable_id': 'var_id', 'value':'mean'})
 
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     df.loc[df['variable_name'] == 'Rainfall', 'variable_name'] = 'rainfall' #Temperature
     df.loc[df['variable_name'] == 'Temperature', 'variable_name'] = 'temperature'
     df['class_name'] = df['class_name'].str.lower() # it was written with Capital C
-    df_out = df[['reg0_name', 'reg0_id',  'variable_name', 'var_id', 'classset_name', 'classesset_id', 'class_name', 'class_id', 'date', 'mean',  'stddev']]
+    df_out = df[['reg0_name', 'adm_id',  'variable_name', 'var_id', 'classset_name', 'classesset_id', 'class_name', 'class_id', 'date', 'mean',  'stddev']]
     df_out.to_csv(fb_out, index=False)
 
     print('End')

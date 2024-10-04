@@ -92,7 +92,7 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
     # map mean area, mean yield, trend?
 
     gdf_gaul1_id = adminID_column_name_in_shp_file
-    df_gaul1_id = "Region_ID|"
+    df_gaul1_id = "adm_id|"
     gdf_gaul0_name = country_name_in_shp_file
 
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
@@ -120,15 +120,15 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
         axs = axs.flatten()
         # Yield|count (valid obs)
         lbl = c + ' Number of valida yield data'
-        mapDfColumn(statsCrop, df_gaul1_id, 'Yield|count', 'AU_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
+        mapDfColumn(statsCrop, df_gaul1_id, 'Yield|count', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
                     gdf_gaul0_name, lbl, cmap='tab20b', fn_fig=None, ax=axs[0])
         # Percent crop area
         lbl = c + ' % of total crop area in the adm. unit'
-        mapDfColumn(statsCrop, df_gaul1_id, 'Perc_area|', 'AU_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
+        mapDfColumn(statsCrop, df_gaul1_id, 'Perc_area|', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
                     gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[1], minmax=[0,100])
         # % national production
         lbl = c +' % national production'
-        mapDfColumn(statsCrop, df_gaul1_id, 'Perc_production|', 'AU_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
+        mapDfColumn(statsCrop, df_gaul1_id, 'Perc_production|', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
                     gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[2], minmax=[0,100])
         # Total production
         if area_unit == 'ha' and yield_unit == 't/ha':
@@ -140,7 +140,7 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
             exit()
         statsCrop['Production|mean'] = statsCrop['Production|mean'] / divider
         lbl = c + ' production  [kt]'
-        mapDfColumn(statsCrop, df_gaul1_id, 'Production|mean', 'AU_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column, gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[3])
+        mapDfColumn(statsCrop, df_gaul1_id, 'Production|mean', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column, gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[3])
         # Total area
         if area_unit == 'ha':
             divider = 100
@@ -149,11 +149,11 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
             exit()
         statsCrop['Area|mean'] = statsCrop['Area|mean'] / divider
         lbl = c + ' area [km^2]' #lbl = r'${\rm \/ Area \/ (1000 km^2)}$'
-        mapDfColumn(statsCrop, df_gaul1_id, 'Area|mean', 'AU_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
+        mapDfColumn(statsCrop, df_gaul1_id, 'Area|mean', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
                     gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[4])
         # yield
         lbl = c + ' Yield'
-        mapDfColumn(statsCrop, df_gaul1_id, 'Yield|mean', 'AU_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
+        mapDfColumn(statsCrop, df_gaul1_id, 'Yield|mean', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
                     gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[5])
 
         fn_fig = os.path.join(dir2use, config.AOI + '_map_' + c + str(prct2retain) + '.png')
@@ -189,13 +189,13 @@ def trend_anlysis(config):
     crops = x['Crop_name'].unique()
     for c in crops:
         xc = x[x['Crop_name'] == c]
-        adm = xc['AU_name'].unique()
+        adm = xc['adm_name'].unique()
         # fig, axs = plt.subplots(len(adm), 1, figsize=(10, 2*len(adm)))
         fig, axs = plt.subplots(len(adm), 1, figsize=(10, 2.5 * len(adm)))
         axs = axs.flatten()
         axs_counter = 0
         for a in adm:
-            xca = xc[xc['AU_name'] == a].sort_values('Year')
+            xca = xc[xc['adm_name'] == a].sort_values('Year')
             y = xca['Yield'].values.reshape(-1)
             X = xca['Year'].values.reshape(-1)
             trend, h, p, z, Tau, s, var_s, slope, intercept = mk.original_test(y, alpha=alpha)

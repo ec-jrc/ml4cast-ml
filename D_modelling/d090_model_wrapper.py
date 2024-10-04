@@ -22,11 +22,11 @@ def fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False):
     if not os.path.exists(fn_out) or run2get_mres_only:
         hindcaster = d100_modeller.YieldModeller(uset)
         # preprocess
-        X, y, groups, feature_names, AU_codes = hindcaster.preprocess(config, runType, run2get_mres_only)
+        X, y, groups, feature_names, adm_ids = hindcaster.preprocess(config, runType, run2get_mres_only)
         # fit and put results in a dict
         hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, \
         selected_features_names, prct_selected, n_selected, \
-        avg_scoring_metric_on_val, fitted_model = hindcaster.fit(X, y, groups, feature_names, AU_codes, runType)
+        avg_scoring_metric_on_val, fitted_model = hindcaster.fit(X, y, groups, feature_names, adm_ids, runType)
         if run2get_mres_only:
             return mRes
         runTimeH = (time.time() - tic) / (60 * 60)

@@ -35,7 +35,7 @@ def saveYieldStats(config, prct2retain=100):
     #stats has a lot of 0, likely no data
     stats = stats.replace(0.0, np.nan)
 
-    # stats = pd.merge(stats, regNames, left_on=['Region_ID'], right_on=['AU_code'])
+    # stats = pd.merge(stats, regNames, left_on=['adm_id'], right_on=['adm_id'])
     # stats = pd.merge(stats, crop_name, on=['Crop_ID'])
     # stats.insert(loc=5, column='Production', value=stats['Area'] * stats['Yield'])
     # keep only from year of interest for the admin level stats
@@ -45,14 +45,14 @@ def saveYieldStats(config, prct2retain=100):
     tmp = stats.copy()
     tmp['Null'] = tmp['Yield'].isnull()
     tmp = tmp[tmp['Null'] == True]
-    tmp = tmp.sort_values(by=['Crop_name','AU_code','Year'])
+    tmp = tmp.sort_values(by=['Crop_name','adm_id','Year'])
     if len(tmp.index)>0:
         print('Missing records are present, inspect ' + os.path.join(config.data_dir, config.AOI + '_missing_data.csv'))
     tmp.to_csv(os.path.join(outDir, config.AOI + '_missing_data.csv'), index=False)
 
     #Mean by: Region, Crop
-    x = stats.groupby(['Region_ID', 'Crop_ID']). \
-         agg({'ASAP1_ID':'first','AU_name':'first','Crop_name':'first','Production': ['mean', 'std'], 'Yield': ['mean', 'std', 'count'], 'Area': ['mean', 'std']})
+    x = stats.groupby(['adm_id', 'Crop_ID']). \
+         agg({'adm_id':'first','adm_name':'first','Crop_name':'first','Production': ['mean', 'std'], 'Yield': ['mean', 'std', 'count'], 'Area': ['mean', 'std']})
     # sort by production
     x = x.sort_values(by=['Crop_ID', ('Production', 'mean')], ascending=False)
     # add an index 0, 1, ..
@@ -67,7 +67,7 @@ def saveYieldStats(config, prct2retain=100):
     x[('Cum_perc_production', '')] = x[('Cum_sum_production','')] / x[('Crop_sum_production', '')] * 100
 
     # by region by crop
-    x[('Crop_sum_area', '')] = x.groupby('Region_ID')[[('Area', 'mean')]].transform('sum')
+    x[('Crop_sum_area', '')] = x.groupby('adm_id')[[('Area', 'mean')]].transform('sum')
     x[('Perc_area', '')] = x[('Area','mean')] / x[('Crop_sum_area', '')] * 100
 
 
@@ -97,7 +97,7 @@ def saveYieldStats(config, prct2retain=100):
         # production
         xc = x[x['Crop_name','first'] == c]
         xc = xc.sort_values(by=[('Area', 'mean')], ascending=False)
-        xdata = list(range(len(xc['AU_name'])))
+        xdata = list(range(len(xc['adm_name'])))
         if area_unit == 'ha' and yield_unit == 't/ha':
             divider = 1000
         elif area_unit == 'ha' and yield_unit == 'kg/ha':
@@ -112,9 +112,9 @@ def saveYieldStats(config, prct2retain=100):
         axs = axs.flatten()
         xc.columns = xc.columns.map(lambda v: '|'.join([str(i) for i in v]))
         # plot production
-        e50_yield_data_analysis.barDfColumn(xdata, xc, 'Production|mean', xc['AU_name|first'].to_list(), 'Production [kt]', c, axs[0], sf_col_SD='Production|std')
+        e50_yield_data_analysis.barDfColumn(xdata, xc, 'Production|mean', xc['adm_name|first'].to_list(), 'Production [kt]', c, axs[0], sf_col_SD='Production|std')
         # yield
-        e50_yield_data_analysis.barDfColumn(xdata, xc, 'Yield|mean', xc['AU_name|first'].to_list(),
+        e50_yield_data_analysis.barDfColumn(xdata, xc, 'Yield|mean', xc['adm_name|first'].to_list(),
                                             'Yield [' + yield_unit + ']', c, axs[1], sf_col_SD='Yield|std')
         # area
         if area_unit == 'ha':
@@ -124,11 +124,11 @@ def saveYieldStats(config, prct2retain=100):
             exit()
         xc['Area|mean'] = xc['Area|mean'] / divider
         xc['Area|std'] = xc['Area|std'] / divider
-        e50_yield_data_analysis.barDfColumn(xdata, xc, 'Area|mean', xc['AU_name|first'].to_list(),
+        e50_yield_data_analysis.barDfColumn(xdata, xc, 'Area|mean', xc['adm_name|first'].to_list(),
                                             r'${\rm Area \/ [km^2]}$', c, axs[2], sf_col_SD='Area|std')
 
         # % area by admin
-        e50_yield_data_analysis.barDfColumn(xdata, xc, 'Perc_area|', xc['AU_name|first'].to_list(),
+        e50_yield_data_analysis.barDfColumn(xdata, xc, 'Perc_area|', xc['adm_name|first'].to_list(),
                                          '% crop area by admin. unit', c, axs[3], sf_col_SD=None)
         fig.subplots_adjust(bottom=0.25)
         fig.subplots_adjust(left=0.15)
@@ -150,19 +150,19 @@ def saveYieldStats(config, prct2retain=100):
     # x0 = x0.drop('Cum_perc_production', axis=1, level=0)
     # x0 = x0.drop('std', axis=1, level=1)
     # x0.columns = x0.columns.droplevel(1)
-    # xTotal = x0.groupby(['Region_ID']).agg({'AU_name': 'first', 'Area': ['sum']})
+    # xTotal = x0.groupby(['adm_id']).agg({'adm_name': 'first', 'Area': ['sum']})
     # xTotal.columns = xTotal.columns.droplevel(1)
     # xTotal = xTotal.rename(columns={"Area": "AreaTotCrops"})
     # crops = x['Crop_name', 'first'].unique()
     # for c in crops:
     #     xc = x[x['Crop_name', 'first'] == c]
     #     xc = xc.sort_values(by=[('Area', 'mean')], ascending=False)
-    #     xdata = list(range(len(xc['AU_name'])))
+    #     xdata = list(range(len(xc['adm_name'])))
     #     xc.columns = xc.columns.map(lambda x: '|'.join([str(i) for i in x]))
-    #     xc = pd.merge(xc, xTotal, left_on=['Region_ID|'], right_index=True)
+    #     xc = pd.merge(xc, xTotal, left_on=['adm_id|'], right_index=True)
     #     xc['Fraction'] = xc['Area|mean'] / xc['AreaTotCrops'] * 100
     #     plt.bar(xdata, xc['Fraction'].to_list())
-    #     labels = xc['AU_name|first'].to_list()
+    #     labels = xc['adm_name|first'].to_list()
     #     labels = [elem[:8] for elem in labels]
     #     plt.xticks(xdata, labels, rotation='vertical')
     #     plt.ylabel('Region crop area / Total crop area in the region [%]')
