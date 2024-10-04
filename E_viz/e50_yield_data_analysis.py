@@ -86,12 +86,12 @@ def mapDfColumn(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_merge
 
 
 
-def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0', prct2retain=100):
+def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0', adminID_column_name_in_shp_file = 'asap1_id', prct2retain=100):
     dir2use = os.path.join(config.data_dir, 'Label_analysis')
     # map numer of year available (Yield count)
     # map mean area, mean yield, trend?
 
-    gdf_gaul1_id = "asap1_id"
+    gdf_gaul1_id = adminID_column_name_in_shp_file
     df_gaul1_id = "Region_ID|"
     gdf_gaul0_name = country_name_in_shp_file
 
@@ -190,7 +190,8 @@ def trend_anlysis(config):
     for c in crops:
         xc = x[x['Crop_name'] == c]
         adm = xc['AU_name'].unique()
-        fig, axs = plt.subplots(len(adm), 1, figsize=(10, 2*len(adm)))
+        # fig, axs = plt.subplots(len(adm), 1, figsize=(10, 2*len(adm)))
+        fig, axs = plt.subplots(len(adm), 1, figsize=(10, 2.5 * len(adm)))
         axs = axs.flatten()
         axs_counter = 0
         for a in adm:

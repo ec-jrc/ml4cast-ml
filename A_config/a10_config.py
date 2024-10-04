@@ -22,6 +22,8 @@ class read:
     self.data_dir = os.path.join(self.root_dir, jdict['data_dir'])
     self.fn_reference_shape = jdict['fn_reference_shape']
     self.country_name_in_shp_file = jdict['country_name_in_shp_file']
+    self.gaul0_column_name_in_shp_file = jdict['gaul0_column_name_in_shp_file']
+    self.adminID_column_name_in_shp_file = jdict['adminID_column_name_in_shp_file']
 
     self.ope_data_dir = os.path.join(self.root_dir, jdict['ope_data_dir'])
     # self.output_dir = os.path.join(self.root_dir, jdict['output_dir'])
@@ -224,17 +226,17 @@ def config_reducer(modelSettings, run_name):
     # 'rs_met_sm_reduced': ['ND', 'RainSum', 'T', 'SM'], 'rs': ['ND', 'NDmax'], 'rs_reduced': ['ND'],
     # 'rs_sm_reduced': ['ND', 'SM'], 'met': ['rad', 'RainSum', 'T', 'Tmin', 'Tmax'],
     # 'met_reduced': ['rad', 'RainSum', 'T'], 'met_sm_reduced': ['rad', 'RainSum', 'T', 'SM']
-    if run_name == 'month5':
-        want_keys = ['rs_met_reduced', 'rs_met_sm_reduced', 'rs_reduced', 'rs_sm_reduced']
+    if run_name == 'test_change_names':
+        want_keys = ['rs_sm_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
         modelSettings.doOHEs = ['AU_level']
         modelSettings.feature_prct_grid = [5, 25, 50, 100]
-        want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf'] #used in run month5
+        want_keys = ['Lasso'] #used in run month5
         #want_keys = ['XGBoost'] # used in run month5 month5_onlyXGB
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        # modelSettings.feature_selections = ['none']
-        # modelSettings.addYieldTrend = [False]
-        # modelSettings.dataReduction = ['none']
+        modelSettings.feature_selections = ['none']
+        modelSettings.addYieldTrend = [False]
+        modelSettings.dataReduction = ['none']
     elif run_name == 'test_quick':
         want_keys = ['rs_met_reduced', 'rs_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
