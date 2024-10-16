@@ -50,31 +50,79 @@ def saveYieldStats(config, prct2retain=100):
         print('Missing records are present, inspect ' + os.path.join(config.data_dir, config.AOI + '_missing_data.csv'))
     tmp.to_csv(os.path.join(outDir, config.AOI + '_missing_data.csv'), index=False)
 
+    # Last5yrs stats
+    region_ids = stats['adm_id'].unique()
+    crop_ids = stats['Crop_ID'].unique()
+    statsLast5yrs = stats.copy()
+    for rid in region_ids:
+        for cid in crop_ids:
+            lastYear = statsLast5yrs[(statsLast5yrs.adm_id == rid) & (statsLast5yrs.Crop_ID == cid)]['Year'].max()
+            statsLast5yrs = statsLast5yrs.drop(statsLast5yrs[(statsLast5yrs.adm_id == rid) & \
+                                                             (statsLast5yrs.Crop_ID == cid) & \
+                                                             (statsLast5yrs.Year <= lastYear-5)].index)
+
+    # Mean by: Region, Crop
+    x5 = statsLast5yrs.groupby(['adm_id', 'Crop_ID']). \
+        agg({'adm_name': 'first', 'Crop_name': 'first', 'Production': ['mean', 'std'],
+             'Yield': ['mean', 'std', 'count'], 'Area': ['mean', 'std']})
+    # sort by production
+    x5 = x5.sort_values(by=['Crop_ID', ('Production', 'mean')], ascending=False)
+    # add an index 0, 1, ..
+    x5.reset_index(inplace=True)
+
+    # Compute, by crop crop in all regions
+    x5[('Crop_sum_production', '')] = x5.groupby('Crop_ID')[[('Production', 'mean')]].transform('sum')
+    x5[('Cum_sum_production', '')] = x5.groupby('Crop_ID')[[('Production', 'mean')]].transform('cumsum')
+    x5[('Perc_production', '')] = x5[('Production', 'mean')] / x5[('Crop_sum_production', '')] * 100
+    x5[('Cum_perc_production', '')] = x5[('Cum_sum_production', '')] / x5[('Crop_sum_production', '')] * 100
+
+    # and by region by crop
+    x5[('Crop_sum_area', '')] = x5.groupby('adm_id')[[('Area', 'mean')]].transform('sum')
+    x5[('Perc_area', '')] = x5[('Area', 'mean')] / x5[('Crop_sum_area', '')] * 100
+
+    # keep a copy with all for later
+    x05 = x5.copy(deep=True)
+    # keep only the largest up to prct2retain production, by crop
+    crops = x5['Crop_name', 'first'].unique()
+    for c in crops:
+        tmp = x5[x5['Crop_name', 'first'] == c]
+        tmp = tmp.reset_index(drop=True)
+        tmp = tmp.sort_values(by='Cum_perc_production')
+        if prct2retain != 100:
+            ind = tmp[tmp['Cum_perc_production'] >= prct2retain].index[0]
+            tmp = tmp.iloc[0:ind + 1]
+
+        x5 = x5.drop(x5[x5['Crop_name', 'first'] == c].index)
+        x5 = pd.concat([x5, tmp])
+    # remove multi column
+    y5 = x5.copy()
+    y5.columns = y5.columns.map(lambda v: '|'.join([str(i) for i in v]))
+    y5.to_csv(os.path.join(outDir, config.AOI + '_5yrsStats_retainPRCT' + str(prct2retain) + '.csv'), index=False)
+
+    # LT stats
     #Mean by: Region, Crop
     x = stats.groupby(['adm_id', 'Crop_ID']). \
-         agg({'adm_id':'first','adm_name':'first','Crop_name':'first','Production': ['mean', 'std'], 'Yield': ['mean', 'std', 'count'], 'Area': ['mean', 'std']})
+         agg({'adm_name':'first','Crop_name':'first','Production': ['mean', 'std'], 'Yield': ['mean', 'std', 'count'], 'Area': ['mean', 'std']})
+
     # sort by production
     x = x.sort_values(by=['Crop_ID', ('Production', 'mean')], ascending=False)
     # add an index 0, 1, ..
     x.reset_index(inplace=True)
 
-    #Compute, by crop
-
-    #by crop in all regions
+    #Compute, by crop crop in all regions
     x[('Crop_sum_production', '')] = x.groupby('Crop_ID')[[('Production', 'mean')]].transform('sum')
     x[('Cum_sum_production', '')] = x.groupby('Crop_ID')[[('Production', 'mean')]].transform('cumsum')
     x[('Perc_production', '')] = x[('Production','mean')] / x[('Crop_sum_production', '')] * 100
     x[('Cum_perc_production', '')] = x[('Cum_sum_production','')] / x[('Crop_sum_production', '')] * 100
 
-    # by region by crop
+    # and by region by crop
     x[('Crop_sum_area', '')] = x.groupby('adm_id')[[('Area', 'mean')]].transform('sum')
     x[('Perc_area', '')] = x[('Area','mean')] / x[('Crop_sum_area', '')] * 100
 
 
     # keep a copy with all for later
     x0 = x.copy(deep=True)
-    # keep only the largest up to 90% production, by crop
-    # 29 04 2021: Mic, at least 90
+    # keep only the largest up to prct2retain production, by crop
     crops = x['Crop_name', 'first'].unique()
     for c in crops:
         tmp = x[x['Crop_name','first'] == c]

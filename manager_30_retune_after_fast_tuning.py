@@ -7,6 +7,7 @@ from F_post_processsing import F100_analyze_hindcast_output
 from A_config import a10_config
 import tuner
 import threading
+import manager_0_user_params as upar
 from manager_20_tune import monitor_condor_q
 
 
@@ -16,20 +17,11 @@ if __name__ == '__main__':
     rerun them properly with standard tuning and place it, together with benchmarks in dir output  
     """
     # USER PARAMS
-    metric = 'RMSE_val' #metric for best model selection, RMSE_val is the only one avail in fast_tuning
-    n = 20 # ml models to rerun (obsrvation show that the best model found by standard tuning is within the first 10 found by fast tuning
-    # env = 'pc' #['pc','jeo']
-    # if env == 'pc':
-    if 'win' in sys.platform:
-        config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'  # r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
-        run_name = '20240923_100_maize'  # 'test_quick'
-        # runType = 'fast_tuning'  # 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
-        tune_on_condor = False
-    else:
-        config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-        run_name = '20240911_75_maize'
-        # runType = 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
-        tune_on_condor = True
+    metric = upar.metric                #metric for best model selection, RMSE_val is the only one avail in fast_tuning
+    n = upar.n                          # ml models to rerun (obsrvation show that the best model found by standard tuning is within the first 10 found by fast tuning
+    config_fn = upar.config_fn
+    run_name = upar.run_name
+    tune_on_condor = upar.tune_on_condor
     # END OF USER PARAMS
 
 

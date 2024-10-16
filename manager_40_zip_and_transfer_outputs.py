@@ -1,6 +1,7 @@
-from A_config import a10_config
 import shutil
 import os
+from A_config import a10_config
+import manager_0_user_params as upar
 
 if __name__ == '__main__':
     """
@@ -10,8 +11,8 @@ if __name__ == '__main__':
     """
     ##########################################################################################
     # USER PARAMS
-    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-    run_name = '20240920_50_maize'
+    config_fn = upar.config_fn
+    run_name = upar.run_name
     # END OF USER PARAMS
     ##########################################################################################
     config = a10_config.read(config_fn, run_name, run_type='fast_tuning')  # only to get root dir

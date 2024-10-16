@@ -1,6 +1,9 @@
 import time
 import os
 import json
+
+import pandas as pd
+
 from D_modelling import d100_modeller
 
 # to avoid all warnings (GPR was triggering ConvergenceWarnings)
@@ -19,6 +22,15 @@ def fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False):
     fn_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
                           '_crop_' + uset['crop'] + '_Yield_' + uset['algorithm'] +
                           '_output.csv')
+    if run2get_mres_only:
+        #see if mRes there already, in case read, pass back and return
+        fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+                                   '_crop_' + uset['crop'] + '_Yield_' + uset['algorithm'] +
+                                   '_mres.csv')
+        if os.path.exists(fn_mRes_out):
+            mRes = pd.read_csv(fn_mRes_out)
+            return mRes
+
     if not os.path.exists(fn_out) or run2get_mres_only:
         hindcaster = d100_modeller.YieldModeller(uset)
         # preprocess
@@ -27,8 +39,16 @@ def fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False):
         hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, \
         selected_features_names, prct_selected, n_selected, \
         avg_scoring_metric_on_val, fitted_model = hindcaster.fit(X, y, groups, feature_names, adm_ids, runType)
-        if run2get_mres_only:
-            return mRes
+        #if I am retuning or tuning produce MRes for results analysis:
+        if runType == 'tuning':
+            # write mres for future use
+            fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+                                  '_crop_' + uset['crop'] + '_Yield_' + uset['algorithm'] +
+                                  '_mres.csv')
+            mRes.to_csv(os.path.join(fn_mRes_out), index=False)
+            # if having mRes was the only purpose, return it back and avoid validation
+            if run2get_mres_only:
+                return mRes
         runTimeH = (time.time() - tic) / (60 * 60)
         # print(f'Model fitted in {runTimeH} hours')
         # error stats

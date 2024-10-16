@@ -51,7 +51,7 @@ def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, rMAE
     stats = stats[stats['Crop_name'] == uset['crop']]
 
     for region in regions:
-        # get stats for region and sort by yera (*)to take last 5)
+        # get stats for region and sort by year (*)to take last 5)
         stats_region = stats[stats['adm_id'] == region].sort_values(by=['Year'])
         fyield_region = df_forecast.loc[df_forecast['adm_id'] == region, 'fyield'].values
         df_forecast.loc[df_forecast['adm_id'] == region, 'adm_id'] = stats_region.iloc[0]['adm_id']

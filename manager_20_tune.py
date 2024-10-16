@@ -8,6 +8,7 @@ import json
 import threading
 import subprocess
 import pandas as pd
+import manager_0_user_params as upar
 from A_config import a10_config
 
 
@@ -139,27 +140,18 @@ if __name__ == '__main__':
     # USER PARAMS
     # be care forecstingMonths is in config!
     # month X means that all months up to X (included) are used, so this is possible in month X+1
-    # env = 'jeo'  # ['pc','jeo']
-    # if env == 'pc':
-    if 'win' in sys.platform:
-        config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json' #r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
-        run_name = 'test_change_names_changed'#'test_quick'
-        runType = 'tuning' #'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
-        tune_on_condor = False
-    else:
-        config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-        run_name = '20240911_75_maize'
-        runType = 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
-        tune_on_condor = True
-        time_step_check = 60 #in minutes
+    config_fn = upar.config_fn
+    run_name = upar.run_name
+    runType = upar.runType
+    tune_on_condor = upar.tune_on_condor
+    time_step_check = upar.time_step_check
+
     # the class mlSettings of a10_config sets all the possible configuration to be tested.
     # The user can reduce the numbers of possible configuration in a given run by editing
     # the function config_reducer in  a10_config
 
     # END OF USER PARAMS
     ##########################################################################################
-
-
 
     config = a10_config.read(config_fn, run_name, run_type=runType)
     forecastingMonths = config.forecastingMonths

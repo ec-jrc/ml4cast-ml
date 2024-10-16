@@ -1,13 +1,10 @@
 import sys
 import glob
-import shutil
 import os
-from pathlib import Path
 from F_post_processsing import F100_analyze_hindcast_output
 from A_config import a10_config
-import tuner
-import threading
-from manager_20_tune import monitor_condor_q
+import manager_0_user_params as upar
+
 
 
 if __name__ == '__main__':
@@ -15,24 +12,12 @@ if __name__ == '__main__':
     This manager just check that all files supposed to be rerun went well (condor sometimes has problems, and specs need to be rerun)
     """
     # USER PARAMS
-    # The following two needs to be the same of magaer_30
-    metric = 'RMSE_val' #metric for best model selection, RMSE_val is the only one avail in fast_tuning
-    n = 20 # ml models to rerun (obsrvation show that the best model found by standard tuning is within the first 10 found by fast tuning
-    # env = 'pc' #['pc','jeo']
-    # if env == 'pc':
-    if 'win' in sys.platform:
-        config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'  # r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
-        run_name = '20240920_50_maize'  # 'test_quick'
-        # runType = 'fast_tuning'  # 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
-        tune_on_condor = False
-    else:
-        config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-        run_name = '20240911_75_maize'
-        # runType = 'fast_tuning'  # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
-        tune_on_condor = True
+    metric = upar.metric  # metric for best model selection, RMSE_val is the only one avail in fast_tuning
+    n = upar.n  # ml models to rerun (obsrvation show that the best model found by standard tuning is within the first 10 found by fast tuning
+    config_fn = upar.config_fn
+    run_name = upar.run_name
+    tune_on_condor = upar.tune_on_condor
     # END OF USER PARAMS
-
-
 
     config = a10_config.read(config_fn, run_name, run_type='fast_tuning') #only to get where the fast tuning was stored
     out_fast = config.models_out_dir

@@ -11,6 +11,7 @@ from A_config import a10_config
 from B_preprocess import b100_load
 from D_modelling import d100_modeller
 from F_post_processsing import F110_process_opeForecast_output
+import manager_0_user_params as upar
 
 
 if __name__ == '__main__':
@@ -24,18 +25,13 @@ if __name__ == '__main__':
     pd.set_option('display.max_columns', None)
     ##########################################################################################
     # USER PARAMS
-    forecastingMonth = 5  # month X means that all months up to X (included) are used, so this is possible in month X+1
-    forecastingYear = 2024  # This year refer to time of EOS
-    metric_for_model_selection = 'RMSE_p'  # 'RMSE_val' MUST BE USED
-
-    if 'win' in sys.platform:
-        config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'  # r'V:\foodsec\Projects\SNYF\NDarfur\NDarfur_config.json'
-        run_name = '20240911_75_maize'
-        tune_on_condor = False
-    else:
-        config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZAsummer/ZAsummer_config.json'
-        run_name = 'xx'
-        tune_on_condor = True
+    metric = upar.metric  # metric for best model selection, while rRMSE_ponly this implemnted for now because of graphs and maps
+    config_fn = upar.config_fn
+    run_name = upar.run_name
+    metric_for_model_selection = upar.metric
+    forecastingMonth = upar.forecastingMonth  # month X means that all months up to X (included) are used, so this is possible in month X+1
+    forecastingYear = upar.forecastingYear  # This year refer to time of EOS
+    tune_on_condor = upar.tune_on_condor
     # END OF USER PARAMS
     ##########################################################################################
 
