@@ -212,6 +212,33 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
             sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
             df_c_t['pltOrder'] = df_c_t['tmp_est'].map(sort_dict)
             df_c_t = df_c_t.sort_values('pltOrder').reset_index()
+            # ax holder for rrmse by AU
+            fig3, axs3 = plt.subplots(2, 3, figsize=(12, 10), constrained_layout=True)
+            # reorder coneniently
+            axs3 = [axs3[0, 0], axs3[0, 1], axs3[1, 0], axs3[1, 1], axs3[0, 2], axs3[1, 2]]
+
+
+            # iterate one time to get min max over pandas df
+            dfAU = pd.DataFrame()
+            for index, row in df_c_t.iterrows():
+                # get run_id
+                runID = row['runID']
+                est = row['Estimator']
+                tmp_est = row['tmp_est']
+                myID = f'{runID:06d}'
+                fn_spec = os.path.join(pathlib.Path(config.models_spec_dir), myID + '_' + c + '_' + est + '.json')
+                print(fn_spec)
+                df = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
+                statsByAdmin = d140_modelStats.statsByAdmin(df)
+                statsByAdmin = statsByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
+                statsByAdmin['Estimator'] = tmp_est
+                dfAU = pd.concat([dfAU, statsByAdmin])
+            minOfMins = dfAU.rrmse_prct.min()
+            maxOfmaxs = dfAU.rrmse_prct.max()
+            # get best by admin
+            dfBestPerAU = dfAU[dfAU['rrmse_prct'] == dfAU.groupby(['adm_id'])['rrmse_prct'].transform(min)]
+            colors = {'ML': "#0000FF", 'Null_model': "#969696", 'PeakNDVI': "#FF0000", 'Trend': "#009600"}
+            dfBestPerAU['colors'] = dfBestPerAU['Estimator'].map(colors)
             # iterate over pandas df
             for index, row in df_c_t.iterrows():
                 # get run_id
@@ -224,9 +251,12 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
                 df = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
                 statsByAdmin = d140_modelStats.statsByAdmin(df)
                 statsByAdmin = statsByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
-                fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' +  str(forecastingPrct)+ '-' + c + '_' + tmp_est +'_AU_rrmse.png'
-                e50_yield_data_analysis.mapDfColumn(statsByAdmin, 'adm_id', 'rrmse_prct', 'adm_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
-                'rRMSE (%)', cmap='tab20b', minmax=None, fn_fig=fig_name, ax=None)
+                axs3[index] = e50_yield_data_analysis.mapDfColumn2Ax(statsByAdmin, 'adm_id', 'rrmse_prct', 'adm_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
+                                'rRMSE (%)', cmap='tab20b', minmax=[minOfMins, maxOfmaxs], ax=axs3[index])
+                axs3[index].set_title(tmp_est)
+                # fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' +  str(forecastingPrct)+ '-' + c + '_' + tmp_est +'_AU_rrmse.png'
+                # e50_yield_data_analysis.mapDfColumn(statsByAdmin, 'adm_id', 'rrmse_prct', 'adm_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
+                # 'rRMSE (%)', cmap='tab20b', minmax=None, fn_fig=fig_name, ax=None)
                 lims = [np.floor(np.min([df['yLoo_true'].values, df['yLoo_pred'].values])),
                         np.ceil(np.max([df['yLoo_true'].values, df['yLoo_pred'].values]))]
                 r2p = d140_modelStats.r2_nan(df['yLoo_true'].values, df['yLoo_pred'].values)
@@ -261,11 +291,26 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
             fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_scatter_by_admin.png'
             fig.savefig(fig_name)
             fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_scatter_by_year.png'
+            fig2.savefig(fig_name)
 
+            # now plot the best by au
+            axs3[4] = e50_yield_data_analysis.mapDfColumn2Ax(dfBestPerAU, 'adm_id', 'tmp_est', 'adm_name', gdf,
+                                                                 gdf_gaul1_id, gdf_gaul0_column,
+                                                                 country_name_in_shp_file,
+                                                                 'Estimator', ax=axs3[4], cate=True)
+            axs3[4].set_title('Best')
+
+            axs3[5].set_axis_off()
+            fig3.subplots_adjust(wspace=0.01, hspace=0.01)
+            for ax in axs3:
+                ax.set_anchor('NW')
+            fig_name = fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' +  str(forecastingPrct)+ '-' + c  +'_AU_rrmse.png'
+            # fig3.tight_layout()
+            fig3.savefig(fig_name)
 
             plt.close(fig)
             plt.close(fig2)
-
+            plt.close(fig3)
 
 # def scatter_plots_and_maps(b1, config, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'): #onfig, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'
 #     df_regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))

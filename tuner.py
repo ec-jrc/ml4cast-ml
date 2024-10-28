@@ -142,7 +142,9 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                     scount = scount + 1
             else:
                 sys.exit('Tuner terminated by user')
-
+        if len(new_file_list) == 0:
+            print('No files to re-run, execution will stop')
+            sys.exit()
         if os.path.exists(condor_task_list_fn):
             os.remove(condor_task_list_fn)
         f_obj = open(condor_task_list_fn, 'a')

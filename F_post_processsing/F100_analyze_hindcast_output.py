@@ -5,16 +5,19 @@ import os
 from A_config import a10_config
 from E_viz import e100_eval_figs
 
+
 def gather_output(config):
     analysisOutputDir = os.path.join(config.models_out_dir, 'Analysis')
     pathlib.Path(analysisOutputDir).mkdir(parents=True, exist_ok=True)
     run_res = list(sorted(pathlib.Path(config.models_out_dir).glob('ID*_output.csv')))
     print('N files = ' + str(len(run_res)))
-    print('Missing files are printed, if any ') #(no warning issued if they are files that were supposed to be skipped (ft sel asked on 1 var)')
+    print(
+        'Missing files are printed, if any ')  # (no warning issued if they are files that were supposed to be skipped (ft sel asked on 1 var)')
     cc = 0
+    missing_counter = 0
     if len(run_res) > 0:
         for file_obj in run_res:
-            #print(file_obj, cc)
+            # print(file_obj, cc)
             cc = cc + 1
             try:
                 df = pd.read_csv(file_obj)
@@ -22,7 +25,7 @@ def gather_output(config):
                 print('Empty file ' + str(file_obj))
             else:
                 try:
-                    run_id = int(df['runID'][0]) #.split('_')[1])
+                    run_id = int(df['runID'][0])  # .split('_')[1])
                 except:
                     print('Error in the file ' + str(file_obj))
                 else:
@@ -30,22 +33,25 @@ def gather_output(config):
                     # df_updated = df
 
                     if file_obj == run_res[0]:
-                        #it is the first, save with hdr
+                        # it is the first, save with hdr
                         df.to_csv(analysisOutputDir + '/all_model_output.csv', mode='w', header=True, index=False)
                     else:
-                        #it is not first, without hdr
+                        # it is not first, without hdr
                         df.to_csv(analysisOutputDir + '/all_model_output.csv', mode='a', header=False, index=False)
                         # print if something is missing
                         if run_id > run_id0:
                             if (run_id != run_id0 + 1):
                                 for i in range(run_id0 + 1, run_id):
                                     print('Non consececutive runids:' + str(i))
+                                    missing_counter = missing_counter + 1
                         # else:
                         #     print('Date changed?', date_id, 'new run id', run_id0)
                     run_id0 = run_id
     else:
         print('There is no a single output file')
     print('End of printing missing files')
+    if missing_counter > 0:
+        print('Missing outputs are present, if you are running RERUN AFTER TUNING, stop and rerun manager_20_tune')
 
 
 def compare_fast_outputs(config, n, metric2use='rRMSE_p'):  # RMSE_p' #'R2_p'
@@ -81,14 +87,16 @@ def compare_fast_outputs(config, n, metric2use='rRMSE_p'):  # RMSE_p' #'R2_p'
     bn = bn.sort_values([var4time, 'Crop', metric2use], \
                         ascending=[True, True, sortAscending])
     bn.to_csv(analysisOutputDir + '/' + 'ML_models_to_run_with_tuning.csv', index=False)
-    return  bn['runID'].tolist()
+    return bn['runID'].tolist()
 
-def compare_outputs (config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0', metric2use = 'rRMSE_p'):  #RMSE_p' #'R2_p'
-    #get some vars from mlSettings class
+
+def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_column='name0',
+                    metric2use='rRMSE_p'):  # RMSE_p' #'R2_p'
+    # get some vars from mlSettings class
     mlsettings = a10_config.mlSettings(forecastingMonths=0)
     # includeTrendModel = True   #for Algeria run ther is no trend model
     # addCECmodel = False #only for South Africa
-    
+
     analysisOutputDir = os.path.join(config.models_out_dir, 'Analysis')
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', 400)  # width is = 400
@@ -110,24 +118,28 @@ def compare_outputs (config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul
     # add the calendar month at which teh forcast can be done
     di = dict(zip(config.forecastingMonths, config.forecastingCalendarMonths))
     mo['forecast_issue_calendar_month'] = mo['forecast_time'].replace(di)
-    mo['forecast_issue_calendar_month'] = mo['forecast_issue_calendar_month'].astype(int) + 1 #add one month as forecast are made beginiing of the month after
-    mo.loc[mo['forecast_issue_calendar_month'] > 12, ['forecast_issue_calendar_month']]= mo['forecast_issue_calendar_month'] -12
+    mo['forecast_issue_calendar_month'] = mo['forecast_issue_calendar_month'].astype(
+        int) + 1  # add one month as forecast are made beginiing of the month after
+    mo.loc[mo['forecast_issue_calendar_month'] > 12, ['forecast_issue_calendar_month']] = mo[
+                                                                                              'forecast_issue_calendar_month'] - 12
     # get best 4 ML configurations by lead time, crop type and y var PLUS benchmarks
     moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
-    b4 = moML.groupby(['Crop', var4time]).apply(lambda x: x.sort_values([metric2use], ascending = sortAscending).head(4)).reset_index(drop=True)
+    b4 = moML.groupby(['Crop', var4time]).apply(
+        lambda x: x.sort_values([metric2use], ascending=sortAscending).head(4)).reset_index(drop=True)
     # always add the benchmarks
     tmp = mo.groupby(['Crop', var4time]) \
         .apply(lambda x: x.loc[x['Estimator'].isin(mlsettings.benchmarks)]).reset_index(drop=True)
     tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'Crop'])
     b4 = pd.concat([b4, tmp])
-    b4 = b4.sort_values([var4time,'Crop', metric2use], \
-                   ascending=[True, True, sortAscending])
+    b4 = b4.sort_values([var4time, 'Crop', metric2use], \
+                        ascending=[True, True, sortAscending])
     b4.to_csv(analysisOutputDir + '/' + 'all_model_best4.csv', index=False)
 
     # and absolute ML best (plus benchmarks)
     # get best 4 ML configurations by lead time, crop type and y var PLUS benchmarks
     moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
-    b1ML = moML.groupby(['Crop', var4time]).apply(lambda x: x.sort_values([metric2use], ascending = sortAscending).head(1)).reset_index(drop=True)
+    b1ML = moML.groupby(['Crop', var4time]).apply(
+        lambda x: x.sort_values([metric2use], ascending=sortAscending).head(1)).reset_index(drop=True)
     # always add the benchmarks
     tmp = mo.groupby(['Crop', var4time]) \
         .apply(lambda x: x.loc[x['Estimator'].isin(mlsettings.benchmarks)]).reset_index(drop=True)
@@ -139,16 +151,12 @@ def compare_outputs (config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul
     # b1 = b1[b1['forecast_time']==5]
     # plot scatter of Ml and bechmark, one plot per crop and forecasting time (this function is saving mRes)
     e100_eval_figs.scatter_plots_and_maps(b1, config, mlsettings, var4time, analysisOutputDir, fn_shape_gaul1,
-                                      country_name_in_shp_file, gdf_gaul0_column=gdf_gaul0_column)
+                                          country_name_in_shp_file, gdf_gaul0_column=gdf_gaul0_column)
     # plot it by forecasting time (simple bars for each forecasting time), mRes is created above
     e100_eval_figs.bars_by_forecast_time2(b1, config, 'rRMSE_p', mlsettings, var4time, analysisOutputDir)
     # e100_eval_figs.bars_by_forecast_time(b1, config, metric2use, mlsettings, var4time, analysisOutputDir)
 
     print('Compare output ended')
-
-
-
-
 
     # best configuration of each model type by forecast time, crop type and y var
     # find out, for each of them, the best performing configuration y lead time, crop type and y var
@@ -156,10 +164,6 @@ def compare_outputs (config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul
     # bmc = bmc.sort_values(['Crop', var4time, metric2use], \
     #                     ascending=[True, True, sortAscending])
     # bmc.to_csv(analysisOutputDir + '/' + 'best_conf_of_all_models.csv', index=False)
-
-
-
-
 
     # # make some plots on best 4
     # crop_names = mo['Crop'].unique()

@@ -84,7 +84,67 @@ def mapDfColumn(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_merge
         fig.savefig(fn_fig)  # , dpi = 300)
         plt.close(fig)
 
+def mapDfColumn2Ax(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_merge_col, gdf_gaul0_column, gdf_gaul0_name,
+                lbl, cmap='tab20b', minmax=None, ax=None, cate=False):
+    """
+    df: the data pandas df
+    df_merge_col: the column name used to merge with geopandas df
+    df_col2map: the column to map
+    df_col_admin_names: the column with the admin names
+    gdf: the geopandas df
+    gdf_merge_col: the column name used to merge with pandas df
+    gdf_gaul0_column: the gdf column with country name
+    gdf_gaul0_name: the name of the gaul0 unit of interest (may be different from the one in the df)
+    lbl: label for the legen
+    ax: ax to be filled
+    """
+    # join df with gdf
+    gdf = gdf[gdf[gdf_gaul0_column] == gdf_gaul0_name]
+    merged = gdf.merge(df, how='left', left_on=gdf_merge_col, right_on=df_merge_col)
+    merged[df_col_admin_names] = merged[df_col_admin_names].fillna('')
 
+    merged.boundary.plot(ax=ax, color="black", linewidth=0.5)
+    if cate == False:
+        vmin = merged[df_col2map].min()
+        vmax = merged[df_col2map].max()
+        if vmin == vmax:
+            vmin = vmin - vmin/10
+            vmax = vmax + vmax / 10
+        if minmax != None:
+            vmin = minmax[0]
+            vmax = minmax[1]
+
+    # https://matplotlib.org/stable/users/explain/colors/colormaps.html
+    if cate:
+        merged = merged.dropna(subset=["colors"])
+        merged.plot(column=df_col2map, ax=ax, legend=True,
+                    #legend_kwds={'label': lbl, 'bbox_to_anchor':(.5, 0.1),'fontsize':12,'frameon':False}, #'orientation': "horizontal",
+                    categorical=True, color=merged["colors"])
+    else:
+        merged.plot(column=df_col2map, ax=ax, legend=True, legend_kwds={'label': lbl, 'orientation': "horizontal", 'shrink': 0.8},
+                vmin=vmin, vmax=vmax, cmap=cmap) # tab20b
+    # Add Labels (only plotted regions)
+    #merged = merged[merged['Crop_name|first'] == c]
+    merged['coords'] = merged['geometry'].apply(lambda x: x.representative_point().coords[:])
+    merged['coords'] = [coords[0] for coords in merged['coords']]
+    for idx, row in merged.iterrows():
+        ax.annotate(text=row[df_col_admin_names], xy=row['coords'], horizontalalignment='center', fontsize=8, color='black')
+
+    ax.set_xlabel('Deg E')
+    start, end = ax.get_xlim()
+    ss = np.floor(start)
+    ee = np.ceil(end)
+    ax.set_xlim(ss, ee)
+    ax.set_xticks(np.arange(ss, ee, 1))
+    # plt.xlim(start, end)
+
+    ax.set_ylabel('Deg N')
+    start, end = ax.get_ylim()
+    ss = np.floor(start)
+    ee = np.ceil(end)
+    ax.set_ylim(ss, ee)
+    ax.set_yticks(np.arange(ss, ee, 1))
+    return ax
 
 def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0', adminID_column_name_in_shp_file = 'asap1_id', prct2retain=100):
     dir2use = os.path.join(config.data_dir, 'Label_analysis')
