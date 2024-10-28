@@ -26,6 +26,16 @@ class DataMixin:
         # [opeForecast] run the operational yield
 
         stats = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'))
+
+        # if working on a ML model and there is some crop-au combination to exclude, do it here upfront
+        if not(self.uset['algorithm'] == 'Null_model' or self.uset['algorithm'] == 'Trend' or self.uset['algorithm'] == 'PeakNDVI'):
+            if bool(config.crop_au_exclusions):
+                for key_crop, value_au_list in config.crop_au_exclusions.items():
+                    for value_au in value_au_list:
+                        mask = (stats['Crop_name'] == key_crop) & (stats['adm_name'] == value_au)
+                        stats = stats[~mask]
+
+
         # # rescale Production units for better graphic and better models (if production is avail)
         # if 'Production' in stats.columns:
         #     stats['Production'] = stats['Production'].div(config.production_scaler)

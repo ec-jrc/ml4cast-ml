@@ -17,6 +17,10 @@ class read:
     #self.forecastingMonths = jdict['forecastingMonths'] obsolete, now %
     self.crops = jdict['crops']
     self.afi = jdict['afi']
+    if "crop_au_exclusions" in jdict:
+        self.crop_au_exclusions = jdict['crop_au_exclusions']
+    else:
+        self.crop_au_exclusions = {}
 
     self.root_dir = jdict['root_dir']
     self.data_dir = os.path.join(self.root_dir, jdict['data_dir'])
