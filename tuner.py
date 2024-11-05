@@ -144,8 +144,8 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
         # running with condor
         dir_condor_submit = config.models_dir
         # make the task list (id, filename full path)
-        condor_task_list_base_name = 'HT_condor_task_arguments.txt'
-        condor_task_list_fn = os.path.join(config.models_dir, condor_task_list_base_name)
+        condor_task_list_base_name1 = 'HT_condor_task_arguments.txt'
+        condor_task_list_fn1 = os.path.join(config.models_dir, condor_task_list_base_name1)
         spec_files_list1 = spec_files_list
         if len(spec_files_list) > nMaxTask:
             spec_files_list1 = spec_files_list[0:7500]
@@ -156,33 +156,30 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
         # In this case copy the HT_condor_task_arguments to HT_condor_task_arguments_all and keep
         # only the entries that were not successful (sya that logs will be overwritten and must be moved a folder,
         # wait for Y from keyboard)
-        if os.path.isfile(condor_task_list_fn):
-            spec_files_list2 = checkExistingSubmit(condor_task_list_base_name, condor_task_list_fn, config, spec_files_list2)
+        if os.path.isfile(condor_task_list_fn1):
+            spec_files_list1 = checkExistingSubmit(condor_task_list_base_name1, condor_task_list_fn1, config, spec_files_list1)
         if len(spec_files_list) > nMaxTask:
             # there was a second ht condor
             if os.path.isfile(condor_task_list_fn2):
-                spec_files_list1 = checkExistingSubmit(condor_task_list_base_name2, condor_task_list_fn2, config, spec_files_list)
-
-
+                spec_files_list1 = checkExistingSubmit(condor_task_list_base_name2, condor_task_list_fn2, config, spec_files_list2)
         if len(spec_files_list1) == 0 and len(spec_files_list2) == 0:
             print('No files to re-run, execution will stop')
             sys.exit()
         # spec_files_list1 exists if I am here
         if len(spec_files_list1) > 0:
-            if os.path.exists(condor_task_list_fn):
-                os.remove(condor_task_list_fn)
-            f_obj = open(condor_task_list_fn, 'a')
+            if os.path.exists(condor_task_list_fn1):
+                os.remove(condor_task_list_fn1)
+            f_obj = open(condor_task_list_fn1, 'a')
             for el in spec_files_list1:
                 f_obj.write(f'{str(el)} {config_fn} {run_name} {runType}\n')
             f_obj.close()
             # Make sure that the run.sh in this project is executable (# chmod 755 run.sh)
-
             # adjust the condor.submit template
-            condSubPath = os.path.join(dir_condor_submit, 'condor.submit')
+            condSubPath1 = os.path.join(dir_condor_submit, 'condor.submit1')
             with open('G_HTCondor/condor.submit_template') as tmpl:
                 content = tmpl.read()
                 content = content.format(AOI=config.AOI, root_dir=config.models_dir) #, shDestination=shDestination)
-            with open(condSubPath, 'w') as out:
+            with open(condSubPath1, 'w') as out:
                 out.write(content)
             # Make the dirs for condor output on /mnt/jeoproc/log/ml4castproc/, clean content
             Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'out')).mkdir(parents=True, exist_ok=True)
@@ -192,7 +189,7 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
             remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'err'))
             remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'log'))
             # Launch condor (sudo -u ml4castproc condor_submit condor.submit)
-            run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath]
+            run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath1]
             p = subprocess.run(run_cmd, shell=False, input='\n', capture_output=True, text=True)
             if p.returncode != 0:
                 print('ERR', p.stderr)
@@ -212,12 +209,12 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                     f_obj.close()
                     # Make sure that the run.sh in this project is executable (# chmod 755 run.sh)
                     # adjust the condor.submit template
-                    condSubPath = os.path.join(dir_condor_submit, 'condor.submit2')
+                    condSubPath2 = os.path.join(dir_condor_submit, 'condor.submit2')
                     with open('G_HTCondor/condor.submit_template') as tmpl:
-                        content = tmpl.read()
+                        content = tmpl.read() 
                         content = content.format(AOI=config.AOI,
                                                  root_dir=config.models_dir)  # , shDestination=shDestination)
-                    with open(condSubPath, 'w') as out:
+                    with open(condSubPath2, 'w') as out:
                         out.write(content)
                     # Make the dirs for condor output on /mnt/jeoproc/log/ml4castproc/, clean content
                     Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'out')).mkdir(parents=True,
@@ -225,12 +222,13 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                     Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'err')).mkdir(parents=True,
                                                                                                 exist_ok=True)
                     Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'log')).mkdir(parents=True,exist_ok=True)
+                    # delete logs only if teh firest chunk is not rerun
                     if len(spec_files_list1) == 0:
                         remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'out'))
                         remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'err'))
                         remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'log'))
                     # Launch condor (sudo -u ml4castproc condor_submit condor.submit)
-                    run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath]
+                    run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath2]
                     p = subprocess.run(run_cmd, shell=False, input='\n', capture_output=True, text=True)
                     if p.returncode != 0:
                         print('ERR', p.stderr)
