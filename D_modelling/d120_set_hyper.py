@@ -63,7 +63,7 @@ def setHyper(model, param_grid, inner_cv, nJobsForGridSearchCv, scoringMetric, n
                               param_grid=param_grid,
                               cv=inner_cv, n_jobs=nJobsForGridSearchCv, scoring=scoringMetric)
     else:
-        print('Model name not implemented: ' + model)
+        print('d120, Model name not implemented: ' + model)
         exit()
     return search
 

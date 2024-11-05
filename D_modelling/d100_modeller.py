@@ -1,4 +1,6 @@
 import os
+import sys
+
 import pandas as pd
 import numpy as np
 import datetime
@@ -51,7 +53,7 @@ class DataMixin:
             statsDistinct = stats.drop_duplicates(["adm_id", "Crop_ID"])[
                 ['adm_id', 'Crop_ID', 'adm_id', 'adm_name', 'adm_id', 'Crop_name']]
             raw_features = pd.merge(raw_features, statsDistinct, how='left', left_on=['adm_id', 'adm_name'], right_on=['adm_id', 'adm_name'])
-            # hoin to keep also feature records that have label
+            # join to keep also feature records that have label
             yxData = pd.merge(stats, raw_features, how='outer', left_on=['adm_id', 'Year', 'Crop_ID'],
                               right_on=['adm_id', 'YearOfEOS', 'Crop_ID'])
             yxData[['adm_id_x', 'adm_name_x', 'adm_id_x','Crop_name_x']] = yxData[['adm_id_y', 'adm_name_y', 'adm_id_y','Crop_name_y']]
@@ -100,13 +102,31 @@ class DataMixin:
                 X = yxData.filter(regex=r'(NDmax|FPmax)').max(axis=1).to_numpy()
                 X = X.reshape((-1, 1))
             else:  # ML models and Lasso
+                # act differently if the model is requested to work on default monthly values or on feature eng
+                if '@' in self.uset['algorithm']:
+                    #it is a ML specifying a ft eng
+                    ft_enf_set = self.uset['algorithm'].split("@")[1]
+                    # treat the fetaure eng
+                    if ft_enf_set == "PeakFPARAndLast3":
+                        # get peak FPAR and get rid of other fpar columns
+                        yxData['peakFPAR'] = yxData.filter(regex=r'(NDmax|FPmax)').max(axis=1)
+                        yxData = yxData[yxData.columns.drop(list(yxData.filter(regex='^FP')))]
+                        # take only last 3 for meteo (and keep peakFPAR)
+                        months2keep = [str(x) for x in list(range(self.uset['forecast_time']+1-3, self.uset['forecast_time']+1))]+['peakFPAR']
+                        yxData = yxData.filter(regex='|'.join(f'{x}' for x in months2keep)) #.dropna(how='all')
+                    else:
+                        print('ft eng set' + ft_enf_set + 'not managed by d100, the execution stops')
+                        sys.exit()
+
                 # get the feature group values of the selected feature set
                 _features = self.uset['feature_groups']
-                # remove not needed features
+                # keep only needed features
                 if self.uset['addYieldTrend'] == True:
                     list2keep = ['^' + str(i) + 'M\d+$' for i in _features] + ['YieldFromTrend']
                 else:
                     list2keep = ['^' + str(i) + 'M\d+$' for i in _features]
+                if '@' in self.uset['algorithm']:
+                    list2keep = list2keep + ['peakFPAR']
                 X = yxData.filter(regex='|'.join(list2keep)).to_numpy()
                 feature_names = list(yxData.filter(regex='|'.join(list2keep)).columns)
                 # now, for Ml models only, scale data if required
@@ -188,6 +208,13 @@ class YieldModeller(DataMixin, object):
 
         # Df to store predictions
         mRes = pd.DataFrame() #pd.DataFrame(columns=['yLoo_pred', 'yLoo_true', 'adm_id', 'Year'])
+
+        # treat ML models with feature selection
+        algo = self.uset['algorithm']
+        if '@' in algo:
+            # get the ML model name
+            algo = self.uset['algorithm'].split("@")[0]
+
         # if runType == 'tuning':
         if ((runType == 'tuning') or (runType == 'fast_tuning')):
             # Outer loop for testing model performances, the groups are years
@@ -225,7 +252,7 @@ class YieldModeller(DataMixin, object):
                         inner_cv = LeaveOneGroupOut()
                         if self.uset['feature_selection'] == 'none':
                             n_features = X_train.shape[1]  # used by GPR only
-                            search = d120_set_hyper.setHyper(self.uset['algorithm'], self.uset['hyperGrid'], inner_cv,
+                            search = d120_set_hyper.setHyper(algo, self.uset['hyperGrid'], inner_cv,
                                                                        self.uset['nJobsForGridSearchCv'], self.uset['scoringMetric'], n_features=n_features)
                             # Tune hyperparameters
                             search.fit(X_train, y_train, groups=groups_train)
@@ -234,10 +261,10 @@ class YieldModeller(DataMixin, object):
                             selected_features_names, prct_selected, n_selected, X_test, search = d120_set_hyper.setHyper_ft_sel(
                                 X_train, y_train, X_test,
                                 self.uset['prct_features2select_grid'], featureNames, groups_train,
-                                self.uset['algorithm'], self.uset['hyperGrid'], inner_cv,
+                                algo, self.uset['hyperGrid'], inner_cv,
                                 self.uset['nJobsForGridSearchCv'], self.uset['scoringMetric'])
                         else:
-                            print('Feature selection type not implemented in d100')
+                            print('d100, Feature selection type not implemented in d100')
                             exit()
 
                         scoring_metric_on_val.append(search.best_score_)
@@ -273,7 +300,7 @@ class YieldModeller(DataMixin, object):
         # For the fitting I apply the model to all data available
         # Fitting is also done to collect hyper for the operational model to be use for real forecasts
         # Set default results (used by benchmark, and overwritten in case peak or ML are used
-        search = 'benchmark with no serach in d100_modeller'
+        search = 'benchmark with no search in d100_modeller'
         hyperParamsGrid = np.nan
         hyperParams = np.nan
         Fit_R2 = np.nan
@@ -297,7 +324,7 @@ class YieldModeller(DataMixin, object):
             groups = groups[~nas]
             if self.uset['feature_selection'] == 'none':
                 n_features = X.shape[1]  # used by GPR only
-                search = d120_set_hyper.setHyper(self.uset['algorithm'], self.uset['hyperGrid'], outer_cv,
+                search = d120_set_hyper.setHyper(algo, self.uset['hyperGrid'], outer_cv,
                                                            self.uset['nJobsForGridSearchCv'],
                                                            self.uset['scoringMetric'], n_features=n_features)
                 # Tune hyperparameters
@@ -311,7 +338,7 @@ class YieldModeller(DataMixin, object):
                     X, y, X,
                     self.uset['prct_features2select_grid'], featureNames,
                     groups,
-                    self.uset['algorithm'], self.uset['hyperGrid'], outer_cv,
+                    algo, self.uset['hyperGrid'], outer_cv,
                     self.uset['nJobsForGridSearchCv'], self.uset['scoringMetric'])
                 scoring_metric_on_fit = - search.best_score_
                 Fit_R2 = metrics.r2_score(y, search.predict(X_2use))  # It is X test because it is X with only the selected features
@@ -331,7 +358,7 @@ class YieldModeller(DataMixin, object):
                 # pegging check was skipped, as the model was run in fit only. give a nana value
                 prctPegged = np.nan
                 avg_scoring_metric_on_val = np.nan
-            hyperParams, hyperParamsGrid, coefFit = d130_get_hyper.get(self.uset['algorithm'], search, self.uset['hyperGrid'],
+            hyperParams, hyperParamsGrid, coefFit = d130_get_hyper.get(algo, search, self.uset['hyperGrid'],
                                        selected_features_names)
         if ((runType == 'fast_tuning') and (not (self.uset['algorithm'] in ['Null_model', 'Trend', 'PeakNDVI']))):
             avg_scoring_metric_on_val = scoring_metric_on_fit

@@ -2,7 +2,7 @@ import sys
 #############################
 # 1. Config file, run type, name, and where to tune
 #############################
-run_name = '20241004_75_100_test_exclusion'# '20241016_75_100_maize_sunflower_soybeans_NorthernCape' #'20241004_75_100_maize_sunflower_soybeans'
+run_name = 'XXX'# '20241016_75_100_maize_sunflower_soybeans_NorthernCape' #'20241004_75_100_maize_sunflower_soybeans'
 runType = 'fast_tuning'     # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
 
 if 'win' in sys.platform:

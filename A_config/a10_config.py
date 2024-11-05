@@ -96,6 +96,9 @@ class mlSettings:
     # Options and feature definition do not apply to benchmarks.
     # Benchmark model to be considered
     self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend']
+    # Feature engineering types (all ML model will be tested using default monthly values and these ft eng settings)
+    # ft settings must start with @
+    self.ft_eng = ['@PeakFPARAndLast3']
 
     # feature groups to be considered
     rad_var = 'rad' #sometimes is 'Rad'
@@ -241,11 +244,11 @@ def config_reducer(modelSettings, run_name):
         modelSettings.feature_selections = ['none']
         modelSettings.addYieldTrend = [False]
         modelSettings.dataReduction = ['none']
-    elif run_name == 'test_quick':
+    elif run_name == 'XXX':
         want_keys = ['rs_met_reduced', 'rs_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
-        #modelSettings.doOHEs = ['none']
-        want_keys = ['Lasso', 'SVR_linear'] #used in run month5
+        modelSettings.doOHEs = ['none']
+        want_keys = ['Lasso'] #used in run month5
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         modelSettings.feature_selections = ['none']
         modelSettings.addYieldTrend = [False]

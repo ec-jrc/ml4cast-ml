@@ -44,6 +44,11 @@ def save_model_specs(config, modelSettings):
 
     # save files for ML
     ML_algos = list(modelSettings.hyperGrid.keys())
+    # repetat the models with feature eng settings
+    for ften in modelSettings.ft_eng:
+        # DEBUG: run only ft eng models
+        ML_algos = [x+ften for x in ML_algos]
+        # ML_algos = ML_algos + [x + ften for x in ML_algos]
     feature_sets = list(modelSettings.feature_groups.keys())
     a = [config.crops, ML_algos, modelSettings.forecastingMonths,
          modelSettings.doOHEs, feature_sets, modelSettings.feature_selections, modelSettings.dataReduction, modelSettings.addYieldTrend]
@@ -58,11 +63,16 @@ def save_model_specs(config, modelSettings):
         # skip it if PCA is requested but we only have one month (??)
         if forecast_time == 1 and data_redct == 'PCA':
             skip = True
+        if '@' in algo:
+            # it is a ML model working of ft eng, we need to get the algo name to get hyper grid
+            algo_name = algo.split("@")[0]
+        else:
+            algo_name = algo
         # Save model settings as json
         uset = {'runID': runID,
                 'crop': crop,
                 'algorithm': algo,
-                'hyperGrid': modelSettings.hyperGrid[algo],
+                'hyperGrid': modelSettings.hyperGrid[algo_name],
                 'dataScaling': modelSettings.dataScaling,
                 'feature_set': feature_set,
                 'feature_groups': modelSettings.feature_groups[feature_set],
