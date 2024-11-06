@@ -1,0 +1,68 @@
+{
+    "AOI": "ZAsummer",
+    "year_start": 2001,
+    "year_end": 2023,
+    "crops": [
+        "Sunflower",
+        "Maize_total",
+        "Soybeans"
+    ],
+    "afi": "Maize_(corn)_WC-South_Africa-ASAP",
+    "crop_au_exclusions": {
+        "Sunflower": [
+            "Northern Cape"
+        ]
+    },
+    "root_dir": "V:\\foodsec\\Projects\\SNYF\\stable_input_data\\ZA\\summer",
+    "data_dir": "V:\\foodsec\\Projects\\SNYF\\stable_input_data\\ZA\\summer/Tuning_data",
+    "fn_reference_shape": "V:\\foodsec\\Projects\\SNYF\\stable_input_data\\SHP_Files\\gaul1_asap.shp",
+    "country_name_in_shp_file": "South Africa",
+    "gaul0_column_name_in_shp_file": "name0",
+    "adminID_column_name_in_shp_file": "asap1_id",
+    "ope_data_dir": "V:\\foodsec\\Projects\\SNYF\\stable_input_data\\ZA\\summer/OpeForecast_data",
+    "output_dir": "V:\\foodsec\\Projects\\SNYF\\stable_input_data\\ZA\\summer/RUN_Maize_(corn)_WC-South_Africa-ASAP",
+    "ope_run_dir": "V:\\foodsec\\Projects\\SNYF\\stable_input_data\\ZA\\summer/RUN_Maize_(corn)_WC-South_Africa-ASAP/OPE_20241028_75_100_maize_sunflower_soybeans",
+    "ope_run_out_dir": "V:\\foodsec\\Projects\\SNYF\\stable_input_data\\ZA\\summer/RUN_Maize_(corn)_WC-South_Africa-ASAP/OPE_20241028_75_100_maize_sunflower_soybeans/output",
+    "models_dir": "V:\\foodsec\\Projects\\SNYF\\stable_input_data\\ZA\\summer/RUN_Maize_(corn)_WC-South_Africa-ASAP/TUNE_20241028_75_100_maize_sunflower_soybeans",
+    "models_spec_dir": "V:\\foodsec\\Projects\\SNYF\\stable_input_data\\ZA\\summer/RUN_Maize_(corn)_WC-South_Africa-ASAP/TUNE_20241028_75_100_maize_sunflower_soybeans/Specs",
+    "models_out_dir": "V:\\foodsec\\Projects\\SNYF\\stable_input_data\\ZA\\summer/RUN_Maize_(corn)_WC-South_Africa-ASAP/TUNE_20241028_75_100_maize_sunflower_soybeans/Output_fast_tuning",
+    "ivars": [
+        "FPAR",
+        "rad",
+        "rainfall",
+        "temperature",
+        "SM_combined"
+    ],
+    "ivars_short": [
+        "FP",
+        "rad",
+        "Rain",
+        "T",
+        "SM"
+    ],
+    "ivars_units": [
+        "-",
+        "kJ m-2 dek-1",
+        "mm",
+        "\u00b0C",
+        "m3 m-3"
+    ],
+    "sos": 31,
+    "eos": 15,
+    "sosMonth": 11,
+    "eosMonth": 5,
+    "yield_units": "t/ha",
+    "area_unit": "ha",
+    "forecastingPrct": [
+        75,
+        100
+    ],
+    "forecastingMonths": [
+        5,
+        7
+    ],
+    "forecastingCalendarMonths": [
+        3,
+        5
+    ]
+}

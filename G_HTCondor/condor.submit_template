@@ -13,4 +13,4 @@ output                   = /mnt/jeoproc/log/ml4castproc/{AOI}/out/job_$(Process)
 error                    = /mnt/jeoproc/log/ml4castproc/{AOI}/err/job_$(Process).err
 log                      = /mnt/jeoproc/log/ml4castproc/{AOI}/log/job_$(Process).log
 batch_name               = "ml4cast_{AOI}"
-queue tasks from {root_dir}/HT_condor_task_arguments.txt
+queue tasks from {root_dir}/{condor_task_list_base_name}

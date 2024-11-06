@@ -144,12 +144,12 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
         # running with condor
         dir_condor_submit = config.models_dir
         # make the task list (id, filename full path)
-        condor_task_list_base_name1 = 'HT_condor_task_arguments.txt'
+        condor_task_list_base_name1 = 'HT_condor_task_arguments1.txt'
         condor_task_list_fn1 = os.path.join(config.models_dir, condor_task_list_base_name1)
         spec_files_list1 = spec_files_list
         if len(spec_files_list) > nMaxTask:
-            spec_files_list1 = spec_files_list[0:7500]
-            spec_files_list2 = spec_files_list[7500:-1]
+            spec_files_list1 = spec_files_list[0:nMaxTask]
+            spec_files_list2 = spec_files_list[nMaxTask:]
             condor_task_list_base_name2 = 'HT_condor_task_arguments2.txt'
             condor_task_list_fn2 = os.path.join(config.models_dir, condor_task_list_base_name2)
         # If the file already exists it means that we are re-running Condor for some reasons (get stopped somehow)
@@ -178,7 +178,7 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
             condSubPath1 = os.path.join(dir_condor_submit, 'condor.submit1')
             with open('G_HTCondor/condor.submit_template') as tmpl:
                 content = tmpl.read()
-                content = content.format(AOI=config.AOI, root_dir=config.models_dir) #, shDestination=shDestination)
+                content = content.format(AOI=config.AOI, root_dir=config.models_dir, condor_task_list_base_name=condor_task_list_base_name1) #, shDestination=shDestination)
             with open(condSubPath1, 'w') as out:
                 out.write(content)
             # Make the dirs for condor output on /mnt/jeoproc/log/ml4castproc/, clean content
@@ -199,7 +199,9 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
 
             if len(spec_files_list) > nMaxTask:
                 # the task was big there is another task to run, but we need to wait an hour
+                # time.sleep(60 * 60)
                 time.sleep(60 * 60)
+
                 if len(spec_files_list2) > 0:
                     if os.path.exists(condor_task_list_fn2):
                         os.remove(condor_task_list_fn2)
@@ -213,7 +215,7 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                     with open('G_HTCondor/condor.submit_template') as tmpl:
                         content = tmpl.read() 
                         content = content.format(AOI=config.AOI,
-                                                 root_dir=config.models_dir)  # , shDestination=shDestination)
+                                                 root_dir=config.models_dir, condor_task_list_base_name=condor_task_list_base_name2)  # , shDestination=shDestination)
                     with open(condSubPath2, 'w') as out:
                         out.write(content)
                     # Make the dirs for condor output on /mnt/jeoproc/log/ml4castproc/, clean content
@@ -237,7 +239,7 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                     print(p.stdout)
 
 
-def tuneBOLD(run_name, config_fn, tune_on_condor, runType, spec_files_list):
+def tuneB_OLD(run_name, config_fn, tune_on_condor, runType, spec_files_list):
     # ----------------------------------------------------------------------------------------------------------
     # PART B
     start_time = time.time()
