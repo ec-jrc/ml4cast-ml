@@ -106,7 +106,7 @@ def setHyper_ft_sel(X, y, X_test, prct_features2select_grid, featureNames,
     #ranked_idx_selected_features = mrmr.mrmr_regression(X=dfZ, y=dfy, K=int(max(n_features2select_grid)), show_progress=False)
     # use local version for HT condor
     ranked_idx_selected_features = mrmr_regression(X=dfZ, y=dfy, K=int(max(n_features2select_grid)),
-                                                        show_progress=False)
+                                                        show_progress=False, n_jobs=nJobsForGridSearchCv)
     for n in list(map(int, n_features2select_grid)):
         idx_selected_features = sorted(ranked_idx_selected_features[0: n])
         if len(indices_OHE) > 0:

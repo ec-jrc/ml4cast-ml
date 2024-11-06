@@ -98,11 +98,13 @@ class mlSettings:
     self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend']
     # Feature engineering types (all ML model will be tested using default monthly values and these ft eng settings)
     # ft settings must start with @
-    self.ft_eng = ['@PeakFPARAndLast3']
+    self.ft_eng = ['@PeakFPARAndLast3'] # @PeakFPARAndLast3 change features groups in c100 (changes rs and does not apply to met)
 
     # feature groups to be considered
     rad_var = 'rad' #sometimes is 'Rad'
     bio_var = 'FP' # could be FP or ND ... se config ivars and ivars short
+    self.rad_var = rad_var
+    self.bio_var = bio_var
     self.feature_groups = {
       'rs_met': [bio_var, bio_var + 'max', rad_var, 'RainSum', 'T', 'Tmin', 'Tmax'],
       'rs_met_reduced': [bio_var, 'RainSum', 'T'],
@@ -125,7 +127,12 @@ class mlSettings:
       'rs_sm_reduced': 'SM&RS-',
       'met': 'Met',
       'met_reduced': 'Met-',
-      'met_sm_reduced': 'SM&Met-'
+      'met_sm_reduced': 'SM&Met-',
+      'maxRS_met': 'maxRS&Met',
+      'maxRS_met_reduced': 'maxRS&Met-',
+      'maxRS_met_sm_reduced': 'SM&maxRS&Met-',
+      'maxRS': 'maxRS',
+      'maxRS_sm': 'SM&maxRS'
     }
 
     # model configuration settings to be tested

@@ -59,6 +59,7 @@ def save_model_specs(config, modelSettings):
     # And loop over
     for crop, algo, forecast_time, doOHE, feature_set, ft_sel, data_redct, addYieldTrend in combs:
         skip = False  # always false except when feature selection is requested but the length of the grid
+        feature_group = modelSettings.feature_groups[feature_set]
         # of feature numbers results to be 1, meaning that it was 1 already so no feature selection possible
         # skip it if PCA is requested but we only have one month (??)
         if forecast_time == 1 and data_redct == 'PCA':
@@ -66,8 +67,36 @@ def save_model_specs(config, modelSettings):
         if '@' in algo:
             # it is a ML model working of ft eng, we need to get the algo name to get hyper grid
             algo_name = algo.split("@")[0]
+            if feature_set == 'met' or feature_set == 'met_reduced' or feature_set =='met_sm_reduced':
+                skip = True
+            if skip == False:
+                # change feature group and feature set
+                rad_var = modelSettings.rad_var
+                bio_var = modelSettings.bio_var
+                tmp = feature_set
+                if tmp == 'rs_met':
+                    feature_set = 'maxRS_met'
+                    feature_group = [bio_var + 'max', rad_var, 'RainSum', 'T', 'Tmin', 'Tmax']
+                elif tmp == 'rs_met_reduced':
+                    feature_set = 'maxRS_met_reduced'
+                    feature_group = [bio_var + 'max', 'RainSum', 'T']
+                elif tmp == 'rs_met_sm_reduced':
+                    feature_set = 'maxRS_met_sm_reduced'
+                    feature_group = [bio_var + 'max', 'RainSum', 'T', 'SM']
+                elif tmp == 'rs':
+                    feature_set = 'maxRS'
+                    feature_group = [bio_var + 'max']
+                elif tmp == 'rs_reduced':
+                    skip = True
+                elif tmp == 'rs_sm_reduced':
+                    feature_set = 'maxRS_sm'
+                    feature_group = [bio_var + 'max', 'SM']
+                else:
+                    print('c100 feature set not defined')
+                    exit()
         else:
             algo_name = algo
+
         # Save model settings as json
         uset = {'runID': runID,
                 'crop': crop,
@@ -75,7 +104,7 @@ def save_model_specs(config, modelSettings):
                 'hyperGrid': modelSettings.hyperGrid[algo_name],
                 'dataScaling': modelSettings.dataScaling,
                 'feature_set': feature_set,
-                'feature_groups': modelSettings.feature_groups[feature_set],
+                'feature_groups': feature_group,
                 'feature_selection': ft_sel,
                 'data_reduction': data_redct,
                 'PCAprctVar2keep': modelSettings.PCAprctVar2keep,
