@@ -251,8 +251,8 @@ def config_reducer(modelSettings, run_name):
         modelSettings.feature_selections = ['none']
         modelSettings.addYieldTrend = [False]
         modelSettings.dataReduction = ['none']
-    elif run_name == 'XXX':
-        want_keys = ['rs_met_reduced', 'rs_reduced']
+    elif run_name == 'aaa_debug_sunflower':
+        want_keys = ['rs_met_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
         modelSettings.doOHEs = ['none']
         want_keys = ['Lasso'] #used in run month5
