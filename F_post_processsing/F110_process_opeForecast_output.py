@@ -26,6 +26,63 @@ def percentile_below(x, xt):
 
 # def to_csv(self, regions, forecasts, funcertainty, fmae, runID = ''):
 def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, rMAE_p_hindcasting, runID=''):
+    df_forecast = pd.DataFrame({'adm_id': regions,
+                                'Region_name': np.nan,
+                                'Crop_name': uset['crop'],
+                                'fyield': forecasts,
+                                # 'fyield_SD_Bootstrap_1yr': funcertainty,
+                                'fyield_rRMSEp_prct_hindcasting': np.nan,
+                                # 'fyield_rMAEp_hindcasting': rMAE_p_hindcasting,
+                                'fyield_percentile': np.nan,
+                                'avg_obs_yield': np.nan,
+                                'avg_obs_yield_last5yrs': np.nan,
+                                'min_obs_yield': np.nan,
+                                'max_obs_yield': np.nan,
+                                'fyield_diff_pct (last 5 yrs in data avail)': np.nan,
+                                'avg_obs_area_last5yrs': np.nan,
+                                'fproduction(fyield*avg_obs_area_last5yrs)': np.nan,
+                                'fproduction_percentile': np.nan,
+                                'algorithm': uset['algorithm'],
+                                'runID': runID})
+
+    # get yield stats
+    #stats = b100_load.LoadLabel_Exclude_Missing(config, save_csv = False, plot_fig= False, verbose= False)
+    stats = b100_load.LoadLabel(config, save_csv=False, plot_fig=False)
+    stats = stats[stats['Crop_name'] == uset['crop']]
+
+    #get error by au
+    defAuError =  pd.read_csv(os.path.join(config.models_out_dir, 'Analysis', 'all_model_best1_AU_error.csv'))
+    defAuError = defAuError[(defAuError['forecast_time'] == uset['forecast_time']) & (defAuError['Crop_name|first'] == uset['crop']) & (defAuError['Estimator'] == uset['algorithm'])]
+    for region in regions:
+        # get stats for region and sort by year (*)to take last 5)
+        stats_region = stats[stats['adm_id'] == region].sort_values(by=['Year'])
+        defAuError_region = defAuError[defAuError['adm_id'] == region]
+        fyield_region = df_forecast.loc[df_forecast['adm_id'] == region, 'fyield'].values
+        df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_rRMSEp_prct_hindcasting'] = defAuError_region.rrmse_prct.values[0]
+        df_forecast.loc[df_forecast['adm_id'] == region, 'adm_id'] = stats_region.iloc[0]['adm_id']
+        df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_percentile'] = \
+            percentile_below(stats_region['Yield'], fyield_region)
+        df_forecast.loc[df_forecast['adm_id'] == region, 'Region_name'] = \
+            stats_region.iloc[0]['adm_name']
+        df_forecast.loc[df_forecast['adm_id'] == region, 'fproduction(fyield*avg_obs_area_last5yrs)'] = \
+            df_forecast.loc[df_forecast['adm_id'] == region, 'fyield'] * stats_region['Area'][-5::].mean()
+        df_forecast.loc[df_forecast['adm_id'] == region, 'avg_obs_yield'] = stats_region['Yield'].mean()
+        df_forecast.loc[df_forecast['adm_id'] == region, 'avg_obs_yield_last5yrs'] = stats_region['Yield'][-5::].mean() #avg_obs_yield_last5yrs
+        df_forecast.loc[df_forecast['adm_id'] == region, 'min_obs_yield'] = stats_region['Yield'].min()
+        df_forecast.loc[df_forecast['adm_id'] == region, 'max_obs_yield'] = stats_region['Yield'].max()
+        df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_diff_pct (last 5 yrs in data avail)'] = \
+            100 * ((fyield_region - stats_region['Yield'][-5::].mean()) / stats_region['Yield'][-5::].mean()  )  # ADDED LAST 5 YEARS
+        df_forecast.loc[df_forecast['adm_id'] == region, 'avg_obs_area_last5yrs'] = stats_region['Area'][-5::].mean()
+        df_forecast.loc[df_forecast['adm_id'] == region, 'fproduction_percentile'] = \
+            percentile_below(stats_region['Production'], df_forecast.loc[df_forecast['adm_id'] == region, 'fproduction(fyield*avg_obs_area_last5yrs)'].values)
+
+    forecast_fn = os.path.join(config.ope_run_out_dir, datetime.datetime.today().strftime('%Y%m%d') + '_' +
+                               uset['crop'] + '_forecast_month_season_' + str(uset['forecast_time'])
+                               + '_issue_early_' + str(forecast_issue_calendar_month) + '_' + uset['algorithm'] +
+                               '.csv' )
+    df_forecast.to_csv(forecast_fn, float_format='%.2f')
+
+def to_csv_old(config, forecast_issue_calendar_month, uset, regions, forecasts, rMAE_p_hindcasting, runID=''):
     df_forecast = pd.DataFrame({'adm_id': np.nan,
                                 'adm_id': regions,
                                 'Region_name': np.nan,
@@ -76,7 +133,6 @@ def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, rMAE
                                + '_issue_early_' + str(forecast_issue_calendar_month) + '_' + uset['algorithm'] +
                                '.csv' )
     df_forecast.to_csv(forecast_fn, float_format='%.2f')
-
 def combine_models_consistency_check(fns):
     # compare best model and peak and adjust extreme predictions, if any
     # 2024 09 23, Mic removed LASSO as it is still ML and may not be selected in fast tuning
@@ -103,6 +159,9 @@ def combine_models_consistency_check(fns):
         #get peak
         fn_3 = [x for x in fns if 'PeakNDVI' in x][0]
         df_peak = pd.read_csv(fn_3, index_col=0)
+
+        # non peak may have been run on a subset of admin units. If some are missing, drop them on peak
+        df_peak = df_peak[df_peak['adm_id'].isin(df_best['adm_id'])]
 
         # Avoid very low estimates
 
@@ -264,7 +323,7 @@ def make_consolidated_ope(config):
         for fn in fns:
             listDFs.append(pd.read_csv(fn, index_col=0))
         df = pd.concat(listDFs, axis=0, ignore_index=True)
-        df = df.sort_values(['Crop_name', 'Region_name', 'algorithm', 'fyield_rMAEp_hindcasting'], ascending=[True, True, True, True])
+        df = df.sort_values(['Crop_name', 'Region_name', 'algorithm', 'fyield_rRMSEp_prct_hindcasting'], ascending=[True, True, True, True])
         fn_out = '_'.join(fns_crop[0].split('_')[0:-1] + ['unconsolidated.csv'])
         df.to_csv(fn_out, index=False)
         # here I have the models make the bar plot. x= different regions, for each reagion YF and YF diff with previous 5 years
@@ -308,7 +367,7 @@ def make_consolidated_ope(config):
                         str(np.round(prod / area, 2)) + ', \n % difference with last avail. 5 years = '  + \
                         str(np.round(100 * ((prod / area) - df_stats_sum['nat_yield'].mean()) / df_stats_sum['nat_yield'].mean(),2))
         e110_ope_figs.map(df_f, config, '', config.ope_run_out_dir, config.fn_reference_shape,
-                          config.country_name_in_shp_file, title=national_text)
+                          config.country_name_in_shp_file, title=national_text, suffix='consolidated')
 
     df = pd.DataFrame({'Crop_Name': crop_list,
                        'fyield': yields,

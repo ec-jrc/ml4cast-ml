@@ -234,6 +234,13 @@ def LoadLabel(config, save_csv = True, plot_fig= False):
     stats = stats.drop(stats[stats['Year'] < config.year_start].index).sort_values('adm_name')
     stats.drop(stats.filter(regex="Unnamed"), axis=1, inplace=True)
 
+    print('Warning: spaces and zeros set to nan in b100 LoadLabel')
+    # set space to nan
+    stats = stats.replace(r'^\s+$', np.nan, regex=True)
+    stats['Yield'] = pd.to_numeric(stats['Yield'])
+    # stats has a lot of 0, likely no data
+    stats = stats.replace(0.0, np.nan)
+
     if save_csv:
         stats.to_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'), index=False)
     if plot_fig:

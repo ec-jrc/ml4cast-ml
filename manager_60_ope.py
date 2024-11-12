@@ -35,13 +35,16 @@ if __name__ == '__main__':
     # END OF USER PARAMS
     ##########################################################################################
 
-    runType = 'opeForecast'
+
     start_time = time.time()
 
     # load region specific data info
     config = a10_config.read(config_fn, run_name)
+    runType = 'opeForecast'
     # get the month when forecasts are issued
+    # forecastingMonths is month in the season (1,e, .. from the first), forecastingCalendarMonths is the calendar month
     di = dict(zip(config.forecastingMonths, config.forecastingCalendarMonths))
+    # the forecast is issue eraly in the month after the last nonth used
     forecast_issue_calendar_month = di[forecastingMonth] + 1
     if forecast_issue_calendar_month > 12 :
         forecast_issue_calendar_month = forecast_issue_calendar_month - 12
@@ -73,7 +76,8 @@ if __name__ == '__main__':
         for est in list2run:    # make forecasts with the 2 or 3 estimators left
             print(crop, est)
             df_run = df_best_time_crop.loc[df_best_time_crop['Estimator'] == est]
-            df_run = df_run.loc[df_run[metric_for_model_selection] == df_run[metric_for_model_selection].min()]
+            if est != 'PeakNDVI':
+                df_run = df_run.loc[df_run[metric_for_model_selection] == df_run[metric_for_model_selection].min()]
             # get the run id
             runID = df_run['runID'].values[0]
             # get the spec of the file and build specification file

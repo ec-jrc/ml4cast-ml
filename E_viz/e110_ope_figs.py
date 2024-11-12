@@ -12,7 +12,7 @@ from D_modelling import d140_modelStats
 from E_viz import e50_yield_data_analysis
 
 
-def map(b1, config, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0', title=''): #onfig, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'
+def map(b1, config, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0', title='', suffix=''): #onfig, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'
     #b1 is the df containing the consolidated forecasts
     df_regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
     crops = b1['Crop_name'].unique()
@@ -26,7 +26,7 @@ def map(b1, config, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_fil
         # statsByAdmin = df_c.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
         fig, axs = plt.subplots(1, 2, figsize=(10, 6))
         axs = axs.flatten()
-        fig_name = OutputDir + '/' + datetime.today().strftime('%Y-%m-%d') + '_' + config.country_name_in_shp_file + '_AU_forecasts.png'
+        fig_name = OutputDir + '/' + datetime.today().strftime('%Y%m%d') + '_' + config.country_name_in_shp_file + '_' + c + '_AU_forecasts' + suffix + '.png'
         # plot production
 
         lbl = 'Yield forecast'

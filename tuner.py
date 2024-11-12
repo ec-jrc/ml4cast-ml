@@ -147,6 +147,7 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
         condor_task_list_base_name1 = 'HT_condor_task_arguments1.txt'
         condor_task_list_fn1 = os.path.join(config.models_dir, condor_task_list_base_name1)
         spec_files_list1 = spec_files_list
+        spec_files_list2 = []
         if len(spec_files_list) > nMaxTask:
             spec_files_list1 = spec_files_list[0:nMaxTask]
             spec_files_list2 = spec_files_list[nMaxTask:]
@@ -156,8 +157,6 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
         # In this case copy the HT_condor_task_arguments to HT_condor_task_arguments_all and keep
         # only the entries that were not successful (sya that logs will be overwritten and must be moved a folder,
         # wait for Y from keyboard)
-        spec_files_list1 = []
-        spec_files_list2 = []
         if os.path.isfile(condor_task_list_fn1):
             spec_files_list1 = checkExistingSubmit(condor_task_list_base_name1, condor_task_list_fn1, config, spec_files_list1)
         if len(spec_files_list) > nMaxTask:

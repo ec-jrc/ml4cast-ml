@@ -14,6 +14,8 @@ class read:
     self.AOI = jdict['AOI']
     self.year_start = int(jdict['year_start'])
     self.year_end = int(jdict['year_end'])
+    # Percentage of admin to retain (based on area). I.e. rank by area and retain only the largest %
+    self.prct2retain = int(jdict['prct2retain'])
     #self.forecastingMonths = jdict['forecastingMonths'] obsolete, now %
     self.crops = jdict['crops']
     self.afi = jdict['afi']

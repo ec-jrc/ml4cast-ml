@@ -47,20 +47,30 @@ class DataMixin:
             raw_features = pd.read_csv(os.path.join(config.ope_run_dir, config.AOI + '_features4scikit.csv'))
             # drop adm_name, not needed and will be duplicated in merge
             #raw_features = raw_features.drop(['adm_name','adm_id'], axis=1)
-            # keep only adm_id that are in stats (some regions may have been dropped because have missing data)
-            raw_features = raw_features[raw_features['adm_id'].isin(stats['adm_id'].unique())]
-            # the result of merge has year with only features as one record per year while I need one record per crop
-            statsDistinct = stats.drop_duplicates(["adm_id", "Crop_ID"])[
-                ['adm_id', 'Crop_ID', 'adm_id', 'adm_name', 'adm_id', 'Crop_name']]
-            raw_features = pd.merge(raw_features, statsDistinct, how='left', left_on=['adm_id', 'adm_name'], right_on=['adm_id', 'adm_name'])
-            # join to keep also feature records that have label
-            yxData = pd.merge(stats, raw_features, how='outer', left_on=['adm_id', 'Year', 'Crop_ID'],
-                              right_on=['adm_id', 'YearOfEOS', 'Crop_ID'])
-            yxData[['adm_id_x', 'adm_name_x', 'adm_id_x','Crop_name_x']] = yxData[['adm_id_y', 'adm_name_y', 'adm_id_y','Crop_name_y']]
-            yxData = yxData.drop(['adm_id_y', 'adm_name_y', 'adm_id_y','Crop_name_y'], axis=1)
-            yxData.rename(columns={'adm_id_x': 'adm_id', 'adm_name_x': 'adm_name', 'adm_id_x': 'adm_id', 'Crop_name_x': 'Crop_name'}, inplace=True)
+            # I need to create a xyDta with features but no labels for the forecast year
+            # get unique combos to attach crop id and crop name to raw features
+            statsDistinct = stats.drop_duplicates(["adm_id", "Crop_ID"])[['adm_id', 'Crop_ID', 'adm_name', 'Crop_name']]
+            raw_features = pd.merge(raw_features, statsDistinct, how='left', left_on=['adm_id', 'adm_name'],
+                                    right_on=['adm_id', 'adm_name'])
+            yxData = pd.merge(stats, raw_features, how='outer', left_on=['adm_id', 'adm_name', 'Year', 'Crop_ID', 'Crop_name'],
+                              right_on=['adm_id', 'adm_name', 'YearOfEOS', 'Crop_ID', 'Crop_name'])
             # transfer year of features to year of stats to have it working with trend
             yxData.loc[yxData['Year'].isna(), "Year"] = yxData["YearOfEOS"].astype('int32')
+            # old stuff:
+            # # keep only adm_id that are in stats (some regions may have been dropped because have missing data)
+            # raw_features = raw_features[raw_features['adm_id'].isin(stats['adm_id'].unique())]
+            # # the result of merge has year with only features as one record per year while I need one record per crop
+            # statsDistinct = stats.drop_duplicates(["adm_id", "Crop_ID"])[
+            #     ['adm_id', 'Crop_ID', 'adm_name', 'Crop_name']] #['adm_id', 'Crop_ID', 'adm_id', 'adm_name', 'adm_id', 'Crop_name']]
+            # raw_features = pd.merge(raw_features, statsDistinct, how='left', left_on=['adm_id', 'adm_name'], right_on=['adm_id', 'adm_name'])
+            # # join to keep also feature records that have label
+            # yxData = pd.merge(stats, raw_features, how='outer', left_on=['adm_id', 'Year', 'Crop_ID'],
+            #                   right_on=['adm_id', 'YearOfEOS', 'Crop_ID'])
+            # yxData[['adm_id_x', 'adm_name_x', 'adm_id_x','Crop_name_x']] = yxData[['adm_id_y', 'adm_name_y', 'adm_id_y','Crop_name_y']]
+            # yxData = yxData.drop(['adm_id_y', 'adm_name_y', 'adm_id_y','Crop_name_y'], axis=1)
+            # yxData.rename(columns={'adm_id_x': 'adm_id', 'adm_name_x': 'adm_name', 'adm_id_x': 'adm_id', 'Crop_name_x': 'Crop_name'}, inplace=True)
+            # # transfer year of features to year of stats to have it working with trend
+            # yxData.loc[yxData['Year'].isna(), "Year"] = yxData["YearOfEOS"].astype('int32')
         else: #tuning or opeTune
             raw_features = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_features4scikit.csv'))
             # drop adm_name, not needed and will be duplicated in merge

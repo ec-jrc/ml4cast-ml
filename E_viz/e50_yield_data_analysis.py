@@ -61,7 +61,7 @@ def mapDfColumn(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_merge
     merged['coords'] = merged['geometry'].apply(lambda x: x.representative_point().coords[:])
     merged['coords'] = [coords[0] for coords in merged['coords']]
     for idx, row in merged.iterrows():
-        ax.annotate(text=row[df_col_admin_names], xy=row['coords'], horizontalalignment='center', fontsize=8, color='black')
+        ax.annotate(text=row[df_col_admin_names], xy=row['coords'], horizontalalignment='center', fontsize=6, color='black')
 
     ax.set_xlabel('Deg E')
     start, end = ax.get_xlim()
@@ -147,7 +147,7 @@ def mapDfColumn2Ax(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_me
     return ax
 
 def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0', adminID_column_name_in_shp_file = 'asap1_id', prct2retain=100):
-    dir2use = os.path.join(config.data_dir, 'Label_analysis')
+    dir2use = os.path.join(config.data_dir, 'Label_analysis' + str(prct2retain))
     # map numer of year available (Yield count)
     # map mean area, mean yield, trend?
 
@@ -183,12 +183,12 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
         mapDfColumn(statsCrop, df_gaul1_id, 'Yield|count', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
                     gdf_gaul0_name, lbl, cmap='tab20b', fn_fig=None, ax=axs[0])
         # Percent crop area
-        lbl = c + ' % of total crop area in the adm. unit'
-        mapDfColumn(statsCrop, df_gaul1_id, 'Perc_area|', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
+        lbl = c + ' % of national crop area in the adm. unit'
+        mapDfColumn(statsCrop, df_gaul1_id, 'Crop_perc_area|', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
                     gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[1], minmax=[0,100])
         # % national production
         lbl = c +' % national production'
-        mapDfColumn(statsCrop, df_gaul1_id, 'Perc_production|', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
+        mapDfColumn(statsCrop, df_gaul1_id, 'Crop_perc_production|', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
                     gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[2], minmax=[0,100])
         # Total production
         if area_unit == 'ha' and yield_unit == 't/ha':
@@ -222,11 +222,11 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
         plt.close(fig)
 
 
-def trend_anlysis(config):
+def trend_anlysis(config, prct2retain=100):
     # test significance
     alpha = 0.01
 
-    outDir = os.path.join(config.data_dir, 'Label_analysis')
+    outDir = os.path.join(config.data_dir, 'Label_analysis'+str(prct2retain))
     Path(outDir).mkdir(parents=True, exist_ok=True)
     pd.set_option('display.max_columns', None)
     desired_width = 10000
@@ -234,18 +234,12 @@ def trend_anlysis(config):
     np.set_printoptions(linewidth=desired_width)
     pd.set_option('display.max_columns', 100)
 
-    statsY = b100_load.LoadLabel(config, save_csv=False, plot_fig=False)
+    x = b100_load.LoadLabel(config, save_csv=False, plot_fig=False)
     regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
     crop_name = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
     area_unit = units['Area'].values[0]
     yield_unit = units['Yield'].values[0]
-    print('Warning: spaces and zeros set to nan in saveYieldStats')
-    # set space to nan
-    statsY = statsY.replace(r'^\s+$', np.nan, regex=True)
-    statsY['Yield'] = pd.to_numeric(statsY['Yield'])
-    # stats has a lot of 0, likely no data
-    x = statsY.replace(0.0, np.nan)
     crops = x['Crop_name'].unique()
     for c in crops:
         xc = x[x['Crop_name'] == c]
@@ -258,8 +252,11 @@ def trend_anlysis(config):
             xca = xc[xc['adm_name'] == a].sort_values('Year')
             y = xca['Yield'].values.reshape(-1)
             X = xca['Year'].values.reshape(-1)
-            trend, h, p, z, Tau, s, var_s, slope, intercept = mk.original_test(y, alpha=alpha)
-            trend_line_mk = np.arange(len(y)) * slope + intercept
+            # a minimum of two data is required
+            n_valid = sum(~np.isnan(y))
+            if n_valid >=2:
+                trend, h, p, z, Tau, s, var_s, slope, intercept = mk.original_test(y, alpha=alpha)
+                trend_line_mk = np.arange(len(y)) * slope + intercept
             # the mnk returns the Thiel sen slope so the below is not necessary
             # X0=  np.copy(X)
             # X = X[~np.isnan(y)].reshape(-1, 1)
@@ -267,8 +264,9 @@ def trend_anlysis(config):
             # res = stats.theilslopes(y, X)
             # trend_line_TS = res[1] + res[0] * X0
             axs[axs_counter].plot(X, y, label='Data') #, label=F'Theil-Sen trend line')
-            if trend != 'no trend':
-                axs[axs_counter].plot(X, trend_line_mk, label='Theil-Sen trend line')
+            if n_valid >= 2:
+                if trend != 'no trend':
+                    axs[axs_counter].plot(X, trend_line_mk, label='Theil-Sen trend line')
             axs[axs_counter].set_xlabel('Years')
             axs[axs_counter].set_ylabel('Yield [' + yield_unit + ']')
             axs[axs_counter].set_title(c + ', ' + a + ', ' + trend + '(p=' + str(np.round(p, 4))+ ')')

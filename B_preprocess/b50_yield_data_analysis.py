@@ -14,7 +14,7 @@ def saveYieldStats(config, prct2retain=100):
     if prct2retain > 100:
         print('requested percentage gt 100')
         exit()
-    outDir = os.path.join(config.data_dir, 'Label_analysis')
+    outDir = os.path.join(config.data_dir, 'Label_analysis' + str(prct2retain))
     Path(outDir).mkdir(parents=True, exist_ok=True)
     pd.set_option('display.max_columns', None)
     desired_width=10000
@@ -23,17 +23,13 @@ def saveYieldStats(config, prct2retain=100):
     pd.set_option('display.max_columns',100)
 
     stats = b100_load.LoadLabel(config, save_csv=False, plot_fig=False)
-    regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
-    crop_name = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
+
+    # regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
+    # crop_name = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
     area_unit = units['Area'].values[0]
     yield_unit = units['Yield'].values[0]
-    print('Warning: spaces and zeros set to nan in saveYieldStats')
-    #set space to nan
-    stats = stats.replace(r'^\s+$', np.nan, regex=True)
-    stats['Yield'] = pd.to_numeric(stats['Yield'])
-    #stats has a lot of 0, likely no data
-    stats = stats.replace(0.0, np.nan)
+
 
     # stats = pd.merge(stats, regNames, left_on=['adm_id'], right_on=['adm_id'])
     # stats = pd.merge(stats, crop_name, on=['Crop_ID'])
@@ -51,85 +47,84 @@ def saveYieldStats(config, prct2retain=100):
     tmp.to_csv(os.path.join(outDir, config.AOI + '_missing_data.csv'), index=False)
 
     # Last5yrs stats
-    region_ids = stats['adm_id'].unique()
-    crop_ids = stats['Crop_ID'].unique()
-    statsLast5yrs = stats.copy()
-    for rid in region_ids:
-        for cid in crop_ids:
-            lastYear = statsLast5yrs[(statsLast5yrs.adm_id == rid) & (statsLast5yrs.Crop_ID == cid)]['Year'].max()
-            statsLast5yrs = statsLast5yrs.drop(statsLast5yrs[(statsLast5yrs.adm_id == rid) & \
-                                                             (statsLast5yrs.Crop_ID == cid) & \
-                                                             (statsLast5yrs.Year <= lastYear-5)].index)
+    if False:
+        region_ids = stats['adm_id'].unique()
+        crop_ids = stats['Crop_ID'].unique()
+        statsLast5yrs = stats.copy()
+        for rid in region_ids:
+            for cid in crop_ids:
+                lastYear = statsLast5yrs[(statsLast5yrs.adm_id == rid) & (statsLast5yrs.Crop_ID == cid)]['Year'].max()
+                statsLast5yrs = statsLast5yrs.drop(statsLast5yrs[(statsLast5yrs.adm_id == rid) & \
+                                                                 (statsLast5yrs.Crop_ID == cid) & \
+                                                                 (statsLast5yrs.Year <= lastYear-5)].index)
 
-    # Mean by: Region, Crop
-    x5 = statsLast5yrs.groupby(['adm_id', 'Crop_ID']). \
-        agg({'adm_name': 'first', 'Crop_name': 'first', 'Production': ['mean', 'std'],
-             'Yield': ['mean', 'std', 'count'], 'Area': ['mean', 'std']})
-    # sort by production
-    x5 = x5.sort_values(by=['Crop_ID', ('Production', 'mean')], ascending=False)
-    # add an index 0, 1, ..
-    x5.reset_index(inplace=True)
+        # Mean by: Region, Crop
+        x5 = statsLast5yrs.groupby(['adm_id', 'Crop_ID']). \
+            agg({'adm_name': 'first', 'Crop_name': 'first', 'Production': ['mean', 'std'],
+                 'Yield': ['mean', 'std', 'count'], 'Area': ['mean', 'std']})
+        # sort by production
+        x5 = x5.sort_values(by=['Crop_ID', ('Production', 'mean')], ascending=False)
+        # add an index 0, 1, ..
+        x5.reset_index(inplace=True)
 
-    # Compute, by crop crop in all regions
-    x5[('Crop_sum_production', '')] = x5.groupby('Crop_ID')[[('Production', 'mean')]].transform('sum')
-    x5[('Cum_sum_production', '')] = x5.groupby('Crop_ID')[[('Production', 'mean')]].transform('cumsum')
-    x5[('Perc_production', '')] = x5[('Production', 'mean')] / x5[('Crop_sum_production', '')] * 100
-    x5[('Cum_perc_production', '')] = x5[('Cum_sum_production', '')] / x5[('Crop_sum_production', '')] * 100
+        # Compute, by crop  in all regions
+        x5[('Crop_sum_production', '')] = x5.groupby('Crop_ID')[[('Production', 'mean')]].transform('sum')
+        x5[('Cum_sum_production', '')] = x5.groupby('Crop_ID')[[('Production', 'mean')]].transform('cumsum')
+        x5[('Perc_production', '')] = x5[('Production', 'mean')] / x5[('Crop_sum_production', '')] * 100
+        x5[('Cum_perc_production', '')] = x5[('Cum_sum_production', '')] / x5[('Crop_sum_production', '')] * 100
 
-    # and by region by crop
-    x5[('Crop_sum_area', '')] = x5.groupby('adm_id')[[('Area', 'mean')]].transform('sum')
-    x5[('Perc_area', '')] = x5[('Area', 'mean')] / x5[('Crop_sum_area', '')] * 100
+        # and by region by crop
+        x5[('Crop_sum_area', '')] = x5.groupby('adm_id')[[('Area', 'mean')]].transform('sum')
+        x5[('Perc_area', '')] = x5[('Area', 'mean')] / x5[('Crop_sum_area', '')] * 100
 
-    # keep a copy with all for later
-    x05 = x5.copy(deep=True)
-    # keep only the largest up to prct2retain production, by crop
-    crops = x5['Crop_name', 'first'].unique()
-    for c in crops:
-        tmp = x5[x5['Crop_name', 'first'] == c]
-        tmp = tmp.reset_index(drop=True)
-        tmp = tmp.sort_values(by='Cum_perc_production')
-        if prct2retain != 100:
-            ind = tmp[tmp['Cum_perc_production'] >= prct2retain].index[0]
-            tmp = tmp.iloc[0:ind + 1]
+        # keep a copy with all for later
+        x05 = x5.copy(deep=True)
+        # keep only the largest up to prct2retain production, by crop
+        crops = x5['Crop_name', 'first'].unique()
+        for c in crops:
+            tmp = x5[x5['Crop_name', 'first'] == c]
+            tmp = tmp.reset_index(drop=True)
+            tmp = tmp.sort_values(by='Cum_perc_production')
+            if prct2retain != 100:
+                ind = tmp[tmp['Cum_perc_production'] >= prct2retain].index[0]
+                tmp = tmp.iloc[0:ind + 1]
 
-        x5 = x5.drop(x5[x5['Crop_name', 'first'] == c].index)
-        x5 = pd.concat([x5, tmp])
-    # remove multi column
-    y5 = x5.copy()
-    y5.columns = y5.columns.map(lambda v: '|'.join([str(i) for i in v]))
-    y5.to_csv(os.path.join(outDir, config.AOI + '_5yrsStats_retainPRCT' + str(prct2retain) + '.csv'), index=False)
+            x5 = x5.drop(x5[x5['Crop_name', 'first'] == c].index)
+            x5 = pd.concat([x5, tmp])
+        # remove multi column
+        y5 = x5.copy()
+        y5.columns = y5.columns.map(lambda v: '|'.join([str(i) for i in v]))
+        y5.to_csv(os.path.join(outDir, config.AOI + '_5yrsStats_retainPRCT' + str(prct2retain) + '.csv'), index=False)
 
     # LT stats
     #Mean by: Region, Crop
     x = stats.groupby(['adm_id', 'Crop_ID']). \
          agg({'adm_name':'first','Crop_name':'first','Production': ['mean', 'std'], 'Yield': ['mean', 'std', 'count'], 'Area': ['mean', 'std']})
 
-    # sort by production
-    x = x.sort_values(by=['Crop_ID', ('Production', 'mean')], ascending=False)
+    # sort by area
+    x = x.sort_values(by=['Crop_ID', ('Area', 'mean')], ascending=False)
     # add an index 0, 1, ..
     x.reset_index(inplace=True)
 
-    #Compute, by crop crop in all regions
-    x[('Crop_sum_production', '')] = x.groupby('Crop_ID')[[('Production', 'mean')]].transform('sum')
-    x[('Cum_sum_production', '')] = x.groupby('Crop_ID')[[('Production', 'mean')]].transform('cumsum')
-    x[('Perc_production', '')] = x[('Production','mean')] / x[('Crop_sum_production', '')] * 100
-    x[('Cum_perc_production', '')] = x[('Cum_sum_production','')] / x[('Crop_sum_production', '')] * 100
+    # Compute, by crop in all regions
+    x[('Crop_tot_area', '')] = x.groupby('Crop_ID')[[('Area', 'mean')]].transform('sum')
+    x[('Crop_perc_area', '')] = x[('Area', 'mean')] / x[('Crop_tot_area', '')] * 100
+    x[('Crop_cum_area', '')] = x.groupby('Crop_ID')[[('Area', 'mean')]].transform('cumsum')
+    x[('Crop_perc_cum_area', '')] = x[('Crop_cum_area','')] / x[('Crop_tot_area', '')] * 100
 
-    # and by region by crop
-    x[('Crop_sum_area', '')] = x.groupby('adm_id')[[('Area', 'mean')]].transform('sum')
-    x[('Perc_area', '')] = x[('Area','mean')] / x[('Crop_sum_area', '')] * 100
-
+    x[('Crop_total_production', '')] = x.groupby('Crop_ID')[[('Production', 'mean')]].transform('sum')
+    x[('Crop_perc_production', '')] = x[('Production', 'mean')] / x[('Crop_total_production', '')] * 100
 
     # keep a copy with all for later
     x0 = x.copy(deep=True)
-    # keep only the largest up to prct2retain production, by crop
+    # keep only the largest up to prct2retain area, by crop
     crops = x['Crop_name', 'first'].unique()
     for c in crops:
         tmp = x[x['Crop_name','first'] == c]
         tmp = tmp.reset_index(drop=True)
-        tmp = tmp.sort_values(by = 'Cum_perc_production')
+        tmp = tmp.sort_values(by = 'Crop_perc_cum_area')
         if prct2retain != 100:
-            ind = tmp[tmp['Cum_perc_production'] >= prct2retain].index[0]
+            ind = tmp[tmp['Crop_perc_cum_area'] >= prct2retain].index[0]
             tmp = tmp.iloc[0:ind + 1]
 
         x = x.drop(x[x['Crop_name', 'first'] == c].index)
@@ -138,6 +133,47 @@ def saveYieldStats(config, prct2retain=100):
     y = x.copy()
     y.columns = y.columns.map(lambda v: '|'.join([str(i) for i in v]))
     y.to_csv(os.path.join(outDir, config.AOI + '_LTstats_retainPRCT' + str(prct2retain) + '.csv'), index=False)
+
+    # # LT stats
+    # # Mean by: Region, Crop
+    # x = stats.groupby(['adm_id', 'Crop_ID']). \
+    #     agg(
+    #     {'adm_name': 'first', 'Crop_name': 'first', 'Production': ['mean', 'std'], 'Yield': ['mean', 'std', 'count'],
+    #      'Area': ['mean', 'std']})
+    #
+    # # sort by production
+    # x = x.sort_values(by=['Crop_ID', ('Production', 'mean')], ascending=False)
+    # # add an index 0, 1, ..
+    # x.reset_index(inplace=True)
+    #
+    # # Compute, by crop crop in all regions
+    # x[('Crop_sum_production', '')] = x.groupby('Crop_ID')[[('Production', 'mean')]].transform('sum')
+    # x[('Cum_sum_production', '')] = x.groupby('Crop_ID')[[('Production', 'mean')]].transform('cumsum')
+    # x[('Perc_production', '')] = x[('Production', 'mean')] / x[('Crop_sum_production', '')] * 100
+    # x[('Cum_perc_production', '')] = x[('Cum_sum_production', '')] / x[('Crop_sum_production', '')] * 100
+    #
+    # # and by region by crop
+    # x[('Crop_sum_area', '')] = x.groupby('adm_id')[[('Area', 'mean')]].transform('sum')
+    # x[('Perc_area', '')] = x[('Area', 'mean')] / x[('Crop_sum_area', '')] * 100
+    #
+    # # keep a copy with all for later
+    # x0 = x.copy(deep=True)
+    # # keep only the largest up to prct2retain production, by crop
+    # crops = x['Crop_name', 'first'].unique()
+    # for c in crops:
+    #     tmp = x[x['Crop_name', 'first'] == c]
+    #     tmp = tmp.reset_index(drop=True)
+    #     tmp = tmp.sort_values(by='Cum_perc_production')
+    #     if prct2retain != 100:
+    #         ind = tmp[tmp['Cum_perc_production'] >= prct2retain].index[0]
+    #         tmp = tmp.iloc[0:ind + 1]
+    #
+    #     x = x.drop(x[x['Crop_name', 'first'] == c].index)
+    #     x = pd.concat([x, tmp])
+    # # remove multi column
+    # y = x.copy()
+    # y.columns = y.columns.map(lambda v: '|'.join([str(i) for i in v]))
+    # y.to_csv(os.path.join(outDir, config.AOI + '_LTstats_retainPRCT' + str(prct2retain) + '.csv'), index=False)
 
     # bar plot of production, area and yield by region of retained statistics
     crops = x['Crop_name','first'].unique()
@@ -176,7 +212,7 @@ def saveYieldStats(config, prct2retain=100):
                                             r'${\rm Area \/ [km^2]}$', c, axs[2], sf_col_SD='Area|std')
 
         # % area by admin
-        e50_yield_data_analysis.barDfColumn(xdata, xc, 'Perc_area|', xc['adm_name|first'].to_list(),
+        e50_yield_data_analysis.barDfColumn(xdata, xc, 'Crop_perc_area|', xc['adm_name|first'].to_list(),
                                          '% crop area by admin. unit', c, axs[3], sf_col_SD=None)
         fig.subplots_adjust(bottom=0.25)
         fig.subplots_adjust(left=0.15)
