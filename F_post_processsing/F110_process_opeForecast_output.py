@@ -47,7 +47,7 @@ def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, rMAE
 
     # get yield stats
     #stats = b100_load.LoadLabel_Exclude_Missing(config, save_csv = False, plot_fig= False, verbose= False)
-    stats = b100_load.LoadLabel(config, save_csv=False, plot_fig=False)
+    stats = b100_load.LoadCleanedLabel(config)
     stats = stats[stats['Crop_name'] == uset['crop']]
 
     #get error by au
@@ -104,7 +104,7 @@ def to_csv_old(config, forecast_issue_calendar_month, uset, regions, forecasts, 
 
     # get yield stats
     #stats = b100_load.LoadLabel_Exclude_Missing(config, save_csv = False, plot_fig= False, verbose= False)
-    stats = b100_load.LoadLabel(config, save_csv=False, plot_fig=False)
+    stats = b100_load.LoadCleanedLabel(config)
     stats = stats[stats['Crop_name'] == uset['crop']]
 
     for region in regions:
@@ -310,8 +310,7 @@ def make_consolidated_ope(config):
     # get pipeline specific forecast files, all crops here
     fns = [x for x in glob.glob(os.path.join(config.ope_run_out_dir, '*.csv')) if 'national' not in x and 'consolidated' not in x]
     # get yield stats
-    #df_stats = b100_load.LoadLabel_Exclude_Missing(config, save_csv=False, plot_fig=False, verbose=False)
-    df_stats = b100_load.LoadLabel(config, save_csv=False, plot_fig=False)
+    df_stats = b100_load.LoadCleanedLabel(config)
     crop_list, production, ppercentile, yields, yieldsdiff = [], [], [], [], []
     # crop_Names = list(df_stats['Crop_name'].unique())
     # for crop_name in crop_Names: # by crop

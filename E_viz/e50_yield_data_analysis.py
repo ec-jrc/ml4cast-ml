@@ -234,7 +234,7 @@ def trend_anlysis(config, prct2retain=100):
     np.set_printoptions(linewidth=desired_width)
     pd.set_option('display.max_columns', 100)
 
-    x = b100_load.LoadLabel(config, save_csv=False, plot_fig=False)
+    x = b100_load.LoadCleanedLabel(config)
     regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
     crop_name = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))

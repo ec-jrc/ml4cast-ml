@@ -216,6 +216,8 @@ def LoadLabel_Exclude_Missing(config, save_csv = True, plot_fig= False, verbose=
     # print('end of b100 LoadLabel_Exclude_Missing')
     return stats
 
+def LoadCleanedLabel(config):
+    stats = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_STATS_cleaned.csv'))
 def LoadLabel(config, save_csv = True, plot_fig= False):
     '''
     This function is loading stats (without excluding admin with missing values)
@@ -254,4 +256,5 @@ def LoadLabel(config, save_csv = True, plot_fig= False):
         g.tight_layout()
         plt.savefig(os.path.join(config.models_dir, config.AOI + '_time_series.png'))
     # print('end of b100 LoadLabel_Exclude_Missing')
+    # here return the cleaned stats
     return stats
