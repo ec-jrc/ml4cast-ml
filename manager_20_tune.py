@@ -116,7 +116,7 @@ def monitor_condor_q(time_step_minutes, submitter, config, run_name):
             print('JOBS HELD')
             print(df[df['StatusString'] == 'Held'])
             print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-        # print(df)
+        # print(df) 
         # print('here')
         # Sleep for n minutes
     time.sleep(time_step_minutes*60)
