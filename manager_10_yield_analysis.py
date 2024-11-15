@@ -18,6 +18,7 @@ if __name__ == '__main__':
     config = a10_config.read(config_fn, 'dummy_name')
     prct2retain = config.prct2retain
     adminID_column_name_in_shp_file = config.adminID_column_name_in_shp_file
+    # QC and make analysis according to prct2retain
     b50_yield_data_analysis.saveYieldStats(config, prct2retain=prct2retain)
     e50_yield_data_analysis.mapYieldStats(config, config.fn_reference_shape, config.country_name_in_shp_file,\
                                           gdf_gaul0_column=config.gaul0_column_name_in_shp_file, adminID_column_name_in_shp_file = config.adminID_column_name_in_shp_file, prct2retain=prct2retain)

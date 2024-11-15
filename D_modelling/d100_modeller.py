@@ -13,7 +13,7 @@ from sklearn.model_selection import LeaveOneGroupOut #, LeavePGroupsOut, GroupSh
 import copy
 # from sklearn.preprocessing import KBinsDiscretizer
 # from sklearn.base import BaseEstimator, RegressorMixin
-
+from B_preprocess import b100_load
 from C_model_setting import c1000_utils
 from D_modelling import d105_PCA_on_features, d110_benchmark_models, d120_set_hyper, d130_get_hyper, d140_modelStats
 # AVOID USE OF MATPLOTLIB GIVING ERRORS IN CONDOR
@@ -27,7 +27,8 @@ class DataMixin:
         # [fast_tuning] skip inner loop and does not provide error estimates
         # [opeForecast] run the operational yield
 
-        stats = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'))
+
+        stats = b100_load.LoadCleanedLabel(config)
 
         # if working on a ML model and there is some crop-au combination to exclude, do it here upfront
         if not(self.uset['algorithm'] == 'Null_model' or self.uset['algorithm'] == 'Trend' or self.uset['algorithm'] == 'PeakNDVI'):
@@ -393,7 +394,7 @@ class YieldModeller(DataMixin, object):
             # mean of temporal R2 of each AU
             meanAUR2 = d140_modelStats.meanAUR2(mRes)  # equivalent to R2 within
             # National level stats
-            stats = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'))
+            stats = b100_load.LoadCleanedLabel(config)
             # national yield using subnat yield weighted by area
             tmp = stats[stats['Crop_name'] == self.uset['crop']][['adm_id', 'Area']]
             # get avg area

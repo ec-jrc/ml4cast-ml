@@ -46,7 +46,6 @@ def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, rMAE
                                 'runID': runID})
 
     # get yield stats
-    #stats = b100_load.LoadLabel_Exclude_Missing(config, save_csv = False, plot_fig= False, verbose= False)
     stats = b100_load.LoadCleanedLabel(config)
     stats = stats[stats['Crop_name'] == uset['crop']]
 
@@ -103,7 +102,6 @@ def to_csv_old(config, forecast_issue_calendar_month, uset, regions, forecasts, 
                                 'runID': runID})
 
     # get yield stats
-    #stats = b100_load.LoadLabel_Exclude_Missing(config, save_csv = False, plot_fig= False, verbose= False)
     stats = b100_load.LoadCleanedLabel(config)
     stats = stats[stats['Crop_name'] == uset['crop']]
 

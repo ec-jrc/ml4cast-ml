@@ -6,7 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from B_preprocess import b100_load
 import pymannkendall as mk
-from scipy import stats
+import matplotlib.ticker as mticker
 #
 def barDfColumn(x, df, df_col_value, xticks, ylabel, crop_name, ax, sf_col_SD=None):
     if sf_col_SD == None:
@@ -148,8 +148,6 @@ def mapDfColumn2Ax(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_me
 
 def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0', adminID_column_name_in_shp_file = 'asap1_id', prct2retain=100):
     dir2use = os.path.join(config.data_dir, 'Label_analysis' + str(prct2retain))
-    # map numer of year available (Yield count)
-    # map mean area, mean yield, trend?
 
     gdf_gaul1_id = adminID_column_name_in_shp_file
     df_gaul1_id = "adm_id|"
@@ -158,7 +156,6 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
     area_unit = units['Area'].values[0]
     yield_unit = units['Yield'].values[0]
-
 
     pd.set_option('display.max_columns', None)
     desired_width = 1000
@@ -170,7 +167,6 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
     gdf = gpd.read_file(fp)
     # load stats
     LTstats = pd.read_csv(os.path.join(dir2use, config.AOI + '_LTstats_retainPRCT' + str(prct2retain) + '.csv'))
-    # LTstats.columns = LTstats.columns.map(lambda x: '|'.join([str(i) for i in x]))
     uniqueCrops = LTstats['Crop_name|first'].unique()
 
     # loop on crops
@@ -228,21 +224,18 @@ def trend_anlysis(config, prct2retain=100):
 
     outDir = os.path.join(config.data_dir, 'Label_analysis'+str(prct2retain))
     Path(outDir).mkdir(parents=True, exist_ok=True)
-    pd.set_option('display.max_columns', None)
-    desired_width = 10000
-    pd.set_option('display.width', desired_width)
-    np.set_printoptions(linewidth=desired_width)
-    pd.set_option('display.max_columns', 100)
 
     x = b100_load.LoadCleanedLabel(config)
-    regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
-    crop_name = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
+    # regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
+    # crop_name = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
     area_unit = units['Area'].values[0]
     yield_unit = units['Yield'].values[0]
     crops = x['Crop_name'].unique()
     for c in crops:
         xc = x[x['Crop_name'] == c]
+        xMinMax = [xc['Year'].min(), xc['Year'].max()]
+        yMinMax = [np.floor(xc['Yield'].min()), np.ceil(xc['Yield'].max())]
         adm = xc['adm_name'].unique()
         # fig, axs = plt.subplots(len(adm), 1, figsize=(10, 2*len(adm)))
         fig, axs = plt.subplots(len(adm), 1, figsize=(10, 2.5 * len(adm)))
@@ -257,13 +250,15 @@ def trend_anlysis(config, prct2retain=100):
             if n_valid >=2:
                 trend, h, p, z, Tau, s, var_s, slope, intercept = mk.original_test(y, alpha=alpha)
                 trend_line_mk = np.arange(len(y)) * slope + intercept
-            # the mnk returns the Thiel sen slope so the below is not necessary
-            # X0=  np.copy(X)
-            # X = X[~np.isnan(y)].reshape(-1, 1)
-            # y = y[~np.isnan(y)]
-            # res = stats.theilslopes(y, X)
-            # trend_line_TS = res[1] + res[0] * X0
+
             axs[axs_counter].plot(X, y, label='Data') #, label=F'Theil-Sen trend line')
+            axs[axs_counter].set_xlim(xMinMax)
+            axs[axs_counter].set_ylim(yMinMax)
+            axs[axs_counter].locator_params(integer=True)
+            # ax = plt.gca()
+            axs[axs_counter].grid(which='major', axis='x', linestyle='--')
+            # Ensure x-axis tick marks are integers
+            axs[axs_counter].xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
             if n_valid >= 2:
                 if trend != 'no trend':
                     axs[axs_counter].plot(X, trend_line_mk, label='Theil-Sen trend line')

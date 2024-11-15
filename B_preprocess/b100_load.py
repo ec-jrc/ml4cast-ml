@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
+from scipy import stats
+import pymannkendall as mk
 import os
-import datetime
 from pathlib import Path
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+import matplotlib.ticker as mticker
 
 
 def LoadPredictors_Save_Csv(config, runType):
@@ -163,98 +164,222 @@ def build_features(config, runType):
     # df.to_pickle(dirOut + '/' + project['AOI'] + '_pheno_features4scikit.pkl')
 
 
-def LoadLabel_Exclude_Missing(config, save_csv = True, plot_fig= False, verbose= True):
-    '''
-    This function is just checking for NaN in stats
-    For stats data, remove regions-crop with missing data
-    '''
-
-    # get yield stats
-    stats = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_stats.csv'))
-    #'adm_name' may not be present
-    if ('adm_name' in stats.columns) == False:
-        names = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
-        stats = pd.merge(stats, names, how='left', left_on=['adm_id'], right_on=['adm_id'])
-    if ('Crop_name' in stats.columns) == False:
-        names = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
-        stats = pd.merge(stats, names, how='left', left_on=['Crop_ID'], right_on=['Crop_ID'])
-    # drop years before period of interest
-    stats = stats.drop(stats[stats['Year'] < config.year_start].index).sort_values('adm_name')
-
-
-    crops = stats['Crop_ID'].unique()
-    if verbose:
-        print('Nan in yield')
-        print('N missing year by region')
-    for c in crops:
-        statsC = stats[stats['Crop_ID'] == c]
-        tmp = statsC[statsC['Yield'].isnull()]
-        if len(tmp) !=0:
-            tmp = tmp.set_index('adm_name')['Yield'].isna().groupby(level=0).sum()
-            print(tmp)
-            listRegionToDrop = tmp.index.to_list()
-            stats = stats.drop(stats[(stats['Crop_ID'] == c) & (stats['adm_name'].isin(listRegionToDrop))].index)
-        if verbose:
-            print('**************')
-            print(statsC['Crop_name'].iloc[0])
-    #remove unamed columns, if any
-    stats.drop(stats.filter(regex="Unnamed"), axis=1, inplace=True)
-    if verbose:
-        print('**************')
-    if save_csv:
-        stats.to_csv(os.path.join(config.output_dir, config.AOI + '_stats_loaded.csv'), index=False)
-    if plot_fig:
-        #plot remaining regioms
-        g = sns.relplot(
-                data=stats,
-                x="Year", y="Yield", col="adm_name",  hue="Crop_name",
-                kind="line", linewidth=2, #zorder=5,
-                col_wrap=5, height=1, aspect=2, #legend=False,
-            )
-        g.tight_layout()
-        plt.savefig(os.path.join(config.output_dir, config.AOI + '_time_series_missing_excluded.png'))
-    # print('end of b100 LoadLabel_Exclude_Missing')
-    return stats
 
 def LoadCleanedLabel(config):
-    stats = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_STATS_cleaned.csv'))
-def LoadLabel(config, save_csv = True, plot_fig= False):
+    return pd.read_csv(os.path.join(config.data_dir, config.AOI + '_STATS_cleaned' + str(config.prct2retain)+'.csv'))
+
+def LoadLabel(stat_file, start_year, end_year, make_charts=False, perc_threshold=-1, crops_names=None):
     '''
+    Se io passo un subset di crops non capisco come possa funzionare perche’ poi fa uno zip di crops e crops_names: for crop, crop_name in zip(crops, crops_names). Ho cambiato in modo che accetti crop_nsmae e lavori solo su quelli.
+    In summary non segna removed per i duplicates
+
+
     This function is loading stats (without excluding admin with missing values)
+    and making quality checks
+    crops_names: pass a list of crops if tou don't want all the crops in stats to be cleaned (e.g. Harvest data have minor crops that are not of interest
+    perc_threshold: z-score >zScoreTreshold or <-zScoreTreshold will be flagged if the abd difference with respect to mean is >  perc_threshold, set to -1 (default) to omit this check
     '''
+    zScoreTreshold = 3 # theshold for finding ouliers
+    df = pd.read_csv(stat_file)
+    units = pd.unique(df['adm_id'])
 
-    # get yield stats
-    stats = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_STATS.csv'))
-    #'adm_name' may not be present
-    if ('adm_name' in stats.columns) == False:
-        names = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
-        stats = pd.merge(stats, names, how='left', left_on=['adm_id'], right_on=['adm_id'])
-    if ('Crop_name' in stats.columns) == False:
-        names = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
-        stats = pd.merge(stats, names, how='left', left_on=['Crop_ID'], right_on=['Crop_ID'])
-    # drop years before period of interest
-    stats = stats.drop(stats[stats['Year'] < config.year_start].index).sort_values('adm_name')
-    stats.drop(stats.filter(regex="Unnamed"), axis=1, inplace=True)
+    if crops_names is None:
+        crops_names = pd.unique(df['Crop_name'])
 
-    print('Warning: spaces and zeros set to nan in b100 LoadLabel')
-    # set space to nan
-    stats = stats.replace(r'^\s+$', np.nan, regex=True)
-    stats['Yield'] = pd.to_numeric(stats['Yield'])
-    # stats has a lot of 0, likely no data
-    stats = stats.replace(0.0, np.nan)
+    units_names = pd.unique(df['adm_name'])
+    # crops_names = pd.unique(df['Crop_name'])
 
-    if save_csv:
-        stats.to_csv(os.path.join(config.models_dir, config.AOI + '_stats.csv'), index=False)
-    if plot_fig:
-        #plot remaining regioms
-        g = sns.relplot(
-                data=stats,
-                x="Year", y="Yield", col="adm_name",  hue="Crop_name",
-                kind="line", linewidth=2, #zorder=5,
-                col_wrap=5, height=1, aspect=2, #legend=False,
-            )
-        g.tight_layout()
-        plt.savefig(os.path.join(config.models_dir, config.AOI + '_time_series.png'))
-    # print('end of b100 LoadLabel_Exclude_Missing')
+    # Initialize columns for 'Outlier', 'Duplicate', and 'LowYield' with dtype 'object'
+    df['Outlier'] = pd.Series(dtype='object')
+    df['Duplicate'] = pd.Series(dtype='object')
+    df['LowYield'] = pd.Series(dtype='object')
+
+    summary = pd.DataFrame(columns=[
+        'adm_id', 'adm_name', 'Crop_ID', 'Crop_name',
+        'Outliers values', 'Outliers years', 'Outlier types',
+        'Duplicates n', 'Duplicates years', 'Trend'
+    ])
+
+    for unit, unit_name in zip(units, units_names):
+        data_unit = df[df['adm_id'] == unit]
+
+        for crop_name in crops_names:
+            data_crop = data_unit[data_unit['Crop_name'] == crop_name]
+
+            if len(data_crop) > 0:
+                years_duplicate = []
+                duplicate_values = []
+                outlier_values = []
+                outlier_years = []
+                outlier_types = []
+                trend_type = []
+
+                # Ensure data is sorted by Year
+                data_crop = data_crop.sort_values(by=['Year'])
+
+                # Filter for the specified year range for outliers only
+                data_year = data_crop[(data_crop['Year'] >= start_year) & (data_crop['Year'] <= end_year)]
+
+                # Positive and negative outliers
+                positive_outliers = data_year[stats.zscore(data_year['Yield']) > zScoreTreshold]
+                negative_outliers = data_year[stats.zscore(data_year['Yield']) < -zScoreTreshold]
+                avg = np.mean(data_year['Yield'].values)
+
+                for outlier_df, flag in zip([positive_outliers, negative_outliers], ['Removed', 'Flagged']):
+                    percent_diff = abs((outlier_df['Yield'].values - avg) / avg) * 100
+                    for idx, pd_diff in enumerate(percent_diff):
+                        if pd_diff >= perc_threshold:
+                            outlier_row = outlier_df.iloc[idx]
+                            df_idx = outlier_row.name
+                            df.loc[df_idx, 'Outlier'] = flag
+                            outlier_values.append(outlier_row['Yield'])
+                            outlier_years.append(outlier_row['Year'])
+                            outlier_types.append(flag)
+
+                # Check for duplicates across the full dataset
+                duplicate_rows = data_crop[data_crop['Yield'].shift() == data_crop['Yield']]
+                if not duplicate_rows.empty:
+                    years_duplicate = duplicate_rows['Year'].tolist()
+                    duplicate_values = duplicate_rows['Yield'].tolist()
+                    df.loc[duplicate_rows.index, 'Duplicate'] = 'Removed'
+
+                # Trend detection
+                tmp_trend = 'not enough samples'
+                trend_detected = False  # Flag to check if a trend is detected
+                if len(data_year) > 1:
+                    try:
+                        mk_test = mk.original_test(data_year['Yield'])
+                        tmp_trend = mk_test.trend
+                        if tmp_trend in ['increasing', 'decreasing']:
+                            trend_detected = True
+                    except ZeroDivisionError:
+                        tmp_trend = 'not enough samples'
+                trend_type.append(tmp_trend)
+
+                # Add results to summary
+                summary = pd.concat([summary, pd.DataFrame([{
+                    'adm_id': unit,
+                    'adm_name': unit_name,
+                    # 'Crop_ID': crop,
+                    'Crop_name': crop_name,
+                    'Outliers values': '|'.join(map(str, outlier_values)),
+                    'Outliers years': '|'.join(map(str, outlier_years)),
+                    'Outlier types': '|'.join(outlier_types),
+                    'Duplicates n': len(duplicate_rows),
+                    'Duplicates years': '|'.join(map(str, years_duplicate)),
+                    'Trend': '|'.join(trend_type),
+                }])], ignore_index=True)
+
+                # Generate plots if requested
+                if make_charts:
+                    graph_df = data_crop[['Year', 'Yield']].sort_values(by='Year')
+                    plt.plot(graph_df['Year'], graph_df['Yield'], label='Yield', linewidth=1.5, color='#1f77b4')
+
+                    # Plot trend line only if a trend was detected
+                    if trend_detected and len(data_year['Year'].unique()) > 1 and data_year['Yield'].var() > 0:
+                        try:
+                            z = np.polyfit(data_year['Year'], data_year['Yield'], 1)
+                            p = np.poly1d(z)
+                            plt.plot(data_year['Year'], p(data_year['Year']), linestyle='--', color='green',
+                                     label='Trend')
+                        except np.linalg.LinAlgError:
+                            pass
+
+                    # Mark duplicates and separate outliers as Removed (red) and Flagged (green)
+                    removed_outliers = df[
+                        (df['Outlier'] == 'Removed') & (df['adm_id'] == unit) & (df['Crop_name'] == crop_name)]
+                    flagged_outliers = df[
+                        (df['Outlier'] == 'Flagged') & (df['adm_id'] == unit) & (df['Crop_name'] == crop_name)]
+
+                    # Plot outliers as red and green circles
+                    plt.scatter(removed_outliers['Year'], removed_outliers['Yield'],
+                                color='red', marker='o', s=100, label='Outliers Removed', facecolors='none')
+                    plt.scatter(flagged_outliers['Year'], flagged_outliers['Yield'],
+                                color='green', marker='o', s=100, label='Outliers Flagged', facecolors='none')
+
+                    # Plot duplicates
+                    plt.scatter(years_duplicate, duplicate_values,
+                                color='orange', marker='x', s=100, label='Duplicates')
+
+                    # Add vertical lines for start and end year
+                    plt.axvline(x=start_year, color='red', linestyle=':', label='Start Year')
+                    plt.axvline(x=end_year, color='red', linestyle='--', label='End Year')
+
+                    # Ensure consistent legend
+                    custom_handles = {
+                        'Yield': plt.Line2D([], [], color='#1f77b4', linewidth=1.5),
+                        'Trend': plt.Line2D([], [], linestyle='--', color='green'),
+                        'Outliers Removed': plt.Line2D([], [], color='red', marker='o', linestyle='None', markersize=10,
+                                                       markerfacecolor='none'),
+                        'Outliers Flagged': plt.Line2D([], [], color='green', marker='o', linestyle='None',
+                                                       markersize=10, markerfacecolor='none'),
+                        'Duplicates Removed': plt.Line2D([], [], color='orange', marker='x', linestyle='None',
+                                                         markersize=10),
+                        'Start Year': plt.Line2D([], [], color='red', linestyle=':', linewidth=1),
+                        'End Year': plt.Line2D([], [], color='red', linestyle='--', linewidth=1)
+                    }
+
+                    # Update labels and handles
+                    final_handles = [custom_handles[label] for label in
+                                     ['Yield', 'Trend', 'Outliers Removed', 'Outliers Flagged', 'Duplicates Removed',
+                                      'Start Year', 'End Year']]
+                    final_labels = ['Yield', 'Trend', 'Outliers Removed', 'Outliers Flagged', 'Duplicates Removed',
+                                    'Start Year', 'End Year']
+                    # ste x grid
+                    ax = plt.gca()
+                    ax.grid(which='major', axis='x', linestyle='--')
+                    # Move legend outside the plot area
+                    plt.legend(handles=final_handles, labels=final_labels, loc='upper center', fontsize='small',
+                               bbox_to_anchor=(1.17, 1.0))
+
+                    # Add titles and labels
+                    graph_name = Path(stat_file).stem + ' ' + str(unit_name) + ' ' + str(unit) + ' ' + str(crop_name)
+                    plt.title(graph_name)
+                    plt.xlabel('Year')
+                    plt.ylabel('Yield')
+
+                    # Ensure x-axis tick marks are integers
+                    ax = plt.gca()
+                    ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+                    plt.xticks(fontsize='small')
+                    plt.yticks(fontsize='small')
+
+                    # Save the chart
+                    graphics_folder = Path(stat_file).parent / 'QC_graphics'
+                    graphics_folder.mkdir(parents=True, exist_ok=True)
+                    out_png = graphics_folder / (graph_name.replace(" ", "_") + '.png')
+
+                    plt.savefig(out_png, bbox_inches='tight')
+                    plt.close()
+
+    # Determine rows to flag as 'LowYield'
+    valid_area_prod = df['Area'].notna() & (df['Area'] > 0) & df['Production'].notna() & (df['Production'] > 0)
+    ratio = df.loc[valid_area_prod, 'Production'] / df.loc[valid_area_prod, 'Area']
+    mask_low_yield = (df['Yield'] == 0) & valid_area_prod & (ratio >= 0.5)
+    df.loc[mask_low_yield, 'LowYield'] = 'Removed'
+
+    # Save the flagged file before cleaning
+    flagged_file = stat_file.replace('.csv', '_flagged.csv')
+    df.to_csv(flagged_file, index=False)
+
+    # CLEANING SECTION: Drop rows based on flags and null values
+    cleaned_df = df[
+        ~(df['Outlier'] == 'Removed') &
+        ~(df['Duplicate'] == 'Removed') &
+        ~(df['LowYield'] == 'Removed') &
+        df['Area'].notna() & df['Production'].notna() & df['Yield'].notna()
+        ].copy()
+
+    # Drop the Outlier, Duplicate, and LowYield columns after cleaning
+    cleaned_df = cleaned_df.drop(columns=['Outlier', 'Duplicate', 'LowYield'])
+
+    # Save the cleaned CSV
+    cleaned_file = stat_file.replace('.csv', '_cleaned.csv')
+    cleaned_df.to_csv(cleaned_file, index=False)
+
+    # Save the summary file
+    summary_file = stat_file.replace('.csv', '_summary.csv')
+    summary.to_csv(summary_file, index=False)
+
     # here return the cleaned stats
-    return stats
+    return cleaned_df

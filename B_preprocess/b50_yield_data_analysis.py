@@ -22,29 +22,26 @@ def saveYieldStats(config, prct2retain=100):
     np.set_printoptions(linewidth=desired_width)
     pd.set_option('display.max_columns',100)
 
-    stats = b100_load.LoadLabel(config, save_csv=False, plot_fig=False)
+    # qaulity check and outlier removal
+    stat_file = os.path.join(config.data_dir, config.AOI + '_stats.csv')
+    stats = b100_load.LoadLabel(stat_file, config.year_start, config.year_end, make_charts=True, perc_threshold=-1, crops_names=config.crops)
 
-    # regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
-    # crop_name = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
     area_unit = units['Area'].values[0]
     yield_unit = units['Yield'].values[0]
 
-
-    # stats = pd.merge(stats, regNames, left_on=['adm_id'], right_on=['adm_id'])
-    # stats = pd.merge(stats, crop_name, on=['Crop_ID'])
-    # stats.insert(loc=5, column='Production', value=stats['Area'] * stats['Yield'])
     # keep only from year of interest for the admin level stats
     stats = stats[stats['Year'] >= config.year_start]
 
-    #save a file with missing data (all regions, no matter 90% production or not)
-    tmp = stats.copy()
-    tmp['Null'] = tmp['Yield'].isnull()
-    tmp = tmp[tmp['Null'] == True]
-    tmp = tmp.sort_values(by=['Crop_name','adm_id','Year'])
-    if len(tmp.index)>0:
-        print('Missing records are present, inspect ' + os.path.join(config.data_dir, config.AOI + '_missing_data.csv'))
-    tmp.to_csv(os.path.join(outDir, config.AOI + '_missing_data.csv'), index=False)
+    # Missing data are now dropped, this below is always empty
+    # #save a file with missing data (all regions, no matter 90% production or not)
+    # tmp = stats.copy()
+    # tmp['Null'] = tmp['Yield'].isnull()
+    # tmp = tmp[tmp['Null'] == True]
+    # tmp = tmp.sort_values(by=['Crop_name','adm_id','Year'])
+    # if len(tmp.index)>0:
+    #     print('Missing records are present, inspect ' + os.path.join(config.data_dir, config.AOI + '_missing_data.csv'))
+    # tmp.to_csv(os.path.join(outDir, config.AOI + '_missing_data.csv'), index=False)
 
     # Last5yrs stats
     if False:
@@ -115,14 +112,12 @@ def saveYieldStats(config, prct2retain=100):
     x[('Crop_total_production', '')] = x.groupby('Crop_ID')[[('Production', 'mean')]].transform('sum')
     x[('Crop_perc_production', '')] = x[('Production', 'mean')] / x[('Crop_total_production', '')] * 100
 
-    # keep a copy with all for later
-    x0 = x.copy(deep=True)
     # keep only the largest up to prct2retain area, by crop
     crops = x['Crop_name', 'first'].unique()
     for c in crops:
         tmp = x[x['Crop_name','first'] == c]
         tmp = tmp.reset_index(drop=True)
-        tmp = tmp.sort_values(by = 'Crop_perc_cum_area')
+        tmp = tmp.sort_values(by='Crop_perc_cum_area')
         if prct2retain != 100:
             ind = tmp[tmp['Crop_perc_cum_area'] >= prct2retain].index[0]
             tmp = tmp.iloc[0:ind + 1]
@@ -134,46 +129,16 @@ def saveYieldStats(config, prct2retain=100):
     y.columns = y.columns.map(lambda v: '|'.join([str(i) for i in v]))
     y.to_csv(os.path.join(outDir, config.AOI + '_LTstats_retainPRCT' + str(prct2retain) + '.csv'), index=False)
 
-    # # LT stats
-    # # Mean by: Region, Crop
-    # x = stats.groupby(['adm_id', 'Crop_ID']). \
-    #     agg(
-    #     {'adm_name': 'first', 'Crop_name': 'first', 'Production': ['mean', 'std'], 'Yield': ['mean', 'std', 'count'],
-    #      'Area': ['mean', 'std']})
-    #
-    # # sort by production
-    # x = x.sort_values(by=['Crop_ID', ('Production', 'mean')], ascending=False)
-    # # add an index 0, 1, ..
-    # x.reset_index(inplace=True)
-    #
-    # # Compute, by crop crop in all regions
-    # x[('Crop_sum_production', '')] = x.groupby('Crop_ID')[[('Production', 'mean')]].transform('sum')
-    # x[('Cum_sum_production', '')] = x.groupby('Crop_ID')[[('Production', 'mean')]].transform('cumsum')
-    # x[('Perc_production', '')] = x[('Production', 'mean')] / x[('Crop_sum_production', '')] * 100
-    # x[('Cum_perc_production', '')] = x[('Cum_sum_production', '')] / x[('Crop_sum_production', '')] * 100
-    #
-    # # and by region by crop
-    # x[('Crop_sum_area', '')] = x.groupby('adm_id')[[('Area', 'mean')]].transform('sum')
-    # x[('Perc_area', '')] = x[('Area', 'mean')] / x[('Crop_sum_area', '')] * 100
-    #
-    # # keep a copy with all for later
-    # x0 = x.copy(deep=True)
-    # # keep only the largest up to prct2retain production, by crop
-    # crops = x['Crop_name', 'first'].unique()
-    # for c in crops:
-    #     tmp = x[x['Crop_name', 'first'] == c]
-    #     tmp = tmp.reset_index(drop=True)
-    #     tmp = tmp.sort_values(by='Cum_perc_production')
-    #     if prct2retain != 100:
-    #         ind = tmp[tmp['Cum_perc_production'] >= prct2retain].index[0]
-    #         tmp = tmp.iloc[0:ind + 1]
-    #
-    #     x = x.drop(x[x['Crop_name', 'first'] == c].index)
-    #     x = pd.concat([x, tmp])
-    # # remove multi column
-    # y = x.copy()
-    # y.columns = y.columns.map(lambda v: '|'.join([str(i) for i in v]))
-    # y.to_csv(os.path.join(outDir, config.AOI + '_LTstats_retainPRCT' + str(prct2retain) + '.csv'), index=False)
+    # save a cleaned stat file with the prct2retain to be retained
+
+    # empty df but same columns, same dtypes, and no row
+    stats_prct2retain = stats.iloc[:0,:].copy()
+    for c in crops:
+        adm_id_2retain_for_crop = y[y['Crop_name|first'] == c]['adm_id|'].unique()
+        tmp = stats[(stats['Crop_name'] == c) & (stats['adm_id'].isin(adm_id_2retain_for_crop))]
+        stats_prct2retain= pd.concat([stats_prct2retain, tmp])
+    cleaned_prct2retain_file = stat_file.replace('.csv', '_cleaned' + str(prct2retain) + '.csv')
+    stats_prct2retain.to_csv(cleaned_prct2retain_file, index=False)
 
     # bar plot of production, area and yield by region of retained statistics
     crops = x['Crop_name','first'].unique()
@@ -219,40 +184,9 @@ def saveYieldStats(config, prct2retain=100):
         fig.tight_layout()
         fig.savefig(os.path.join(outDir, config.AOI + '_bar_' + c + str(prct2retain) + '.png'))
         plt.close()
-        # print('defguj')
 
 
 
 
 
-    # # bar plot of % area of the crop over the total area of the three by region of stat90
-    # # compute total area by region using x0 (it has all the regions no matter uf contrib to 90% production)
-    # x0 = x0.drop('Production', axis = 1, level = 0)
-    # x0 = x0.drop('Yield', axis=1, level=0)
-    # x0 = x0.drop('Cum_sum_production', axis=1, level=0)
-    # x0 = x0.drop('Perc_production', axis=1, level=0)
-    # x0 = x0.drop('Cum_perc_production', axis=1, level=0)
-    # x0 = x0.drop('std', axis=1, level=1)
-    # x0.columns = x0.columns.droplevel(1)
-    # xTotal = x0.groupby(['adm_id']).agg({'adm_name': 'first', 'Area': ['sum']})
-    # xTotal.columns = xTotal.columns.droplevel(1)
-    # xTotal = xTotal.rename(columns={"Area": "AreaTotCrops"})
-    # crops = x['Crop_name', 'first'].unique()
-    # for c in crops:
-    #     xc = x[x['Crop_name', 'first'] == c]
-    #     xc = xc.sort_values(by=[('Area', 'mean')], ascending=False)
-    #     xdata = list(range(len(xc['adm_name'])))
-    #     xc.columns = xc.columns.map(lambda x: '|'.join([str(i) for i in x]))
-    #     xc = pd.merge(xc, xTotal, left_on=['adm_id|'], right_index=True)
-    #     xc['Fraction'] = xc['Area|mean'] / xc['AreaTotCrops'] * 100
-    #     plt.bar(xdata, xc['Fraction'].to_list())
-    #     labels = xc['adm_name|first'].to_list()
-    #     labels = [elem[:8] for elem in labels]
-    #     plt.xticks(xdata, labels, rotation='vertical')
-    #     plt.ylabel('Region crop area / Total crop area in the region [%]')
-    #     plt.title(c)
-    #     plt.ylim([0, 100])
-    #     plt.subplots_adjust(bottom=0.25)
-    #     plt.subplots_adjust(left=0.15)
-    #     plt.savefig(os.path.join(outDir, config.AOI + '_bar_' + c + str(prct2retain) + '_Percent_area_by_au.png'))
-    #     plt.close()
+
