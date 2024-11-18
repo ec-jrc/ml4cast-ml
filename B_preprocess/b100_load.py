@@ -169,11 +169,6 @@ def LoadCleanedLabel(config):
 
 def LoadLabel(stat_file, start_year, end_year, make_charts=False, perc_threshold=-1, crops_names=None):
     '''
-    Se io passo un subset di crops non capisco come possa funzionare perche’ poi fa uno zip di crops e crops_names: for crop, crop_name in zip(crops, crops_names). Ho cambiato in modo che accetti crop_nsmae e lavori solo su quelli.
-    In summary non segna removed per i duplicates
-    Ho cambiato tl treshold di sd per oulier, portandolo da 2 a 3 perche' toglieva dati sensati in ZA
-
-
     This function is loading stats (without excluding admin with missing values)
     and making quality checks
     crops_names: pass a list of crops if tou don't want all the crops in stats to be cleaned (e.g. Harvest data have minor crops that are not of interest
