@@ -4,7 +4,9 @@ from scipy import stats
 import pymannkendall as mk
 import os
 from pathlib import Path
-import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+
 
 
 
@@ -267,8 +269,6 @@ def LoadLabel(stat_file, start_year, end_year, make_charts=False, perc_threshold
 
                 # Generate plots if requested
                 if make_charts:
-                    import matplotlib.pyplot as plt
-                    import matplotlib.ticker as mticker
                     graph_df = data_crop[['Year', 'Yield']].sort_values(by='Year')
                     plt.plot(graph_df['Year'], graph_df['Yield'], label='Yield', linewidth=1.5, color='#1f77b4')
 
