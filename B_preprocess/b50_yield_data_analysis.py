@@ -44,7 +44,7 @@ def saveYieldStats(config, prct2retain=100):
     # tmp.to_csv(os.path.join(outDir, config.AOI + '_missing_data.csv'), index=False)
 
     # Last5yrs stats
-    if False:
+    if True:
         region_ids = stats['adm_id'].unique()
         crop_ids = stats['Crop_ID'].unique()
         statsLast5yrs = stats.copy()

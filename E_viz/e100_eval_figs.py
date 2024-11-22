@@ -40,7 +40,7 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
     # In this version I compute the rel RMSE by admin (aeach admin with its own mean yield) and then I weight them
     # using area of the last five years (to occount for the fact that larger errors are more tolerable if the area is small)
     os.path.join(config.data_dir, 'Label_analysis')
-    df_Stats5yrs = pd.read_csv(os.path.join(os.path.join(config.data_dir, 'Label_analysis'), config.AOI + '_5yrsStats_retainPRCT100.csv'))
+    df_Stats5yrs = pd.read_csv(os.path.join(os.path.join(config.data_dir, 'Label_analysis'+str(config.prct2retain)), config.AOI + '_5yrsStats_retainPRCT100.csv'))
     # Now read mres, compute metric2use at the admin level, and make an area average add as a new columns
     b1['rRMSE_p_areaWeighted'] = -999
     b1 = b1.reset_index() # the index was repeating
