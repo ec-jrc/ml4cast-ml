@@ -10,6 +10,7 @@ from C_model_setting import c100_save_model_specs
 from B_preprocess import b100_load
 from D_modelling import d090_model_wrapper
 from F_post_processsing import F100_analyze_hindcast_output
+import re
 
 def remove_files(path):
   """
@@ -172,7 +173,8 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                 os.remove(condor_task_list_fn1)
             f_obj = open(condor_task_list_fn1, 'a')
             for el in spec_files_list1:
-                f_obj.write(f'{str(el)} {config_fn} {run_name} {runType}\n')
+                # f_obj.write(f'"{str(el)}" {config_fn} {run_name} {runType}\n')
+                f_obj.write(f"'{re.escape(str(el))}' {config_fn} {run_name} {runType}\n")
             f_obj.close()
             # Make sure that the run.sh in this project is executable (# chmod 755 run.sh)
             # adjust the condor.submit template
