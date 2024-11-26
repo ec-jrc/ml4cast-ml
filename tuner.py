@@ -174,7 +174,8 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
             f_obj = open(condor_task_list_fn1, 'a')
             for el in spec_files_list1:
                 # f_obj.write(f'"{str(el)}" {config_fn} {run_name} {runType}\n')
-                f_obj.write(f"'{re.escape(str(el))}' {config_fn} {run_name} {runType}\n")
+                f_obj.write(f'{str(el)} {config_fn} {run_name} {runType}\n')
+                # f_obj.write(f"{re.escape(str(el))} {config_fn} {run_name} {runType}\n")
             f_obj.close()
             # Make sure that the run.sh in this project is executable (# chmod 755 run.sh)
             # adjust the condor.submit template

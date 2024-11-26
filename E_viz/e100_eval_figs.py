@@ -74,6 +74,7 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
         forecast_issue_calendar_month = calendar.month_abbr[
             b1[b1[var4time] == t]['forecast_issue_calendar_month'].iloc[0]]
         fig, axs = plt.subplots(nrows=2, ncols=max(len(crops), 2), figsize=(14,10))  # need two at least for the loop below
+        # plt.subplots_adjust(top=0.8)
         # fig, axs = plt.subplots(nrows=2, ncols=len(crops), figsize=(14, 12))
         ax_c = 0  # ax counter
         # get max metirc
@@ -89,6 +90,8 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
             # tmp = areaWeighted_rRMSE(tmp, df_regNames, df_Stats)
             p = sns.barplot(tmp, x="tmp_est", y=metric2use, hue="tmp_est",
                             palette=colors, ax=axs[0, ax_c], dodge=False, width=0.4, legend="full")
+            # axs[0, ax_c].set_position([axs[0, ax_c].get_position().x0, axs[0, ax_c].get_position().y0 * 0.8,
+            #                            axs[0, ax_c].get_position().width, axs[0, ax_c].get_position().height * 0.8])
             ml_row = tmp[tmp['tmp_est'] == 'ML']
             [info_string0, info_string1, info_string2, info_string3] = output_row_to_ML_info_string(ml_row, metric2use)
             axs[0, ax_c].text(0.875, -0.1, metric2use + ' = ' + info_string0, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
@@ -105,6 +108,7 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
         # plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
         axs[0, ax_c-1].legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
         ax_c = 0
+        # Second row fo area weighted
         # get max metirc
         ymax = b1[b1[var4time] == t]['rRMSE_p_areaWeighted'].max()
         for crop in crops:
@@ -117,6 +121,8 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
             # tmp = areaWeighted_rRMSE(tmp, df_regNames, df_Stats)
             p = sns.barplot(tmp, x="tmp_est", y='rRMSE_p_areaWeighted', hue="tmp_est",
                             palette=colors, ax=axs[1, ax_c], dodge=False, width=0.4, legend="full")
+            # axs[1, ax_c].set_position([axs[1, ax_c].get_position().x0, axs[1, ax_c].get_position().y0 * 0.8,
+            #                            axs[1, ax_c].get_position().width, axs[1, ax_c].get_position().height * 0.8])
             ml_row = tmp[tmp['tmp_est'] == 'ML']
             [info_string0, info_string1, info_string2, info_string3] = output_row_to_ML_info_string(ml_row,
                                                                                                     metric2use)
@@ -139,7 +145,12 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
             axs[1, 1].remove()
         # h, l = p.get_legend_handles_labels()
         # plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-        fig.tight_layout()
+        fig.text(0.90, 0.775, 'Average of', ha='left')
+        fig.text(0.90, 0.755, 'admin-level error', ha='left')
+        fig.text(0.90, 0.275, 'Crop-area weighted', ha='left')
+        fig.text(0.90, 0.255, 'average of', ha='left')
+        fig.text(0.90, 0.235, 'admin-level error', ha='left')
+        plt.tight_layout()
         #get forecastingPrct from t (forecastingMonths)
         forecastingPrct = config.forecastingPrct[config.forecastingMonths.index(t)]
         fig_name = outputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '_all_crops_performances.png'
@@ -294,7 +305,7 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
             fig2.savefig(fig_name)
 
             # now plot the best by au
-            axs3[4] = e50_yield_data_analysis.mapDfColumn2Ax(dfBestPerAU, 'adm_id', 'tmp_est', 'adm_name', gdf,
+            axs3[4] = e50_yield_data_analysis.mapDfColumn2Ax(dfBestPerAU, 'adm_id', 'Estimator', 'adm_name', gdf,
                                                                  gdf_gaul1_id, gdf_gaul0_column,
                                                                  country_name_in_shp_file,
                                                                  'Estimator', ax=axs3[4], cate=True)
@@ -306,6 +317,7 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
                 ax.set_anchor('NW')
             fig_name = fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' +  str(forecastingPrct)+ '-' + c  +'_AU_rrmse.png'
             # fig3.tight_layout()
+            # plt.tight_layout()
             fig3.savefig(fig_name)
 
             plt.close(fig)

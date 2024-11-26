@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from B_preprocess import b100_load
 import pymannkendall as mk
 import matplotlib.ticker as mticker
+import matplotlib.patches as mpatches
 #
 def barDfColumn(x, df, df_col_value, xticks, ylabel, crop_name, ax, sf_col_SD=None):
     if sf_col_SD == None:
@@ -117,9 +118,13 @@ def mapDfColumn2Ax(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_me
     # https://matplotlib.org/stable/users/explain/colors/colormaps.html
     if cate:
         merged = merged.dropna(subset=["colors"])
+        # Create a list of patches representing the different categories
+        patches = [mpatches.Patch(color=color, label=label) for color, label in zip(merged[['colors',df_col2map]].drop_duplicates()['colors'], merged[['colors',df_col2map]].drop_duplicates()[df_col2map])]
         merged.plot(column=df_col2map, ax=ax, legend=True,
-                    #legend_kwds={'label': lbl, 'bbox_to_anchor':(.5, 0.1),'fontsize':12,'frameon':False}, #'orientation': "horizontal",
+                    # legend_kwds={'label': lbl, 'orientation': "horizontal", 'shrink': 0.3}, #legend_kwds={'label': lbl, 'bbox_to_anchor':(.5, 0.1),'fontsize':12,'frameon':False}, #'orientation': "horizontal",
                     categorical=True, color=merged["colors"])
+        ax.legend(handles=patches, loc='lower center', bbox_to_anchor=(0.5, -0.2), ncol=len(merged["colors"]), title=lbl)
+
     else:
         merged.plot(column=df_col2map, ax=ax, legend=True, legend_kwds={'label': lbl, 'orientation': "horizontal", 'shrink': 0.8},
                 vmin=vmin, vmax=vmax, cmap=cmap) # tab20b
