@@ -1,4 +1,5 @@
 import sys
+import os
 #############################
 # 1. Config file, run type, name, and where to tune
 #############################
@@ -13,6 +14,10 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\DZ\DZMultiple_WC-Algeria-ASAP_config.json'
     tune_on_condor = False
 else:
+    # limit multithreat (even setting njobs = 4, undelying libriaries were using more, see https://github.com/joblib/joblib/issues/793)
+    os.environ['MKL_NUM_THREADS'] = '1'
+    os.environ['OPENBLAS_NUM_THREADS'] = '1'
+    os.environ['OMP_NUM_THREADS'] = '1'
     # ZA
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # DZ
