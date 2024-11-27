@@ -13,7 +13,7 @@ from sklearn.model_selection import LeaveOneGroupOut #, LeavePGroupsOut, GroupSh
 import copy
 # from sklearn.preprocessing import KBinsDiscretizer
 # from sklearn.base import BaseEstimator, RegressorMixin
-from B_preprocess import b100_load
+from B_preprocess import b101_load_cleaned
 from C_model_setting import c1000_utils
 from D_modelling import d105_PCA_on_features, d110_benchmark_models, d120_set_hyper, d130_get_hyper, d140_modelStats
 # AVOID USE OF MATPLOTLIB GIVING ERRORS IN CONDOR
@@ -28,7 +28,7 @@ class DataMixin:
         # [opeForecast] run the operational yield
 
 
-        stats = b100_load.LoadCleanedLabel(config)
+        stats = b101_load_cleaned.LoadCleanedLabel(config)
 
         # if working on a ML model and there is some crop-au combination to exclude, do it here upfront
         if not(self.uset['algorithm'] == 'Null_model' or self.uset['algorithm'] == 'Trend' or self.uset['algorithm'] == 'PeakNDVI'):
@@ -116,17 +116,17 @@ class DataMixin:
                 # act differently if the model is requested to work on default monthly values or on feature eng
                 if '@' in self.uset['algorithm']:
                     #it is a ML specifying a ft eng
-                    ft_enf_set = self.uset['algorithm'].split("@")[1]
+                    ft_eng_set = self.uset['algorithm'].split("@")[1]
                     # treat the fetaure eng
-                    if ft_enf_set == "PeakFPARAndLast3":
+                    if ft_eng_set == "PeakFPARAndLast3":
                         # get peak FPAR and get rid of other fpar columns
                         yxData['peakFPAR'] = yxData.filter(regex=r'(NDmax|FPmax)').max(axis=1)
                         yxData = yxData[yxData.columns.drop(list(yxData.filter(regex='^FP')))]
-                        # take only last 3 for meteo (and keep peakFPAR)
-                        months2keep = [str(x) for x in list(range(self.uset['forecast_time']+1-3, self.uset['forecast_time']+1))]+['peakFPAR']
+                        # take only last 3 for meteo (and keep peakFPAR and YieldFromTrend - if there it is needed)
+                        months2keep = [str(x) for x in list(range(self.uset['forecast_time']+1-3, self.uset['forecast_time']+1))]+['peakFPAR']+ ['YieldFromTrend']
                         yxData = yxData.filter(regex='|'.join(f'{x}' for x in months2keep)) #.dropna(how='all')
                     else:
-                        print('ft eng set' + ft_enf_set + 'not managed by d100, the execution stops')
+                        print('ft eng set' + ft_eng_set + 'not managed by d100, the execution stops')
                         sys.exit()
 
                 # get the feature group values of the selected feature set
@@ -178,11 +178,11 @@ class DataMixin:
         groups = years.to_numpy()
         adm_ids = adm_ids.to_numpy()
         # save the data actually used by the model
-        data = pd.DataFrame(
-            np.concatenate([adm_ids.reshape((-1, 1)), groups.reshape((-1, 1)), y.reshape((-1, 1)), X], axis=1),
-            columns=['adm_id', 'year', 'Yield'] + feature_names)
-        myID = self.uset['runID']
-        myID = f'{myID:06d}'
+        # data = pd.DataFrame(
+        #     np.concatenate([adm_ids.reshape((-1, 1)), groups.reshape((-1, 1)), y.reshape((-1, 1)), X], axis=1),
+        #     columns=['adm_id', 'year', 'Yield'] + feature_names)
+        # myID = self.uset['runID']
+        # myID = f'{myID:06d}'
         # if run2get_mres_only == False:
         #     data.to_csv(os.path.join(config.models_out_dir, 'ID_' + str(myID) +
         #                          '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] + '_yx_preprocData.csv'), index=False)
@@ -394,7 +394,7 @@ class YieldModeller(DataMixin, object):
             # mean of temporal R2 of each AU
             meanAUR2 = d140_modelStats.meanAUR2(mRes)  # equivalent to R2 within
             # National level stats
-            stats = b100_load.LoadCleanedLabel(config)
+            stats = b101_load_cleaned.LoadCleanedLabel(config)
             # national yield using subnat yield weighted by area
             tmp = stats[stats['Crop_name'] == self.uset['crop']][['adm_id', 'Area']]
             # get avg area

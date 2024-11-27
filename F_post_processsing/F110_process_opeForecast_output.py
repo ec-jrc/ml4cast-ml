@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
-from B_preprocess import b100_load
+from B_preprocess import b101_load_cleaned
 from E_viz import e110_ope_figs
 import datetime
 import glob
@@ -46,7 +46,7 @@ def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, rMAE
                                 'runID': runID})
 
     # get yield stats
-    stats = b100_load.LoadCleanedLabel(config)
+    stats = b101_load_cleaned.LoadCleanedLabel(config)
     stats = stats[stats['Crop_name'] == uset['crop']]
 
     #get error by au
@@ -102,7 +102,7 @@ def to_csv_old(config, forecast_issue_calendar_month, uset, regions, forecasts, 
                                 'runID': runID})
 
     # get yield stats
-    stats = b100_load.LoadCleanedLabel(config)
+    stats = b101_load_cleaned.LoadCleanedLabel(config)
     stats = stats[stats['Crop_name'] == uset['crop']]
 
     for region in regions:
@@ -308,14 +308,14 @@ def make_consolidated_ope(config):
     # get pipeline specific forecast files, all crops here
     fns = [x for x in glob.glob(os.path.join(config.ope_run_out_dir, '*.csv')) if 'national' not in x and 'consolidated' not in x]
     # get yield stats
-    df_stats = b100_load.LoadCleanedLabel(config)
+    df_stats = b101_load_cleaned.LoadCleanedLabel(config)
     crop_list, production, ppercentile, yields, yieldsdiff = [], [], [], [], []
     # crop_Names = list(df_stats['Crop_name'].unique())
     # for crop_name in crop_Names: # by crop
     for crop_name in config.crops:
         print(crop_name)
         fns_crop = [x for x in fns if crop_name in x]
-        # first save a signle file with all estimations, ordered by region and by fyield_rMAEp_hindcasting
+        # first save a single file with all estimations, ordered by region and by fyield_rMAEp_hindcasting
         listDFs = []
         for fn in fns:
             listDFs.append(pd.read_csv(fn, index_col=0))

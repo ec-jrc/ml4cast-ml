@@ -146,14 +146,14 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
     tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'Crop'])
     b1 = pd.concat([b1ML, tmp])
     b1.to_csv(analysisOutputDir + '/' + 'all_model_best1.csv', index=False)
-    # # DEBUG
-    # b1 = b1[b1['Crop']=='Maize_total']
-    # b1 = b1[b1['forecast_time']==5]
+    # compute error at AU level
+    b1withAUerror = e100_eval_figs.AU_error(b1, config, analysisOutputDir)
     # plot scatter of Ml and bechmark, one plot per crop and forecasting time (this function is saving mRes)
-    e100_eval_figs.scatter_plots_and_maps(b1, config, mlsettings, var4time, analysisOutputDir, fn_shape_gaul1,
+    #e100_eval_figs.scatter_plots_and_maps(b1, config, mlsettings, var4time, analysisOutputDir, fn_shape_gaul1,
+    e100_eval_figs.scatter_plots_and_maps(b1withAUerror, config, mlsettings, var4time, analysisOutputDir, fn_shape_gaul1,
                                           country_name_in_shp_file, gdf_gaul0_column=gdf_gaul0_column)
     # plot it by forecasting time (simple bars for each forecasting time), mRes is created above
-    e100_eval_figs.bars_by_forecast_time2(b1, config, 'rRMSE_p', mlsettings, var4time, analysisOutputDir)
+    e100_eval_figs.bars_by_forecast_time2(b1withAUerror, config, 'rRMSE_p', mlsettings, var4time, analysisOutputDir)
     # e100_eval_figs.bars_by_forecast_time(b1, config, metric2use, mlsettings, var4time, analysisOutputDir)
 
     print('Compare output ended')

@@ -35,38 +35,77 @@ def output_row_to_ML_info_string(df, metric2use):
     return [info_string0, info_string1, info_string2, info_string3]
 
 
-
-def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputDir):
+def AU_error(b1, config, outputDir):
     # In this version I compute the rel RMSE by admin (aeach admin with its own mean yield) and then I weight them
     # using area of the last five years (to occount for the fact that larger errors are more tolerable if the area is small)
     os.path.join(config.data_dir, 'Label_analysis')
-    df_Stats5yrs = pd.read_csv(os.path.join(os.path.join(config.data_dir, 'Label_analysis'+str(config.prct2retain)), config.AOI + '_5yrsStats_retainPRCT100.csv'))
+    df_Stats5yrs = pd.read_csv(os.path.join(os.path.join(config.data_dir, 'Label_analysis' + str(config.prct2retain)),
+                                            config.AOI + '_5yrsStats_retainPRCT100.csv'))
+    df_regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
     # Now read mres, compute metric2use at the admin level, and make an area average add as a new columns
     b1['rRMSE_p_areaWeighted'] = -999
-    b1 = b1.reset_index() # the index was repeating
+    b1 = b1.reset_index()  # the index was repeating
     dfAU = pd.DataFrame()
     for index, row in b1.iterrows():
         # get run_id
         runID = row['runID']
-        #est = row['Estimator']
+        # est = row['Estimator']
         myID = f'{runID:06d}'
         fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
                                    '_crop_' + row['Crop'] + '_Yield_' + row['Estimator'] +
                                    '_mres.csv')
         mRes = pd.read_csv(fn_mRes_out)
         rRMSE_pByAdmin = d140_modelStats.statsByAdmin(mRes)
-        rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_Stats5yrs[df_Stats5yrs['Crop_name|first']==row['Crop']], how='left', left_on='adm_id', right_on='adm_id|')
-        b1.at[index, 'rRMSE_p_areaWeighted'] = np.average(rRMSE_pByAdmin.rrmse_prct, weights=rRMSE_pByAdmin['Area|mean'])
+        rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
+        rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_Stats5yrs[df_Stats5yrs['Crop_name|first'] == row['Crop']], how='left',
+                                              left_on='adm_id', right_on='adm_id|')
+        # b1.at[index, 'rRMSE_p_areaWeighted'] = np.average(rRMSE_pByAdmin.rrmse_prct,
+        #                                                   weights=rRMSE_pByAdmin['Area|mean'])
+        row['rRMSE_p_areaWeighted'] = np.average(rRMSE_pByAdmin.rrmse_prct,
+                                                          weights=rRMSE_pByAdmin['Area|mean'])
         rRMSE_pByAdmin.insert(1, column='Estimator', value=row['Estimator'])
         rRMSE_pByAdmin.insert(2, column='forecast_time', value=row['forecast_time'])
+        rRMSE_pByAdmin = rRMSE_pByAdmin.assign(**row.to_frame().T.to_dict(orient='records')[0])
 
         dfAU = pd.concat([dfAU, rRMSE_pByAdmin])
     dfAU.to_csv(os.path.join(outputDir, 'all_model_best1_AU_error.csv'))
+    return dfAU
+def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputDir):
+    # In this version I compute the rel RMSE by admin (aeach admin with its own mean yield) and then I weight them
+    # using area of the last five years (to occount for the fact that larger errors are more tolerable if the area is small)
+
+    # os.path.join(config.data_dir, 'Label_analysis')
+    # df_Stats5yrs = pd.read_csv(os.path.join(os.path.join(config.data_dir, 'Label_analysis'+str(config.prct2retain)), config.AOI + '_5yrsStats_retainPRCT100.csv'))
+    # # Now read mres, compute metric2use at the admin level, and make an area average add as a new columns
+    # b1['rRMSE_p_areaWeighted'] = -999
+    # b1 = b1.reset_index() # the index was repeating
+    # dfAU = pd.DataFrame()
+    # for index, row in b1.iterrows():
+    #     # get run_id
+    #     runID = row['runID']
+    #     #est = row['Estimator']
+    #     myID = f'{runID:06d}'
+    #     fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+    #                                '_crop_' + row['Crop'] + '_Yield_' + row['Estimator'] +
+    #                                '_mres.csv')
+    #     mRes = pd.read_csv(fn_mRes_out)
+    #     rRMSE_pByAdmin = d140_modelStats.statsByAdmin(mRes)
+    #     rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_Stats5yrs[df_Stats5yrs['Crop_name|first']==row['Crop']], how='left', left_on='adm_id', right_on='adm_id|')
+    #     b1.at[index, 'rRMSE_p_areaWeighted'] = np.average(rRMSE_pByAdmin.rrmse_prct, weights=rRMSE_pByAdmin['Area|mean'])
+    #     rRMSE_pByAdmin.insert(1, column='Estimator', value=row['Estimator'])
+    #     rRMSE_pByAdmin.insert(2, column='forecast_time', value=row['forecast_time'])
+    #     rRMSE_pByAdmin = rRMSE_pByAdmin.assign(**row.to_frame().T.to_dict(orient='records')[0])
+    #
+    #     dfAU = pd.concat([dfAU, rRMSE_pByAdmin])
+    # dfAU.to_csv(os.path.join(outputDir, 'all_model_best1_AU_error.csv'))
 
 
     # in order to assign the same colors and keep a defined order I have to do some workaround
-    b1['tmp_est'] = b1['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
+    # b1['tmp_est'] = b1['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
     # colors = {'Cat1': "#F28E2B", 'Cat2': "#4E79A7", 'Cat3': "#79706E"}
+    # now b1 has the best (+ benchmarks) repeated for each AU (it has AU error). For the following I just need
+    # overall data
+    b1 = b1.drop_duplicates(subset='runID', keep='first')
     colors = {'ML': "#0000FF", 'Null_model': "#969696", 'PeakNDVI': "#FF0000", 'Trend': "#009600"}
     for t in b1[var4time].unique():
         crops = b1['Crop'].unique()
@@ -156,49 +195,169 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
         fig_name = outputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '_all_crops_performances.png'
         plt.savefig(fig_name)
         plt.close(fig)
-
-def _bars_by_forecast_time(b1, metric2use, mlsettings, var4time, outputDir):
-    # in order to assign the same colors and keep a defined order I have to do some workaround
-    b1['tmp_est'] = b1['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
-    # colors = {'Cat1': "#F28E2B", 'Cat2': "#4E79A7", 'Cat3': "#79706E"}
-    colors = {'ML': "#0000FF", 'Null_model': "#969696", 'PeakNDVI': "#FF0000", 'Trend': "#009600"}
-    for t in b1[var4time].unique():
-        crops = b1['Crop'].unique()
-        # get forecast_issue_calendar_month
-        forecast_issue_calendar_month = calendar.month_abbr[b1[b1[var4time] == t]['forecast_issue_calendar_month'].iloc[0]]
-        fig, axs = plt.subplots(ncols=max(len(crops),2), figsize=(14, 6)) #need two at least for the loop below
-        ax_c = 0  # ax counter
-        # get mas metirc
-        ymax = b1[b1[var4time] == t][metric2use].max()
-        for crop in crops:
-            # in order to assign teh same colors I have to do some workaround
-            tmp = b1[(b1[var4time] == t) & (b1['Crop'] == crop)].copy()
-            sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
-            tmp['pltOrder'] = tmp['tmp_est'].map(sort_dict)
-            tmp = tmp.sort_values('pltOrder')
-            p = sns.barplot(tmp, x="tmp_est", y=metric2use, hue="tmp_est",
-                            palette=colors, ax=axs[ax_c], dodge=False, width=0.4, legend="full")
-            ml_row = tmp[tmp['tmp_est'] == 'ML']
-            [info_string0, info_string1, info_string2, info_string3] = output_row_to_ML_info_string(ml_row, metric2use)
-            axs[ax_c].text(0.875, -0.1, metric2use + '= ' + info_string0, transform=axs[ax_c].transAxes,
-                           horizontalalignment='center')
-            axs[ax_c].text(0.875, -0.14, info_string1, transform=axs[ax_c].transAxes, horizontalalignment='center')
-            axs[ax_c].text(0.875, -0.18, info_string2, transform=axs[ax_c].transAxes, horizontalalignment='center')
-            axs[ax_c].text(0.875, -0.22, info_string3, transform=axs[ax_c].transAxes, horizontalalignment='center')
-            axs[ax_c].get_legend().set_visible(False)
-            axs[ax_c].set_title(crop)
-            axs[ax_c].set(ylim=(0, ymax * 1.1))
-            axs[ax_c].set(xlabel='Model')
-            ax_c = ax_c + 1
-
-        if len(crops) == 1:
-            axs[1].remove()
-        h, l = p.get_legend_handles_labels()
-        plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-        fig.tight_layout()
-
-        plt.savefig(outputDir + '/' + 'all_model_best1_forecast_month_season_' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '.png')
-        plt.close(fig)
+# def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputDir):
+#     # In this version I compute the rel RMSE by admin (aeach admin with its own mean yield) and then I weight them
+#     # using area of the last five years (to occount for the fact that larger errors are more tolerable if the area is small)
+#     os.path.join(config.data_dir, 'Label_analysis')
+#     df_Stats5yrs = pd.read_csv(os.path.join(os.path.join(config.data_dir, 'Label_analysis'+str(config.prct2retain)), config.AOI + '_5yrsStats_retainPRCT100.csv'))
+#     # Now read mres, compute metric2use at the admin level, and make an area average add as a new columns
+#     b1['rRMSE_p_areaWeighted'] = -999
+#     b1 = b1.reset_index() # the index was repeating
+#     dfAU = pd.DataFrame()
+#     for index, row in b1.iterrows():
+#         # get run_id
+#         runID = row['runID']
+#         #est = row['Estimator']
+#         myID = f'{runID:06d}'
+#         fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+#                                    '_crop_' + row['Crop'] + '_Yield_' + row['Estimator'] +
+#                                    '_mres.csv')
+#         mRes = pd.read_csv(fn_mRes_out)
+#         rRMSE_pByAdmin = d140_modelStats.statsByAdmin(mRes)
+#         rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_Stats5yrs[df_Stats5yrs['Crop_name|first']==row['Crop']], how='left', left_on='adm_id', right_on='adm_id|')
+#         b1.at[index, 'rRMSE_p_areaWeighted'] = np.average(rRMSE_pByAdmin.rrmse_prct, weights=rRMSE_pByAdmin['Area|mean'])
+#         rRMSE_pByAdmin.insert(1, column='Estimator', value=row['Estimator'])
+#         rRMSE_pByAdmin.insert(2, column='forecast_time', value=row['forecast_time'])
+#         rRMSE_pByAdmin = rRMSE_pByAdmin.assign(**row.to_frame().T.to_dict(orient='records')[0])
+#
+#         dfAU = pd.concat([dfAU, rRMSE_pByAdmin])
+#     dfAU.to_csv(os.path.join(outputDir, 'all_model_best1_AU_error.csv'))
+#
+#
+#     # in order to assign the same colors and keep a defined order I have to do some workaround
+#     b1['tmp_est'] = b1['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
+#     # colors = {'Cat1': "#F28E2B", 'Cat2': "#4E79A7", 'Cat3': "#79706E"}
+#     colors = {'ML': "#0000FF", 'Null_model': "#969696", 'PeakNDVI': "#FF0000", 'Trend': "#009600"}
+#     for t in b1[var4time].unique():
+#         crops = b1['Crop'].unique()
+#         # get forecast_issue_calendar_month
+#         forecast_issue_calendar_month = calendar.month_abbr[
+#             b1[b1[var4time] == t]['forecast_issue_calendar_month'].iloc[0]]
+#         fig, axs = plt.subplots(nrows=2, ncols=max(len(crops), 2), figsize=(14,10))  # need two at least for the loop below
+#         # plt.subplots_adjust(top=0.8)
+#         # fig, axs = plt.subplots(nrows=2, ncols=len(crops), figsize=(14, 12))
+#         ax_c = 0  # ax counter
+#         # get max metirc
+#         ymax = b1[b1[var4time] == t][metric2use].max()
+#         for crop in crops:
+#             # in order to assign the same colors I have to do some workaround
+#             tmp = b1[(b1[var4time] == t) & (b1['Crop'] == crop)].copy()
+#
+#             sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
+#             tmp['pltOrder'] = tmp['tmp_est'].map(sort_dict)
+#             tmp = tmp.sort_values('pltOrder')
+#             # get area weigthed rRMSE
+#             # tmp = areaWeighted_rRMSE(tmp, df_regNames, df_Stats)
+#             p = sns.barplot(tmp, x="tmp_est", y=metric2use, hue="tmp_est",
+#                             palette=colors, ax=axs[0, ax_c], dodge=False, width=0.4, legend="full")
+#             # axs[0, ax_c].set_position([axs[0, ax_c].get_position().x0, axs[0, ax_c].get_position().y0 * 0.8,
+#             #                            axs[0, ax_c].get_position().width, axs[0, ax_c].get_position().height * 0.8])
+#             ml_row = tmp[tmp['tmp_est'] == 'ML']
+#             [info_string0, info_string1, info_string2, info_string3] = output_row_to_ML_info_string(ml_row, metric2use)
+#             axs[0, ax_c].text(0.875, -0.1, metric2use + ' = ' + info_string0, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
+#             axs[0, ax_c].text(0.875, -0.14, info_string1, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
+#             axs[0, ax_c].text(0.875, -0.18, info_string2, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
+#             axs[0, ax_c].text(0.875, -0.22, info_string3, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
+#             axs[0, ax_c].get_legend().set_visible(False)
+#             axs[0, ax_c].set_title(crop)
+#             axs[0, ax_c].set(ylim=(0, ymax * 1.1))
+#             axs[0, ax_c].set(xlabel='Model')
+#             ax_c = ax_c + 1
+#         h, l = p.get_legend_handles_labels()
+#         # h, l = axs[0, ax_c-1].get_legend_handles_labels()
+#         # plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+#         axs[0, ax_c-1].legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+#         ax_c = 0
+#         # Second row fo area weighted
+#         # get max metirc
+#         ymax = b1[b1[var4time] == t]['rRMSE_p_areaWeighted'].max()
+#         for crop in crops:
+#             # in order to assign the same colors I have to do some workaround
+#             tmp = b1[(b1[var4time] == t) & (b1['Crop'] == crop)].copy()
+#             sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
+#             tmp['pltOrder'] = tmp['tmp_est'].map(sort_dict)
+#             tmp = tmp.sort_values('pltOrder')
+#             # get area weigthed rRMSE
+#             # tmp = areaWeighted_rRMSE(tmp, df_regNames, df_Stats)
+#             p = sns.barplot(tmp, x="tmp_est", y='rRMSE_p_areaWeighted', hue="tmp_est",
+#                             palette=colors, ax=axs[1, ax_c], dodge=False, width=0.4, legend="full")
+#             # axs[1, ax_c].set_position([axs[1, ax_c].get_position().x0, axs[1, ax_c].get_position().y0 * 0.8,
+#             #                            axs[1, ax_c].get_position().width, axs[1, ax_c].get_position().height * 0.8])
+#             ml_row = tmp[tmp['tmp_est'] == 'ML']
+#             [info_string0, info_string1, info_string2, info_string3] = output_row_to_ML_info_string(ml_row,
+#                                                                                                     metric2use)
+#             info_string0 = str(round(ml_row['rRMSE_p_areaWeighted'].values[0], 2))
+#             axs[1, ax_c].text(0.875, -0.1, 'rRMSE_p_AW' + ' = ' + info_string0, transform=axs[1, ax_c].transAxes,
+#                               horizontalalignment='center')
+#             axs[1, ax_c].text(0.875, -0.14, info_string1, transform=axs[1, ax_c].transAxes,
+#                               horizontalalignment='center')
+#             axs[1, ax_c].text(0.875, -0.18, info_string2, transform=axs[1, ax_c].transAxes,
+#                               horizontalalignment='center')
+#             axs[1, ax_c].text(0.875, -0.22, info_string3, transform=axs[1, ax_c].transAxes,
+#                               horizontalalignment='center')
+#             axs[1, ax_c].get_legend().set_visible(False)
+#             axs[1, ax_c].set_title(crop)
+#             axs[1, ax_c].set(ylim=(0, ymax * 1.1))
+#             axs[1, ax_c].set(xlabel='Model')
+#             ax_c = ax_c + 1
+#         if len(crops) == 1:
+#             axs[0, 1].remove()
+#             axs[1, 1].remove()
+#         # h, l = p.get_legend_handles_labels()
+#         # plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+#         fig.text(0.90, 0.775, 'Average of', ha='left')
+#         fig.text(0.90, 0.755, 'admin-level error', ha='left')
+#         fig.text(0.90, 0.275, 'Crop-area weighted', ha='left')
+#         fig.text(0.90, 0.255, 'average of', ha='left')
+#         fig.text(0.90, 0.235, 'admin-level error', ha='left')
+#         plt.tight_layout()
+#         #get forecastingPrct from t (forecastingMonths)
+#         forecastingPrct = config.forecastingPrct[config.forecastingMonths.index(t)]
+#         fig_name = outputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '_all_crops_performances.png'
+#         plt.savefig(fig_name)
+#         plt.close(fig)
+# def _bars_by_forecast_time(b1, metric2use, mlsettings, var4time, outputDir):
+#     # in order to assign the same colors and keep a defined order I have to do some workaround
+#     b1['tmp_est'] = b1['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
+#     # colors = {'Cat1': "#F28E2B", 'Cat2': "#4E79A7", 'Cat3': "#79706E"}
+#     colors = {'ML': "#0000FF", 'Null_model': "#969696", 'PeakNDVI': "#FF0000", 'Trend': "#009600"}
+#     for t in b1[var4time].unique():
+#         crops = b1['Crop'].unique()
+#         # get forecast_issue_calendar_month
+#         forecast_issue_calendar_month = calendar.month_abbr[b1[b1[var4time] == t]['forecast_issue_calendar_month'].iloc[0]]
+#         fig, axs = plt.subplots(ncols=max(len(crops),2), figsize=(14, 6)) #need two at least for the loop below
+#         ax_c = 0  # ax counter
+#         # get mas metirc
+#         ymax = b1[b1[var4time] == t][metric2use].max()
+#         for crop in crops:
+#             # in order to assign teh same colors I have to do some workaround
+#             tmp = b1[(b1[var4time] == t) & (b1['Crop'] == crop)].copy()
+#             sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
+#             tmp['pltOrder'] = tmp['tmp_est'].map(sort_dict)
+#             tmp = tmp.sort_values('pltOrder')
+#             p = sns.barplot(tmp, x="tmp_est", y=metric2use, hue="tmp_est",
+#                             palette=colors, ax=axs[ax_c], dodge=False, width=0.4, legend="full")
+#             ml_row = tmp[tmp['tmp_est'] == 'ML']
+#             [info_string0, info_string1, info_string2, info_string3] = output_row_to_ML_info_string(ml_row, metric2use)
+#             axs[ax_c].text(0.875, -0.1, metric2use + '= ' + info_string0, transform=axs[ax_c].transAxes,
+#                            horizontalalignment='center')
+#             axs[ax_c].text(0.875, -0.14, info_string1, transform=axs[ax_c].transAxes, horizontalalignment='center')
+#             axs[ax_c].text(0.875, -0.18, info_string2, transform=axs[ax_c].transAxes, horizontalalignment='center')
+#             axs[ax_c].text(0.875, -0.22, info_string3, transform=axs[ax_c].transAxes, horizontalalignment='center')
+#             axs[ax_c].get_legend().set_visible(False)
+#             axs[ax_c].set_title(crop)
+#             axs[ax_c].set(ylim=(0, ymax * 1.1))
+#             axs[ax_c].set(xlabel='Model')
+#             ax_c = ax_c + 1
+#
+#         if len(crops) == 1:
+#             axs[1].remove()
+#         h, l = p.get_legend_handles_labels()
+#         plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+#         fig.tight_layout()
+#
+#         plt.savefig(outputDir + '/' + 'all_model_best1_forecast_month_season_' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '.png')
+#         plt.close(fig)
 
 def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'): #onfig, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'
     # in order to assign the same colors and keep a defined order I have to do some workaround
@@ -230,44 +389,45 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
 
 
             # iterate one time to get min max over pandas df
-            dfAU = pd.DataFrame()
-            for index, row in df_c_t.iterrows():
-                # get run_id
-                runID = row['runID']
-                est = row['Estimator']
-                tmp_est = row['tmp_est']
-                myID = f'{runID:06d}'
-                fn_spec = os.path.join(pathlib.Path(config.models_spec_dir), myID + '_' + c + '_' + est + '.json')
-                print(fn_spec)
-                df = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
-                statsByAdmin = d140_modelStats.statsByAdmin(df)
-                statsByAdmin = statsByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
-                statsByAdmin['Estimator'] = tmp_est
-                dfAU = pd.concat([dfAU, statsByAdmin])
-            minOfMins = dfAU.rrmse_prct.min()
-            maxOfmaxs = dfAU.rrmse_prct.max()
+            # dfAU = pd.DataFrame()
+            # for index, row in df_c_t.iterrows():
+            #     # get run_id
+            #     runID = row['runID']
+            #     est = row['Estimator']
+            #     tmp_est = row['tmp_est']
+            #     myID = f'{runID:06d}'
+            #     fn_spec = os.path.join(pathlib.Path(config.models_spec_dir), myID + '_' + c + '_' + est + '.json')
+            #     print(fn_spec)
+            #     df = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
+            #     statsByAdmin = d140_modelStats.statsByAdmin(df)
+            #     statsByAdmin = statsByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
+            #     statsByAdmin['Estimator'] = tmp_est
+            #     dfAU = pd.concat([dfAU, statsByAdmin])
+            minOfMins = df_c_t.rrmse_prct.min()
+            maxOfmaxs = df_c_t.rrmse_prct.max()
+            # minOfMins = dfAU.rrmse_prct.min()
+            # maxOfmaxs = dfAU.rrmse_prct.max()
             # get best by admin
-            dfBestPerAU = dfAU[dfAU['rrmse_prct'] == dfAU.groupby(['adm_id'])['rrmse_prct'].transform(min)]
+            # dfBestPerAU = dfAU[dfAU['rrmse_prct'] == dfAU.groupby(['adm_id'])['rrmse_prct'].transform(min)]
+            dfBestPerAU = df_c_t[df_c_t['rrmse_prct'] == df_c_t.groupby(['adm_id'])['rrmse_prct'].transform(min)]
             colors = {'ML': "#0000FF", 'Null_model': "#969696", 'PeakNDVI': "#FF0000", 'Trend': "#009600"}
-            dfBestPerAU['colors'] = dfBestPerAU['Estimator'].map(colors)
-            # iterate over pandas df
-            for index, row in df_c_t.iterrows():
-                # get run_id
-                runID = row['runID']
-                est = row['Estimator']
-                tmp_est= row['tmp_est']
+            dfBestPerAU['colors'] = dfBestPerAU['tmp_est'].map(colors)
+            index = 0
+            for model in df_c_t['tmp_est'].unique():
+                df_c_t_m = df_c_t[df_c_t['tmp_est'] == model]
+                axs3[index] = e50_yield_data_analysis.mapDfColumn2Ax(df_c_t_m, 'adm_id', 'rrmse_prct', 'adm_name',
+                                                                     gdf, gdf_gaul1_id, gdf_gaul0_column,
+                                                                     country_name_in_shp_file,
+                                                                     'rRMSE (%)', cmap='tab20b',
+                                                                     minmax=[minOfMins, maxOfmaxs], ax=axs3[index])
+                axs3[index].set_title(model)
+                # get mres errors
+                runID = df_c_t_m['runID'].iloc[0]
+                est = df_c_t_m['Estimator'].iloc[0]
                 myID = f'{runID:06d}'
                 fn_spec = os.path.join(pathlib.Path(config.models_spec_dir), myID + '_' + c + '_' + est + '.json')
-                print(fn_spec)
+                # print(fn_spec)
                 df = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
-                statsByAdmin = d140_modelStats.statsByAdmin(df)
-                statsByAdmin = statsByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
-                axs3[index] = e50_yield_data_analysis.mapDfColumn2Ax(statsByAdmin, 'adm_id', 'rrmse_prct', 'adm_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
-                                'rRMSE (%)', cmap='tab20b', minmax=[minOfMins, maxOfmaxs], ax=axs3[index])
-                axs3[index].set_title(tmp_est)
-                # fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' +  str(forecastingPrct)+ '-' + c + '_' + tmp_est +'_AU_rrmse.png'
-                # e50_yield_data_analysis.mapDfColumn(statsByAdmin, 'adm_id', 'rrmse_prct', 'adm_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
-                # 'rRMSE (%)', cmap='tab20b', minmax=None, fn_fig=fig_name, ax=None)
                 lims = [np.floor(np.min([df['yLoo_true'].values, df['yLoo_pred'].values])),
                         np.ceil(np.max([df['yLoo_true'].values, df['yLoo_pred'].values]))]
                 r2p = d140_modelStats.r2_nan(df['yLoo_true'].values, df['yLoo_pred'].values)
@@ -297,32 +457,105 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
                     axs2[index].set_xlabel('Obs')
                     axs2[index].set_ylabel('Pred')
                     axs2[index].legend(frameon=False, ncol=4, loc='upper left', prop={'size':10}, handletextpad=0.005, columnspacing=0.02, labelspacing=0.05)
+                index = index + 1
             fig.tight_layout()
             fig2.tight_layout()
-            fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_scatter_by_admin.png'
+            fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(
+                forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_scatter_by_admin.png'
             fig.savefig(fig_name)
-            fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_scatter_by_year.png'
+            fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(
+                forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_scatter_by_year.png'
             fig2.savefig(fig_name)
-
             # now plot the best by au
             axs3[4] = e50_yield_data_analysis.mapDfColumn2Ax(dfBestPerAU, 'adm_id', 'Estimator', 'adm_name', gdf,
-                                                                 gdf_gaul1_id, gdf_gaul0_column,
-                                                                 country_name_in_shp_file,
-                                                                 'Estimator', ax=axs3[4], cate=True)
+                                                             gdf_gaul1_id, gdf_gaul0_column,
+                                                             country_name_in_shp_file,
+                                                             'Estimator', ax=axs3[4], cate=True)
             axs3[4].set_title('Best')
-
             axs3[5].set_axis_off()
             fig3.subplots_adjust(wspace=0.01, hspace=0.01)
             for ax in axs3:
                 ax.set_anchor('NW')
-            fig_name = fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' +  str(forecastingPrct)+ '-' + c  +'_AU_rrmse.png'
-            # fig3.tight_layout()
-            # plt.tight_layout()
+            fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(
+                forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_AU_rrmse.png'
             fig3.savefig(fig_name)
-
             plt.close(fig)
             plt.close(fig2)
             plt.close(fig3)
+
+            # # iterate over pandas df
+            # for index, row in df_c_t.iterrows():
+            #     # get run_id
+            #     runID = row['runID']
+            #     est = row['Estimator']
+            #     tmp_est= row['tmp_est']
+            #     myID = f'{runID:06d}'
+            #     fn_spec = os.path.join(pathlib.Path(config.models_spec_dir), myID + '_' + c + '_' + est + '.json')
+            #     print(fn_spec)
+            #     df = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
+            #     statsByAdmin = d140_modelStats.statsByAdmin(df)
+            #     statsByAdmin = statsByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
+            #     axs3[index] = e50_yield_data_analysis.mapDfColumn2Ax(statsByAdmin, 'adm_id', 'rrmse_prct', 'adm_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
+            #                     'rRMSE (%)', cmap='tab20b', minmax=[minOfMins, maxOfmaxs], ax=axs3[index])
+            #     axs3[index].set_title(tmp_est)
+            #     # fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' +  str(forecastingPrct)+ '-' + c + '_' + tmp_est +'_AU_rrmse.png'
+            #     # e50_yield_data_analysis.mapDfColumn(statsByAdmin, 'adm_id', 'rrmse_prct', 'adm_name', gdf, gdf_gaul1_id, gdf_gaul0_column, country_name_in_shp_file,
+            #     # 'rRMSE (%)', cmap='tab20b', minmax=None, fn_fig=fig_name, ax=None)
+            #     lims = [np.floor(np.min([df['yLoo_true'].values, df['yLoo_pred'].values])),
+            #             np.ceil(np.max([df['yLoo_true'].values, df['yLoo_pred'].values]))]
+            #     r2p = d140_modelStats.r2_nan(df['yLoo_true'].values, df['yLoo_pred'].values)
+            #     for au_code in df['adm_id'].unique():
+            #         x = df[df['adm_id'] == au_code]['yLoo_true'].values
+            #         y = df[df['adm_id'] == au_code]['yLoo_pred'].values
+            #         lbl = df_regNames[df_regNames['adm_id'] == au_code.astype('int')]['adm_name'].values[0]
+            #         axs[index].scatter(x, y, label=lbl, edgecolor='k', linewidth=0.5)
+            #         axs[index].plot(lims, lims, color='black', linewidth=0.5)
+            #         axs[index].set_title(est + ',R2p=' + str(np.round(r2p, 2)))
+            #         axs[index].set_xlim(lims)
+            #         axs[index].set_ylim(lims)
+            #         axs[index].set_xlabel('Obs')
+            #         axs[index].set_ylabel('Pred')
+            #         axs[index].legend(frameon=False, loc='upper left')
+            #     color = iter(cm.gist_ncar(np.linspace(0, 1, len(df['Year'].unique())))) # rainbow too small, gist_rainbow
+            #     for yr in df['Year'].unique():
+            #         clr = next(color)
+            #         x = df[df['Year'] == yr]['yLoo_true'].values
+            #         y = df[df['Year'] == yr]['yLoo_pred'].values
+            #         lbl = str(int(yr))
+            #         axs2[index].scatter(x, y, label=lbl, c=clr, edgecolor='k', linewidth=0.5)
+            #         axs2[index].plot(lims, lims, color='black', linewidth=0.5)
+            #         axs2[index].set_title(est + ',R2p=' + str(np.round(r2p, 2)))
+            #         axs2[index].set_xlim(lims)
+            #         axs2[index].set_ylim(lims)
+            #         axs2[index].set_xlabel('Obs')
+            #         axs2[index].set_ylabel('Pred')
+            #         axs2[index].legend(frameon=False, ncol=4, loc='upper left', prop={'size':10}, handletextpad=0.005, columnspacing=0.02, labelspacing=0.05)
+            # fig.tight_layout()
+            # fig2.tight_layout()
+            # fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_scatter_by_admin.png'
+            # fig.savefig(fig_name)
+            # fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_scatter_by_year.png'
+            # fig2.savefig(fig_name)
+            #
+            # # now plot the best by au
+            # axs3[4] = e50_yield_data_analysis.mapDfColumn2Ax(dfBestPerAU, 'adm_id', 'Estimator', 'adm_name', gdf,
+            #                                                      gdf_gaul1_id, gdf_gaul0_column,
+            #                                                      country_name_in_shp_file,
+            #                                                      'Estimator', ax=axs3[4], cate=True)
+            # axs3[4].set_title('Best')
+            #
+            # axs3[5].set_axis_off()
+            # fig3.subplots_adjust(wspace=0.01, hspace=0.01)
+            # for ax in axs3:
+            #     ax.set_anchor('NW')
+            # fig_name = fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' +  str(forecastingPrct)+ '-' + c  +'_AU_rrmse.png'
+            # # fig3.tight_layout()
+            # # plt.tight_layout()
+            # fig3.savefig(fig_name)
+            #
+            # plt.close(fig)
+            # plt.close(fig2)
+            # plt.close(fig3)
 
 # def scatter_plots_and_maps(b1, config, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'): #onfig, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'
 #     df_regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))

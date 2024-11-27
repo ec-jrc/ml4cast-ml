@@ -166,8 +166,7 @@ def build_features(config, runType):
 
 
 
-def LoadCleanedLabel(config):
-    return pd.read_csv(os.path.join(config.data_dir, config.AOI + '_STATS_cleaned' + str(config.prct2retain)+'.csv'))
+
 
 def LoadLabel(stat_file, start_year, end_year, make_charts=False, perc_threshold=-1, crops_names=None):
     '''

@@ -4,7 +4,7 @@ import geopandas as gpd
 import os
 from pathlib import Path
 import matplotlib.pyplot as plt
-from B_preprocess import b100_load
+from B_preprocess import b101_load_cleaned
 import pymannkendall as mk
 import matplotlib.ticker as mticker
 import matplotlib.patches as mpatches
@@ -232,7 +232,7 @@ def trend_anlysis(config, prct2retain=100):
     outDir = os.path.join(config.data_dir, 'Label_analysis'+str(prct2retain))
     Path(outDir).mkdir(parents=True, exist_ok=True)
 
-    x = b100_load.LoadCleanedLabel(config)
+    x = b101_load_cleaned.LoadCleanedLabel(config)
     # regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
     # crop_name = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_CROP_id.csv'))
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))

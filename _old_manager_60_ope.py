@@ -18,8 +18,7 @@ if __name__ == '__main__':
     This script is used to run the operational yield forecast for a new year. Predictors are saved in a
     different dir that can be updated and to avoid overwrite of features used for training (OpeForecast_data under root dir
     specified in config file).
-    The script first refit the best model pipeline on all available years and then make the forecast.
-    The best model (can be also benchmark model is selected by crop and admin unit
+    The script first refit the best model pipeline on all available years and then make the forecast
     '''
     pd.set_option('display.width', 5000)
     pd.set_option('display.max_columns', None)
@@ -40,7 +39,6 @@ if __name__ == '__main__':
 
     # load region specific data info
     config = a10_config.read(config_fn, run_name)
-    modelSettings = a10_config.mlSettings(forecastingMonths=forecastingMonth)
     runType = 'opeForecast'
     # get the month when forecasts are issued
     # forecastingMonths is month in the season (1,e, .. from the first), forecastingCalendarMonths is the calendar month
@@ -73,7 +71,6 @@ if __name__ == '__main__':
         df_run = df_best_time_crop.loc[df_best_time_crop[metric_for_model_selection] == df_best_time_crop[metric_for_model_selection].min()]
         # if best is lasso or peak don't do it twice (remove duplicates from list using set)
         #list2run = sorted(list(set([df_run['Estimator'].iloc[0], 'Lasso', 'PeakNDVI']))) LASSO may not be selecte during fast tuning
-        # TODO: use modelSettings.benchmarks to extend
         list2run = sorted(list(set([df_run['Estimator'].iloc[0], 'PeakNDVI'])))
         # list2run = sorted(list(set([df_run['Estimator'].iloc[0], 'PeakNDVI', 'Null_model', ])))
         for est in list2run:    # make forecasts with the 2 or 3 estimators left

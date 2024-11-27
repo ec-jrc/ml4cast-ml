@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import os
 import json
+from datetime import datetime
 
 
 class read:
@@ -26,17 +27,15 @@ class read:
 
     self.root_dir = jdict['root_dir']
     self.data_dir = os.path.join(self.root_dir, jdict['data_dir'])
+    self.output_dir = os.path.join(self.root_dir, 'RUN_' + self.afi)
     self.fn_reference_shape = jdict['fn_reference_shape']
     self.country_name_in_shp_file = jdict['country_name_in_shp_file']
     self.gaul0_column_name_in_shp_file = jdict['gaul0_column_name_in_shp_file']
     self.adminID_column_name_in_shp_file = jdict['adminID_column_name_in_shp_file']
 
     self.ope_data_dir = os.path.join(self.root_dir, jdict['ope_data_dir'])
-    # self.output_dir = os.path.join(self.root_dir, jdict['output_dir'])
-    self.output_dir = os.path.join(self.root_dir, 'RUN_' + self.afi )
-
-    # run_stamp = datetime.datetime.today().strftime('%Y%m%d')
-    self.ope_run_dir = os.path.join(self.output_dir, 'OPE_'+run_name)
+    run_stamp = datetime.today().strftime('%Y%m%d')
+    self.ope_run_dir = os.path.join(self.output_dir, 'OPE_'+ run_name + '_made_on_' + str(run_stamp))
     self.ope_run_out_dir = os.path.join(self.ope_run_dir, 'output')
     self.models_dir = os.path.join(self.output_dir, 'TUNE_' + run_name)
     self.models_spec_dir = os.path.join(self.models_dir, 'Specs')

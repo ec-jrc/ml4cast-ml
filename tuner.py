@@ -84,7 +84,7 @@ def tuneA(run_name, config_fn, tune_on_condor, runType):
     # Prepare input files
     b100_load.LoadPredictors_Save_Csv(config, runType)
     b100_load.build_features(config, runType)
-    b100_load.LoadCleanedLabel(config)
+    # b100_load.LoadCleanedLabel(config)
     # prepare json files specifying the details of each run to be tested
     c100_save_model_specs.save_model_specs(config, modelSettings)
     # print(config.__dict__)
