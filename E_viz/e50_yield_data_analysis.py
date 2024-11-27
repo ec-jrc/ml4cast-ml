@@ -123,11 +123,13 @@ def mapDfColumn2Ax(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_me
         merged.plot(column=df_col2map, ax=ax, legend=True,
                     # legend_kwds={'label': lbl, 'orientation': "horizontal", 'shrink': 0.3}, #legend_kwds={'label': lbl, 'bbox_to_anchor':(.5, 0.1),'fontsize':12,'frameon':False}, #'orientation': "horizontal",
                     categorical=True, color=merged["colors"])
-        ax.legend(handles=patches, loc='lower center', bbox_to_anchor=(0.5, -0.2), ncol=len(merged["colors"]), title=lbl)
+        ax.legend(handles=patches, loc='lower center', bbox_to_anchor=(0.5, -0.4), ncol=len(merged["colors"]), title=lbl, frameon=False)
 
     else:
         merged.plot(column=df_col2map, ax=ax, legend=True, legend_kwds={'label': lbl, 'orientation': "horizontal", 'shrink': 0.8},
                 vmin=vmin, vmax=vmax, cmap=cmap) # tab20b
+
+
     # Add Labels (only plotted regions)
     #merged = merged[merged['Crop_name|first'] == c]
     merged['coords'] = merged['geometry'].apply(lambda x: x.representative_point().coords[:])
