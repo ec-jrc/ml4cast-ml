@@ -38,40 +38,18 @@ class DataMixin:
                         mask = (stats['Crop_name'] == key_crop) & (stats['adm_name'] == value_au)
                         stats = stats[~mask]
 
-
-        # # rescale Production units for better graphic and better models (if production is avail)
-        # if 'Production' in stats.columns:
-        #     stats['Production'] = stats['Production'].div(config.production_scaler)
-
         # Raw features for ope forecast are stored in a different dir to avoid overwrite of features used for training
         if runType == 'opeForecast':
             raw_features = pd.read_csv(os.path.join(config.ope_run_dir, config.AOI + '_features4scikit.csv'))
-            # drop adm_name, not needed and will be duplicated in merge
-            #raw_features = raw_features.drop(['adm_name','adm_id'], axis=1)
-            # I need to create a xyDta with features but no labels for the forecast year
+            # I need to create a xyData with features but no labels for the forecast year
             # get unique combos to attach crop id and crop name to raw features
             statsDistinct = stats.drop_duplicates(["adm_id", "Crop_ID"])[['adm_id', 'Crop_ID', 'adm_name', 'Crop_name']]
             raw_features = pd.merge(raw_features, statsDistinct, how='left', left_on=['adm_id', 'adm_name'],
                                     right_on=['adm_id', 'adm_name'])
             yxData = pd.merge(stats, raw_features, how='outer', left_on=['adm_id', 'adm_name', 'Year', 'Crop_ID', 'Crop_name'],
                               right_on=['adm_id', 'adm_name', 'YearOfEOS', 'Crop_ID', 'Crop_name'])
-            # transfer year of features to year of stats to have it working with trend
+            # transfer year of features to year of stats to have it working with trend (there in year of data because there is no histo yield for the time to be forecasted)
             yxData.loc[yxData['Year'].isna(), "Year"] = yxData["YearOfEOS"].astype('int32')
-            # old stuff:
-            # # keep only adm_id that are in stats (some regions may have been dropped because have missing data)
-            # raw_features = raw_features[raw_features['adm_id'].isin(stats['adm_id'].unique())]
-            # # the result of merge has year with only features as one record per year while I need one record per crop
-            # statsDistinct = stats.drop_duplicates(["adm_id", "Crop_ID"])[
-            #     ['adm_id', 'Crop_ID', 'adm_name', 'Crop_name']] #['adm_id', 'Crop_ID', 'adm_id', 'adm_name', 'adm_id', 'Crop_name']]
-            # raw_features = pd.merge(raw_features, statsDistinct, how='left', left_on=['adm_id', 'adm_name'], right_on=['adm_id', 'adm_name'])
-            # # join to keep also feature records that have label
-            # yxData = pd.merge(stats, raw_features, how='outer', left_on=['adm_id', 'Year', 'Crop_ID'],
-            #                   right_on=['adm_id', 'YearOfEOS', 'Crop_ID'])
-            # yxData[['adm_id_x', 'adm_name_x', 'adm_id_x','Crop_name_x']] = yxData[['adm_id_y', 'adm_name_y', 'adm_id_y','Crop_name_y']]
-            # yxData = yxData.drop(['adm_id_y', 'adm_name_y', 'adm_id_y','Crop_name_y'], axis=1)
-            # yxData.rename(columns={'adm_id_x': 'adm_id', 'adm_name_x': 'adm_name', 'adm_id_x': 'adm_id', 'Crop_name_x': 'Crop_name'}, inplace=True)
-            # # transfer year of features to year of stats to have it working with trend
-            # yxData.loc[yxData['Year'].isna(), "Year"] = yxData["YearOfEOS"].astype('int32')
         else: #tuning or opeTune
             raw_features = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_features4scikit.csv'))
             # drop adm_name, not needed and will be duplicated in merge
@@ -83,7 +61,7 @@ class DataMixin:
         yxData = yxData[yxData['Crop_name'] == self.uset['crop']]
         yxData.sort_values(['adm_name', 'Crop_name', 'Year'], ascending=[True, True, True], inplace=True)
 
-        # Add a trend feature (the yield estimate for a year-admin unit)
+        # Add a trend feature (the yield estimate for a year-admin unit) (in ope this will add the trend estimation to the year to be forecasted)
         if self.uset['algorithm'] == 'Trend' or self.uset['addYieldTrend'] == True:
             yxData = c1000_utils.add_yield_trend_estimate(yxData, self.uset['ny_max_trend'])
         #yxData.to_csv(os.path.join(config.models_dir, 'buttami.csv'), index=False)
@@ -170,29 +148,10 @@ class DataMixin:
                 X = np.concatenate((X, OHE), axis=1)
             # End of pre-processing of input data -------------------------------------------
             # Retain selected features for the ope model
-        # if runType == 'opeForecast':
-        #     print('to be handled in a new way')
-        #     exit()
         # now prepare data for hindcasting
         # We use the year as a group (for leave one group out at a time)
         groups = years.to_numpy()
         adm_ids = adm_ids.to_numpy()
-        # save the data actually used by the model
-        # data = pd.DataFrame(
-        #     np.concatenate([adm_ids.reshape((-1, 1)), groups.reshape((-1, 1)), y.reshape((-1, 1)), X], axis=1),
-        #     columns=['adm_id', 'year', 'Yield'] + feature_names)
-        # myID = self.uset['runID']
-        # myID = f'{myID:06d}'
-        # if run2get_mres_only == False:
-        #     data.to_csv(os.path.join(config.models_out_dir, 'ID_' + str(myID) +
-        #                          '_crop_' + self.uset['crop'] + '_Yield_' + self.uset['algorithm'] + '_yx_preprocData.csv'), index=False)
-        # if runType == 'opeForecast':
-        #     # yxData = yxData[yxData'['Year'] == year_out]
-        #     ind = groups == year_out
-        #     groups = groups[ind]
-        #     X = X[ind, :]
-        #     y = y[ind]
-        #     adm_ids = adm_ids[ind]
         return X, y, groups, feature_names, adm_ids
 
 

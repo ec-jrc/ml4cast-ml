@@ -55,6 +55,7 @@ def run_LOYO(model, X_train, X_test, y_train, y_test, adm_id_train, adm_id_test,
 def run_fit(model, X, y, adm_ids):
     # run benchmarks in fitting
     if model == 'PeakNDVI':
+        search_list = []
         uniqueadm_id = np.unique(adm_ids)
         y_pred = []
         y_true = []
@@ -64,6 +65,7 @@ def run_fit(model, X, y, adm_ids):
             # treat nan in y
             nas = np.isnan(y_au)
             reg = linear_model.LinearRegression().fit(X_au[~nas].reshape(-1, 1), y_au[~nas])
+            search_list.append(reg)
             y_pred.extend(reg.predict(X_au.reshape(-1, 1)).tolist())
             y_true.extend(y_au.tolist())
-    return y_true, y_pred, reg
+    return y_true, y_pred, search_list

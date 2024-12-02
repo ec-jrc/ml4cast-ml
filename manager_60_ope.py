@@ -5,10 +5,11 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import calendar
+import datetime
 
 from A_config import a10_config
 from B_preprocess import b100_load
-from D_modelling import d100_modeller
+from D_modelling import d100_modeller, d110_benchmark_models
 from F_post_processsing import F110_process_opeForecast_output
 import manager_0_user_params as upar
 
@@ -68,19 +69,22 @@ if __name__ == '__main__':
     print('####################################')
     print('Forecasting')
     for crop in config.crops:   # by crop to be forecasted (with the same AFI, the predictors are the same)
-        df_best_time_crop = df_best_time[df_best['Crop'] == crop]
-        #get best
-        df_run = df_best_time_crop.loc[df_best_time_crop[metric_for_model_selection] == df_best_time_crop[metric_for_model_selection].min()]
-        # if best is lasso or peak don't do it twice (remove duplicates from list using set)
-        #list2run = sorted(list(set([df_run['Estimator'].iloc[0], 'Lasso', 'PeakNDVI']))) LASSO may not be selecte during fast tuning
-        # TODO: use modelSettings.benchmarks to extend
-        list2run = sorted(list(set([df_run['Estimator'].iloc[0], 'PeakNDVI'])))
+        df_best_time_crop = df_best_time[df_best_time['Crop'] == crop]
+        #get best (can ML or bench)
+        df_best = df_best_time_crop.loc[df_best_time_crop[metric_for_model_selection] == df_best_time_crop[metric_for_model_selection].min()]
+        list2run = modelSettings.benchmarks.copy()
+        list2run.append(df_best['Estimator'].iloc[0])
+        # if best is bench don't do it twice (remove duplicates from list using set)
+        list2run = sorted(list(set(list2run)))
+        # list2runz = sorted(list(set([df_run['Estimator'].iloc[0], 'PeakNDVI'])))
         # list2run = sorted(list(set([df_run['Estimator'].iloc[0], 'PeakNDVI', 'Null_model', ])))
         for est in list2run:    # make forecasts with the 2 or 3 estimators left
             print(crop, est)
             df_run = df_best_time_crop.loc[df_best_time_crop['Estimator'] == est]
-            if est != 'PeakNDVI':
+            if est not in modelSettings.benchmarks:
                 df_run = df_run.loc[df_run[metric_for_model_selection] == df_run[metric_for_model_selection].min()]
+            # if est != 'PeakNDVI':
+            #     df_run = df_run.loc[df_run[metric_for_model_selection] == df_run[metric_for_model_selection].min()]
             # get the run id
             runID = df_run['runID'].values[0]
             # get the spec of the file and build specification file
@@ -89,25 +93,59 @@ if __name__ == '__main__':
             with open(fn_spec, 'r') as fp:
                 uset = json.load(fp)
             print(uset)
-            # set pipeline specs
-            forecaster = d100_modeller.YieldModeller(uset)
-            # preprocess data according to specs
-            X, y, groups, feature_names, adm_ids = forecaster.preprocess(config, runType)
-            # X, y, groups extend beyond the years for which I have yield data (at least one year more, the year being forecasted):
-            # the years used for training (from year_start to year_end) in the config json.
-            # Here I split X, y in two set, the fitting and the forecasting one.
-            fit_indices = np.where(np.logical_and(groups >= config.year_start, groups <= config.year_end))[0]
-            forecast_indices = np.where(groups == forecastingYear)[0]
-            # fit
-            hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, \
-                selected_features_names, prct_selected, n_selected, \
-                avg_scoring_metric_on_val, fitted_model = forecaster.fit(X[fit_indices, :], y[fit_indices], groups[fit_indices], feature_names, adm_ids[fit_indices], runType)
-            # The features to be used are stored selected_features_names, extract them from X
-            ind2retain = [np.where(np.array(feature_names)==item)[0][0] for item in selected_features_names]
-            # apply the fitted model to forecast data
-            forecasts = fitted_model.predict(X[forecast_indices, :][:, np.array(ind2retain)]).tolist()
-            au_codes = adm_ids[forecast_indices].tolist()
-            F110_process_opeForecast_output.to_csv(config, forecast_issue_calendar_month, forecaster.uset, au_codes, forecasts, df_run['rMAE_p'].values[0],runID = runID)
+            forecast_fn = os.path.join(config.ope_run_out_dir, datetime.datetime.today().strftime('%Y%m%d') + '_' +
+                                       uset['crop'] + '_forecast_month_season_' + str(uset['forecast_time'])
+                                       + '_issue_early_' + str(forecast_issue_calendar_month) + '_' + uset[
+                                           'algorithm'] +
+                                       '.csv')
+            if not os.path.exists(forecast_fn):
+                # set pipeline specs
+                forecaster = d100_modeller.YieldModeller(uset)
+                # preprocess data according to specs
+                X, y, groups, feature_names, adm_ids = forecaster.preprocess(config, runType)
+                # X, y, groups extend beyond the years for which I have yield data (at least one year more, the year being forecasted):
+                # the years used for training (from year_start to year_end) in the config json.
+                # Here I split X, y in two set, the fitting and the forecasting one.
+                fit_indices = np.where(np.logical_and(groups >= config.year_start, groups <= config.year_end))[0]
+                forecast_indices = np.where(groups == forecastingYear)[0]
+                # fit
+                # Null_model and trend require special handing
+                if est == 'Null_model':
+                    forecasts = []
+                    au_codes = []
+                    for adm_id in np.unique(adm_ids):
+                        # fit (i.e. compute the average)
+                        ind_adm_id_in_fit_indices = np.where(adm_ids[fit_indices] == adm_id) # this is a subset of fit indices
+                        forecasts.append(np.nanmean(y[fit_indices[ind_adm_id_in_fit_indices]]))
+                        au_codes.append(adm_id)
+                elif est == 'Trend':
+                    forecasts = []
+                    au_codes = []
+                    for adm_id in np.unique(adm_ids):
+                        # the trend is precomputed in X, I only need to get it
+                        ind_adm_id_in_forecast_indices = np.where(adm_ids[forecast_indices] == adm_id)  # this is a subset of forecast indices
+                        forecasts.append(np.nanmean(X[forecast_indices[ind_adm_id_in_forecast_indices]][0][0]))
+                        au_codes.append(adm_id)
+                elif est == 'PeakNDVI':
+                    forecasts = []
+                    au_codes = []
+                    for adm_id in np.unique(adm_ids):
+                        ind_adm_id_in_fit_indices = np.where(adm_ids[fit_indices] == adm_id)  # this is a subset of fit indices
+                        ind_adm_id_in_forecast_indices = np.where(adm_ids[forecast_indices] == adm_id)  # this is a subset of forecast indices
+                        y_true, y_pred, reg_list = d110_benchmark_models.run_fit(est, X[fit_indices[ind_adm_id_in_fit_indices]], y[fit_indices[ind_adm_id_in_fit_indices]], adm_ids[fit_indices[ind_adm_id_in_fit_indices]])
+                        res = reg_list[0].predict(X[forecast_indices[ind_adm_id_in_forecast_indices]])
+                        forecasts.append(res[0])
+                        au_codes.append(adm_id)
+                else:
+                    hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, \
+                    selected_features_names, prct_selected, n_selected, \
+                    avg_scoring_metric_on_val, fitted_model = forecaster.fit(X[fit_indices, :], y[fit_indices], groups[fit_indices], feature_names, adm_ids[fit_indices], runType)
+                    # The features to be used are stored selected_features_names, extract them from X
+                    ind2retain = [np.where(np.array(feature_names)==item)[0][0] for item in selected_features_names]
+                    # apply the fitted model to forecast data
+                    forecasts = fitted_model.predict(X[forecast_indices, :][:, np.array(ind2retain)]).tolist()
+                    au_codes = adm_ids[forecast_indices].tolist()
+                F110_process_opeForecast_output.to_csv(config, forecast_issue_calendar_month, forecaster.uset, au_codes, forecasts, runID = runID)
 
     F110_process_opeForecast_output.make_consolidated_ope(config)
     print('end ope forecast')
