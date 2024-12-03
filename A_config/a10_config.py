@@ -80,7 +80,8 @@ class mlSettings:
     self.forecastingMonths = forecastingMonths
 
     # scikit, numbers of cores to be used when multi-thread is possible, at least 4
-    self.nJobsForGridSearchCv = 4
+    # self.nJobsForGridSearchCv = 4 # attempt to solve overuse of cpu in condor
+    self.nJobsForGridSearchCv = 1
 
     # Input data scaling. Admitted values:
     # z_f: z-score features

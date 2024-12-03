@@ -1,10 +1,12 @@
 import pandas as pd
 import numpy as np
 import os
+import copy
 from B_preprocess import b101_load_cleaned
 from E_viz import e110_ope_figs
 import datetime
 import glob
+from pathlib import Path
 
 
 
@@ -101,67 +103,67 @@ def combine_models(fns):
     df_best = df.loc[df.groupby('adm_id')['fyield_rRMSEp_prct_hindcasting'].idxmin()]
 
     # adjust high low est
-    df_consolidated = df.iloc[:0]
+    df_conservative_estimates = df.iloc[:0]
     list_replace = []
     for adm_id in df['adm_id'].unique():
         df_adm = df[df['adm_id'] == adm_id]
         df_best_adm = df_best[df_best['adm_id'] == adm_id]
         if df_best_adm['algorithm'].values[0] == 'PeakNDVI':
             # no option, keep it
-            df_consolidated = pd.concat([df_consolidated, df_best_adm])
+            df_conservative_estimates = pd.concat([df_conservative_estimates, df_best_adm])
             list_replace.append('best')
         else:
             # check fyield_percentile < 0.1
             if df_best_adm['fyield_percentile'].values[0] < 0.1:
                 # if peak has a larger one use it
                 if df_adm[df_adm['algorithm'] == 'PeakNDVI']['fyield_percentile'].values[0] >= 0.1:
-                    df_consolidated = pd.concat([df_consolidated, df_adm[df_adm['algorithm'] == 'PeakNDVI']])
+                    df_conservative_estimates = pd.concat([df_conservative_estimates, df_adm[df_adm['algorithm'] == 'PeakNDVI']])
                     list_replace.append('replaced because yield_percentile<0.1')
                 else:
-                    df_consolidated = pd.concat([df_consolidated, df_best_adm])
+                    df_conservative_estimates = pd.concat([df_conservative_estimates, df_best_adm])
                     list_replace.append('best, but yield_percentile<0.1 that could not be replaced with Peak')
             # check fyield_percentile > 0.9
             elif df_best_adm['fyield_percentile'].values[0] > 0.9:
                 # if peak has a smaller one use it
                 if df_adm[df_adm['algorithm'] == 'PeakNDVI']['fyield_percentile'].values[0] <= 0.9:
-                    df_consolidated = pd.concat([df_consolidated, df_adm[df_adm['algorithm'] == 'PeakNDVI']])
+                    df_conservative_estimates = pd.concat([df_conservative_estimates, df_adm[df_adm['algorithm'] == 'PeakNDVI']])
                     list_replace.append('replaced because yield_percentile>0.9')
                 else:
-                    df_consolidated = pd.concat([df_consolidated, df_best_adm])
+                    df_conservative_estimates = pd.concat([df_conservative_estimates, df_best_adm])
                     list_replace.append('best, but yield_percentile>0.9 that could not be replaced with Peak')
             else:
-                df_consolidated = pd.concat([df_consolidated, df_best_adm])
+                df_conservative_estimates = pd.concat([df_conservative_estimates, df_best_adm])
                 list_replace.append('best')
-    df_consolidated['Consolidation_log'] = list_replace
+    df_conservative_estimates['Consolidation_log'] = list_replace
 
-    # I have the df_consolidated, now check that estimates do not exceed min max
+    # I have the df_conservative_estimates, now check that estimates do not exceed min max
     # min
-    mask = df_consolidated['fyield'] < df_consolidated['min_obs_yield']
-    if len(df_consolidated[mask]) > 0:
+    mask = df_conservative_estimates['fyield'] < df_conservative_estimates['min_obs_yield']
+    if len(df_conservative_estimates[mask]) > 0:
         # replace estimate with max
-        df_consolidated.loc[mask, 'fyield'] = df_consolidated[mask]['min_obs_yield']
-        df_consolidated.loc[mask, 'fyield_percentile'] = 1
-        df_consolidated.loc[mask, 'fyield_diff_pct (last 5 yrs in data avail)'] = \
-            100 * (df_consolidated[mask]['fyield'] - df_consolidated[mask]['avg_obs_yield_last5yrs']) / \
-            df_consolidated[mask]['avg_obs_yield_last5yrs']
-        df_consolidated.loc[mask, 'fproduction(fyield*avg_obs_area_last5yrs)'] = df_consolidated[mask]['fyield'] * \
-                                                                             df_consolidated[mask][
+        df_conservative_estimates.loc[mask, 'fyield'] = df_conservative_estimates[mask]['min_obs_yield']
+        df_conservative_estimates.loc[mask, 'fyield_percentile'] = 1
+        df_conservative_estimates.loc[mask, 'fyield_diff_pct (last 5 yrs in data avail)'] = \
+            100 * (df_conservative_estimates[mask]['fyield'] - df_conservative_estimates[mask]['avg_obs_yield_last5yrs']) / \
+            df_conservative_estimates[mask]['avg_obs_yield_last5yrs']
+        df_conservative_estimates.loc[mask, 'fproduction(fyield*avg_obs_area_last5yrs)'] = df_conservative_estimates[mask]['fyield'] * \
+                                                                             df_conservative_estimates[mask][
                                                                                  'avg_obs_area_last5yrs']
-        df_consolidated.loc[mask, 'fproduction_percentile'] = np.nan
-        df_consolidated.loc[mask, 'Consolidation_log'] = 'fyield < min, reset to min'
+        df_conservative_estimates.loc[mask, 'fproduction_percentile'] = np.nan
+        df_conservative_estimates.loc[mask, 'Consolidation_log'] = 'fyield < min, reset to min'
     # max
-    mask = df_consolidated['fyield'] > df_consolidated['max_obs_yield']
-    if len(df_consolidated[mask]) > 0:
+    mask = df_conservative_estimates['fyield'] > df_conservative_estimates['max_obs_yield']
+    if len(df_conservative_estimates[mask]) > 0:
         # replace estimate with max
-        df_consolidated.loc[mask, 'fyield'] = df_consolidated[mask]['max_obs_yield']
-        df_consolidated.loc[mask, 'fyield_percentile'] = 1
-        df_consolidated.loc[mask, 'fyield_diff_pct (last 5 yrs in data avail)'] = \
-            100 * (df_consolidated[mask]['fyield'] - df_consolidated[mask]['avg_obs_yield_last5yrs']) / df_consolidated[mask]['avg_obs_yield_last5yrs']
-        df_consolidated.loc[mask, 'fproduction(fyield*avg_obs_area_last5yrs)'] = df_consolidated[mask]['fyield'] * df_consolidated[mask]['avg_obs_area_last5yrs']
-        df_consolidated.loc[mask, 'fproduction_percentile'] =  np.nan
-        df_consolidated.loc[mask, 'Consolidation_log'] = 'fyield > max, reset to max'
+        df_conservative_estimates.loc[mask, 'fyield'] = df_conservative_estimates[mask]['max_obs_yield']
+        df_conservative_estimates.loc[mask, 'fyield_percentile'] = 1
+        df_conservative_estimates.loc[mask, 'fyield_diff_pct (last 5 yrs in data avail)'] = \
+            100 * (df_conservative_estimates[mask]['fyield'] - df_conservative_estimates[mask]['avg_obs_yield_last5yrs']) / df_conservative_estimates[mask]['avg_obs_yield_last5yrs']
+        df_conservative_estimates.loc[mask, 'fproduction(fyield*avg_obs_area_last5yrs)'] = df_conservative_estimates[mask]['fyield'] * df_conservative_estimates[mask]['avg_obs_area_last5yrs']
+        df_conservative_estimates.loc[mask, 'fproduction_percentile'] =  np.nan
+        df_conservative_estimates.loc[mask, 'Consolidation_log'] = 'fyield > max, reset to max'
 
-    return df_best, df_consolidated
+    return df_best, df_conservative_estimates
 
 def make_consolidated_ope(config):
     """
@@ -171,8 +173,11 @@ def make_consolidated_ope(config):
     fns = [x for x in glob.glob(os.path.join(config.ope_run_out_dir, '*.csv')) if 'national' not in x and 'consolidated' not in x and 'best_by' not in x]
     # get yield stats
     df_stats = b101_load_cleaned.LoadCleanedLabel(config)
-    crop_list, production, ppercentile, yields, yieldsdiff = [], [], [], [], []
-    # crop_Names = list(df_stats['Crop_name'].unique())
+
+    crop_list, yields, yieldsdiff, production, ppercentile = [], [], [], [], []
+    dict_list = {'crop_list': [], 'yields': [], 'yieldsdiff': [], 'production': [], 'ppercentile': []}
+    dict4nat = {'best_accuracy': copy.deepcopy(dict_list), 'conservative_estimates': copy.deepcopy(dict_list)}
+
     # for crop_name in crop_Names: # by crop
     for crop_name in config.crops:
         print(crop_name)
@@ -186,67 +191,83 @@ def make_consolidated_ope(config):
         # replace Null_model with NullModel to avoid wrong splitting
         tmp = fns_crop[0].replace("Null_model", "NullModel")
         fn_out = '_'.join(tmp.split('_')[0:-1] + ['unconsolidated.csv'])
+        fn_out = os.path.join(config.ope_run_out_dir, 'best_accuracy', os.path.basename(fn_out))
+        Path(os.path.join(config.ope_run_out_dir, 'best_accuracy')).mkdir(parents=True, exist_ok=True)
         df.to_csv(fn_out, index=False)
 
-        # best model by admin
-        df_b, df_f = combine_models(fns_crop)
+        # best model by admin (best accuracy and conservative accuracy)
+        df_best_est, df_cons_est = combine_models(fns_crop)
         fn_out = '_'.join(tmp.split('_')[0:-1] + ['best_by_admin.csv'])
-        df_b.to_csv(fn_out)
+        fn_out = os.path.join(config.ope_run_out_dir, 'best_accuracy', os.path.basename(fn_out))
+        df_best_est = df_best_est.sort_values(by=['Region_name'], ascending=True)
+        df_best_est.to_csv(fn_out, index=False)
 
-        # update consolidated
-        fn_out = '_'.join(tmp.split('_')[0:-1] + ['consolidated.csv'])
+        # update conservative estimates
+        fn_out = '_'.join(tmp.split('_')[0:-1] + ['conservative_estimates.csv'])
         # Subset stats
         df_stats_i = df_stats[df_stats['Crop_name'] == crop_name]
-        df_stats_i = df_stats_i[df_stats_i['adm_name'].isin(df_f['Region_name'])]
+        df_stats_i = df_stats_i[df_stats_i['adm_name'].isin(df_cons_est['Region_name'])]
 
         # Recompute production percentile (because if min or max are used, they do not have percentiles?)
-        for region in df_f['Region_name']:
-            if df_f.loc[df_f['Region_name'] == region, 'fproduction_percentile'].isna().sum() == 1:
+        for region in df_cons_est['Region_name']:
+            if df_cons_est.loc[df_cons_est['Region_name'] == region, 'fproduction_percentile'].isna().sum() == 1:
                 stats_region = df_stats_i[df_stats_i['adm_name'] == region]
-                df_f.loc[df_f['Region_name'] == region, 'fproduction_percentile'] = \
+                df_cons_est.loc[df_cons_est['Region_name'] == region, 'fproduction_percentile'] = \
                     percentile_below(stats_region['Production'],
-                    df_f.loc[df_f['Region_name'] == region, 'fproduction(fyield*avg_obs_area_last5yrs)'].values)
+                    df_cons_est.loc[df_cons_est['Region_name'] == region, 'fproduction(fyield*avg_obs_area_last5yrs)'].values)
         # Save updated values
-        df_f.to_csv(fn_out)
+        fn_out = os.path.join(config.ope_run_out_dir, 'conservative_estimates', os.path.basename(fn_out))
+        Path(os.path.join(config.ope_run_out_dir, 'conservative_estimates')).mkdir(parents=True, exist_ok=True)
+        df_cons_est = df_cons_est.sort_values(by=['Region_name'], ascending=True)
+        df_cons_est.to_csv(fn_out, index=False)
+        #df_cons_est.to_csv(fn_out)
+        for selection_type, df in zip(['best_accuracy', 'conservative_estimates'], [df_best_est, df_cons_est]):
+            dirName = os.path.join(config.ope_run_out_dir, selection_type)
+            # compute national stats
+            prod = df['fproduction(fyield*avg_obs_area_last5yrs)'].sum()
+            area = df['avg_obs_area_last5yrs'].sum()
+            # Define a lambda function to compute the weighted mean:
+            wm = lambda x: np.average(x, weights=df_stats_i.loc[x.index, "Area"])
+            # Note: the weighted sum of Yi, is exactly the same of Y_nat = Prod_nat / Area_nat
+            df_stats_sum = df_stats_i.groupby(['Year']).agg(
+                Production=pd.NamedAgg(column="Production", aggfunc="sum"),
+                nat_yield=pd.NamedAgg(column="Yield", aggfunc=wm)
+            )
 
-        # compute national stats
-        prod = df_f['fproduction(fyield*avg_obs_area_last5yrs)'].sum()
-        area = df_f['avg_obs_area_last5yrs'].sum()
+            crop_list.append(crop_name)
+            dict4nat[selection_type]['crop_list'].append(crop_name)
+            production.append(prod)
+            dict4nat[selection_type]['production'].append(prod)
+            yields.append(prod / area)
+            dict4nat[selection_type]['yields'].append(prod / area)
+            yieldsdiff.append(100 * ((prod / area) - df_stats_sum['nat_yield'][-5:].mean()) / df_stats_sum['nat_yield'][-5:].mean())
+            dict4nat[selection_type]['yieldsdiff'].append(100 * ((prod / area) - df_stats_sum['nat_yield'][-5:].mean()) / df_stats_sum['nat_yield'][-5:].mean())
+            ppercentile.append(percentile_below(df_stats_sum['Production'], prod))
+            dict4nat[selection_type]['ppercentile'].append(percentile_below(df_stats_sum['Production'], prod))
 
-        # Define a lambda function to compute the weighted mean:
-        wm = lambda x: np.average(x, weights=df_stats_i.loc[x.index, "Area"])
+            # map consolidated and text about national production
+            national_text = crop_name + ',' + config.country_name_in_shp_file + ', aggregated yield forecast (area weighted) = ' + \
+                            str(np.round(prod / area, 2)) + ', \n % difference with last avail. 5 years = ' + \
+                            str(np.round(100 * ((prod / area) - df_stats_sum['nat_yield'][-5:].mean()) / df_stats_sum[
+                                'nat_yield'][-5:].mean(), 2))
+            e110_ope_figs.map(df, config, '', dirName, config.fn_reference_shape,
+                              config.country_name_in_shp_file, title=national_text, suffix='_' + selection_type)
+    # get elements of filename
+    tmp = fns_crop[0].replace("Null_model", "NullModel")
+    fn_out = '_'.join(tmp.split('_')[0:-1])
+    for selection_type in ['best_accuracy', 'conservative_estimates']:
+        dirName = os.path.join(config.ope_run_out_dir, selection_type)
+        df = pd.DataFrame({'Crop_Name': dict4nat[selection_type]['crop_list'],
+                           'fyield': dict4nat[selection_type]['yields'],
+                           'yield_diff_pct': dict4nat[selection_type]['yieldsdiff'],
+                           'fproduction(fyield*avg_obs_area_last5yrs)': dict4nat[selection_type]['production'],
+                           'fproduction_percentile':  dict4nat[selection_type]['ppercentile']})
 
-        # Note: the weighted sum of Yi, is exactly the same of Y_nat = Prod_nat / Area_nat
-
-        df_stats_sum = df_stats_i.groupby(['Year']).agg(
-            Production=pd.NamedAgg(column="Production", aggfunc="sum"),
-            nat_yield=pd.NamedAgg(column="Yield", aggfunc=wm)
-        )
-
-        crop_list.append(crop_name)
-        production.append(prod)
-        yields.append(prod / area)
-        yieldsdiff.append(100 * ((prod / area) - df_stats_sum['nat_yield'].mean()) / df_stats_sum['nat_yield'].mean())
-        ppercentile.append(percentile_below(df_stats_sum['Production'], prod))
-
-        # map consolidated and text about national production
-        national_text = crop_name + ',' + config.country_name_in_shp_file + ', aggregated yield forecast = ' + \
-                        str(np.round(prod / area, 2)) + ', \n % difference with last avail. 5 years = '  + \
-                        str(np.round(100 * ((prod / area) - df_stats_sum['nat_yield'].mean()) / df_stats_sum['nat_yield'].mean(),2))
-        e110_ope_figs.map(df_f, config, '', config.ope_run_out_dir, config.fn_reference_shape,
-                          config.country_name_in_shp_file, title=national_text, suffix='_consolidated')
-
-    df = pd.DataFrame({'Crop_Name': crop_list,
-                       'fyield': yields,
-                       'yield_diff_pct': yieldsdiff,
-                       'fproduction(fyield*avg_obs_area_last5yrs)': production,
-                       'fproduction_percentile': ppercentile})
-
-
-    fn_parts = os.path.basename(fn_out).split('_')
-    fn_parts[1] = 'national-forecast'
-    filename = os.path.join(config.ope_run_out_dir, '_'.join(fn_parts))
-    df.to_csv(filename)
+        fn_parts = os.path.basename(fn_out).split('_')
+        fn_parts[1] = 'national-forecast'
+        fn_parts.append(selection_type)
+        filename = os.path.join(dirName, '_'.join(fn_parts)+'.csv')
+        df.to_csv(filename)
 
 
 

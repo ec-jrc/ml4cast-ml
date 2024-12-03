@@ -54,7 +54,11 @@ def AU_error(b1, config, outputDir):
         fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
                                    '_crop_' + row['Crop'] + '_Yield_' + row['Estimator'] +
                                    '_mres.csv')
-        mRes = pd.read_csv(fn_mRes_out)
+        if os.path.exists(fn_mRes_out):
+            mRes = pd.read_csv(fn_mRes_out)
+        else:
+            fn_spec = os.path.join(config.models_spec_dir, str(myID) + '_' + row['Crop'] + '_' + row['Estimator'] + '.json')
+            mRes = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
         rRMSE_pByAdmin = d140_modelStats.statsByAdmin(mRes)
         rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
         rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_Stats5yrs[df_Stats5yrs['Crop_name|first'] == row['Crop']], how='left',

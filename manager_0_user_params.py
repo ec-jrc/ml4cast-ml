@@ -3,7 +3,7 @@ import os
 #############################
 # 1. Config file, run type, name, and where to tune
 #############################
-run_name = '20241118'# '20241016_75_100_maize_sunflower_soybeans_NorthernCape' #'20241004_75_100_maize_sunflower_soybeans'
+run_name = '20241203_test'# '20241016_75_100_maize_sunflower_soybeans_NorthernCape' #'20241004_75_100_maize_sunflower_soybeans'
 # runtype is overwritten when called by manager_50_ope
 runType = 'fast_tuning' #'fast_tuning'     # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
 

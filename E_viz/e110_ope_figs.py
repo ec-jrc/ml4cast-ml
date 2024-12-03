@@ -36,7 +36,7 @@ def map(b1, config, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_fil
         lbl = "YF % difference with last avail. 5 years"
         minmax = [-df_c['fyield_diff_pct (last 5 yrs in data avail)'].abs().max(), df_c['fyield_diff_pct (last 5 yrs in data avail)'].abs().max()]
         e50_yield_data_analysis.mapDfColumn(df_c, 'adm_id', 'fyield_diff_pct (last 5 yrs in data avail)', 'Region_name', gdf, gdf_gaul1_id,
-                    gdf_gaul0_column, country_name_in_shp_file, lbl, cmap='bwr', fn_fig=None, ax=axs[1], minmax=minmax)
+                    gdf_gaul0_column, country_name_in_shp_file, lbl, cmap='bwr_r', fn_fig=None, ax=axs[1], minmax=minmax)
         fig.suptitle(title, fontsize=14)
         fig.tight_layout()
         fig.savefig(fig_name)
