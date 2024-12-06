@@ -12,7 +12,12 @@ def getPCA(self, feature_names, X):
     # get list of feature type in feature group and exclude RainSum
     # Note: trend is unaffected because it is not in the feature group
     feature2PCA = [s for s in self.uset['feature_groups'] if s != 'RainSum']  # [f(x) for x in sequence if condition]
-    if 'FPmax' in feature2PCA: feature2PCA.remove('FPmax')
+    # if peakFPAR is requested, there is no FPmax anymore, so remove
+    if 'peakFPAR' in feature_names:
+        feature2PCA.remove('FPmax')
+
+    # if 'FPmax' in feature2PCA: feature2PCA.remove('FPmax')
+
     for var2PCA in feature2PCA:
         # print(var2PCA)
         # print('shape in', X.shape)

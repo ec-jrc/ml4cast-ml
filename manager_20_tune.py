@@ -156,8 +156,6 @@ if __name__ == '__main__':
     config = a10_config.read(config_fn, run_name, run_type=runType)
     # forecastingMonths = config.forecastingMonths
     spec_files_list = tuner.tuneA(run_name, config_fn, tune_on_condor, runType)
-    # condor debug
-    spec_files_list = spec_files_list[0:500]
     tuner.tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list)
     if tune_on_condor:
         print('Condor runs launched, start the monitoring')

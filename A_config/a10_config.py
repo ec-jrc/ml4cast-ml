@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import os
 import json
+import sys
 from datetime import datetime
 
 
@@ -81,7 +82,10 @@ class mlSettings:
 
     # scikit, numbers of cores to be used when multi-thread is possible, at least 4
     # self.nJobsForGridSearchCv = 4 # attempt to solve overuse of cpu in condor
-    self.nJobsForGridSearchCv = 1
+    if 'win' in sys.platform:
+        self.nJobsForGridSearchCv = 8
+    else:
+        self.nJobsForGridSearchCv = 1
 
     # Input data scaling. Admitted values:
     # z_f: z-score features
