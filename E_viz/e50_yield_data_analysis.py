@@ -257,7 +257,9 @@ def trend_anlysis(config, prct2retain=100):
             if n_valid >=2:
                 trend, h, p, z, Tau, s, var_s, slope, intercept = mk.original_test(y, alpha=alpha)
                 trend_line_mk = np.arange(len(y)) * slope + intercept
-
+            else:
+                trend = 'n < 2, trend cannot be assessed'
+                p = np.NAN
             axs[axs_counter].plot(X, y, label='Data') #, label=F'Theil-Sen trend line')
             axs[axs_counter].set_xlim(xMinMax)
             axs[axs_counter].set_ylim(yMinMax)

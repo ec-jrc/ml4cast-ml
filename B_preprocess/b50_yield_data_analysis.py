@@ -157,9 +157,26 @@ def saveYieldStats(config, prct2retain=100):
 
         xc['Production', 'mean'] = xc['Production','mean']/divider
         xc['Production', 'std'] = xc['Production','std']/divider
-        fig, axs = plt.subplots(2, 2, figsize=(10, 10))
-        axs = axs.flatten()
         xc.columns = xc.columns.map(lambda v: '|'.join([str(i) for i in v]))
+        w = len(xc['adm_name|first'].to_list()) #width based on number of admins
+        if w <= 15: # ZA
+            w = 10
+            h = 10
+            thicklblsz = 10
+            titlesz = 15
+            axisTitlesz = 10
+        elif w > 15: # BE
+            h = 15  # increase h
+            thicklblsz = 30
+            titlesz = 40
+            axisTitlesz = 30
+        elif w > 50: # ZM
+            h = 30 #increase h
+            thicklblsz = 30
+            titlesz = 40
+            axisTitlesz = 30
+        fig, axs = plt.subplots(2, 2, figsize=(w, h))
+        axs = axs.flatten()
         # plot production
         e50_yield_data_analysis.barDfColumn(xdata, xc, 'Production|mean', xc['adm_name|first'].to_list(), 'Production [kt]', c, axs[0], sf_col_SD='Production|std')
         # yield
@@ -178,7 +195,12 @@ def saveYieldStats(config, prct2retain=100):
 
         # % area by admin
         e50_yield_data_analysis.barDfColumn(xdata, xc, 'Crop_perc_area|', xc['adm_name|first'].to_list(),
-                                         '% crop area by admin. unit', c, axs[3], sf_col_SD=None)
+                                         '% of national crop area [%]', c, axs[3], sf_col_SD=None)
+        for i in [0,1,2,3]:
+            axs[i].tick_params(axis='both', which='major', labelsize=thicklblsz)
+            axs[i].title.set_size(titlesz)
+            axs[i].yaxis.label.set_size(axisTitlesz)
+
         fig.subplots_adjust(bottom=0.25)
         fig.subplots_adjust(left=0.15)
         fig.tight_layout()

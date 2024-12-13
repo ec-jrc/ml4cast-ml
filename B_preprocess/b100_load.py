@@ -36,7 +36,7 @@ def LoadPredictors_Save_Csv(config, runType):
     regNames = pd.read_csv(os.path.join(dirIn, config.AOI + '_REGION_id.csv'))
     # now link it with adm_id and name
     df = pd.merge(df, regNames, left_on=['adm_id'], right_on=['adm_id'])
-    # remove the admin name form extraction, not needed, use th eone from region file
+    # remove the admin name form extraction, not needed, use the one from region file
     df = df.rename(columns={'adm_name_x': 'adm_name_extraction', 'adm_name_y': 'adm_name'})
     df.drop('adm_name_extraction', axis=1, inplace=True)
     # get first NDVI or FPAR time and drop everything before
