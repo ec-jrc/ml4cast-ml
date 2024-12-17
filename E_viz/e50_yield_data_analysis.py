@@ -12,6 +12,8 @@ import matplotlib.patches as mpatches
 def barDfColumn(x, df, df_col_value, xticks, ylabel, crop_name, ax, sf_col_SD=None):
     if sf_col_SD == None:
         ax.bar(x, df[df_col_value].to_list())
+    elif np.isnan(df[sf_col_SD].to_list()).all():
+        ax.bar(x, df[df_col_value].to_list())
     else:
         ax.bar(x, df[df_col_value].to_list(), yerr=df[sf_col_SD].to_list())
     xticks = [elem[:8] for elem in xticks]

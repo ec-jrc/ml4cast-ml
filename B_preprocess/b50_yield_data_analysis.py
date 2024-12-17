@@ -143,6 +143,8 @@ def saveYieldStats(config, prct2retain=100):
     # bar plot of production, area and yield by region of retained statistics
     crops = x['Crop_name','first'].unique()
     for c in crops:
+        if c == 'Coffee':
+            print(c)
         # production
         xc = x[x['Crop_name','first'] == c]
         xc = xc.sort_values(by=[('Area', 'mean')], ascending=False)
@@ -165,12 +167,12 @@ def saveYieldStats(config, prct2retain=100):
             thicklblsz = 10
             titlesz = 15
             axisTitlesz = 10
-        elif w > 15: # BE
+        elif w > 15 and w < 40: # BE
             h = 15  # increase h
             thicklblsz = 30
             titlesz = 40
             axisTitlesz = 30
-        elif w > 50: # ZM
+        elif w >= 40: # ZM
             h = 30 #increase h
             thicklblsz = 30
             titlesz = 40
