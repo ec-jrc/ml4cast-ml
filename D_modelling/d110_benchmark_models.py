@@ -21,7 +21,7 @@ def run_LOYO(model, X_train, X_test, y_train, y_test, adm_id_train, adm_id_test,
             index = np.where(adm_id_test == au)
             yloo_au.extend(adm_id_test[index].tolist())
             yloo_true.extend(y_test[index].tolist())
-        outLoopRes =  [yloo_pred, yloo_true, yloo_au, np.unique(groups_test).tolist() * len(yloo_pred)]
+        outLoopRes = [yloo_pred, yloo_true, yloo_au, np.unique(groups_test).tolist() * len(yloo_pred)]
 
     elif model == 'Trend':
         #the prediction for the left out year is precomputed trend

@@ -27,9 +27,10 @@ class DataMixin:
         # [fast_tuning] skip inner loop and does not provide error estimates
         # [opeForecast] run the operational yield
 
-
         stats = b101_load_cleaned.LoadCleanedLabel(config)
-
+        firstYear = stats['Year'].min()
+        lastYear = stats['Year'].max()
+        # add empty record when there are no records
         # if working on a ML model and there is some crop-au combination to exclude, do it here upfront
         if not(self.uset['algorithm'] == 'Null_model' or self.uset['algorithm'] == 'Trend' or self.uset['algorithm'] == 'PeakNDVI'):
             if bool(config.crop_au_exclusions):
@@ -37,6 +38,13 @@ class DataMixin:
                     for value_au in value_au_list:
                         mask = (stats['Crop_name'] == key_crop) & (stats['adm_name'] == value_au)
                         stats = stats[~mask]
+        # if working on benchmark, exclude admins having less than 10 obs
+        else:
+            for crop in stats['Crop_name'].unique():
+                validPerAdmin = stats[stats['Crop_name'] == crop].groupby(['adm_id'])['Yield'].count()
+                admin_ids_to_drop = validPerAdmin.index[validPerAdmin < 10].to_list()
+                stats = stats[~((stats['adm_id'].isin(admin_ids_to_drop)) & (stats['Crop_name'] == crop))]
+
 
         # Raw features for ope forecast are stored in a different dir to avoid overwrite of features used for training
         if runType == 'opeForecast':
@@ -52,10 +60,10 @@ class DataMixin:
             yxData.loc[yxData['Year'].isna(), "Year"] = yxData["YearOfEOS"].astype('int32')
         else: #tuning or opeTune
             raw_features = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_features4scikit.csv'))
-            # drop adm_name, not needed and will be duplicated in merge
-            #raw_features = raw_features.drop(['adm_name','adm_id'], axis=1)
             # left join to keep only features with labels
             yxData = pd.merge(stats, raw_features, how='left', left_on=['adm_id', 'Year', 'adm_name'], right_on=['adm_id', 'YearOfEOS', 'adm_name'])
+            # # outer join to keep all
+            # yxData = pd.merge(stats, raw_features, how='outer', left_on=['adm_id', 'Year', 'adm_name'], right_on=['adm_id', 'YearOfEOS', 'adm_name'])
 
         # retain only the crop to analysed
         yxData = yxData[yxData['Crop_name'] == self.uset['crop']]
@@ -202,8 +210,7 @@ class YieldModeller(DataMixin, object):
                     #print('Iteration outer loop = ' + str(nIterationOuterLoop))
                     X_train, X_test, groups_train, adm_id_train = X[train_index], X[test_index], groups[train_index], adm_ids[train_index]
                     y_train, y_test, groups_test, adm_id_test = y[train_index], y[test_index], groups[test_index], adm_ids[test_index]
-                    # Not implemented:
-                    # Exclude records (year - AU) with missing data
+                    # Not implemented: Exclude records (year - AU) with missing data in feature
                     # train set
                     nas = np.isnan(y_train)
                     y_train = y_train[~nas]

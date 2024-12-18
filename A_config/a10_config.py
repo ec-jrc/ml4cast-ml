@@ -14,6 +14,7 @@ class read:
     with open(full_path_config, 'r') as fp:
         jdict = json.load(fp)
     self.AOI = jdict['AOI']
+    # year start and end define the period for which I have yield data and RS data (used for tuning)
     self.year_start = int(jdict['year_start'])
     self.year_end = int(jdict['year_end'])
     # Percentage of admin to retain (based on area). I.e. rank by area and retain only the largest %
