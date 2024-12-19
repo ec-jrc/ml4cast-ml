@@ -83,8 +83,7 @@ def build_features(config, runType):
                               df.variable_name, df.adm_name]).agg(
                                 # adm_name=('adm_name', 'first'),
                                 adm_id=('adm_id', 'first'),
-                                #adm_id=('adm_id', 'first'),
-                                Date=('Date', 'first'), mean=('mean', 'mean'),  # Year=('Year','first'),Month=('Month','first'),
+                                Date=('Date', 'min'), mean=('mean', 'mean'),  # Year=('Year','first'),Month=('Month','first'),
                                 min=('mean', 'min'), max=('mean', 'max'), sum=('mean', 'sum'))
     df_month = df_month.reset_index()
     # df_month = df_month.drop(columns=['adm_name'])
@@ -132,26 +131,30 @@ def build_features(config, runType):
         # dfM_au = k[k['adm_id'] == au]
         YY_list = df_au['YearOfEOS'].unique()
         for yy in YY_list:
+            # if yy == 2025 and au == 20409:
+            #     print(au)
+            #     print(yy)
             df_au_yy =  df_au[df_au['YearOfEOS'] == yy]
             row = [df_au['adm_id'].iloc[0],df_au['adm_name'].iloc[0], df_au_yy['YearOfEOS'].iloc[0]]
             columns = ['adm_id', 'adm_name', 'YearOfEOS']
             for v, vs in zip(ivars, ivars_short):
                 df_au_yy_v = df_au_yy[df_au_yy['variable_name'] == v]
                 if len(df_au_yy_v) == 0:
-                    print('b100_load, no data for variable', v, 'in year', yy)
+                    print('b100_load.build_features, no data for variable', v, 'in year', yy, 'au', au )
                 mm_list = np.sort(df_au_yy['Month_index'].unique())
                 for mm in mm_list:
                     # now is one variable during a pheno phase of a year of an AU (all info in the list)
                     dfM_au_yy_v_mm = df_au_yy_v[df_au_yy_v['Month_index'] == mm]
-                    if v == 'rainfall':
-                        row.append(dfM_au_yy_v_mm['sum'].iloc[0])
-                        columns.append(vs + 'Sum' + MonthSep + str(mm))
-                    else:
-                        row.append(dfM_au_yy_v_mm['mean'].iloc[0])
-                        columns.append(vs + MonthSep + str(mm))
-                    if (v == 'temperature') or (v == 'NDVI') or (v == 'FPAR'):
-                        columns.append(vs + 'min' + MonthSep + str(mm))
-                        row.append(dfM_au_yy_v_mm['min'].iloc[0])
+                    if len(dfM_au_yy_v_mm) > 0: # one (SM) may not be available
+                        if v == 'rainfall':
+                            row.append(dfM_au_yy_v_mm['sum'].iloc[0])
+                            columns.append(vs + 'Sum' + MonthSep + str(mm))
+                        else:
+                            row.append(dfM_au_yy_v_mm['mean'].iloc[0])
+                            columns.append(vs + MonthSep + str(mm))
+                        if (v == 'temperature') or (v == 'NDVI') or (v == 'FPAR'):
+                            columns.append(vs + 'min' + MonthSep + str(mm))
+                            row.append(dfM_au_yy_v_mm['min'].iloc[0])
                         columns.append(vs + 'max' + MonthSep + str(mm))
                         row.append(dfM_au_yy_v_mm['max'].iloc[0])
             if init == 0:

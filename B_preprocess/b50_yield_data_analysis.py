@@ -74,8 +74,8 @@ def saveYieldStats(config, prct2retain=100):
         x5[('Crop_sum_area', '')] = x5.groupby('adm_id')[[('Area', 'mean')]].transform('sum')
         x5[('Perc_area', '')] = x5[('Area', 'mean')] / x5[('Crop_sum_area', '')] * 100
 
-        # keep a copy with all for later
-        x05 = x5.copy(deep=True)
+        # # keep a copy with all for later
+        # x05 = x5.copy(deep=True)
         # keep only the largest up to prct2retain production, by crop
         crops = x5['Crop_name', 'first'].unique()
         for c in crops:

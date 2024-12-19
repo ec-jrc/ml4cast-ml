@@ -3,7 +3,7 @@ import os
 #############################
 # 1. Config file, run type, name, and where to tune
 #############################
-run_name = '20241217'# '20241016_75_100_maize_sunflower_soybeans_NorthernCape' #'20241004_75_100_maize_sunflower_soybeans'
+run_name = 'test_new_trend'# '20241016_75_100_maize_sunflower_soybeans_NorthernCape' #'20241004_75_100_maize_sunflower_soybeans'
 # runtype is overwritten when called by manager_50_ope
 runType = 'fast_tuning' #'fast_tuning'     # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
 
@@ -46,6 +46,6 @@ n = 20
 # 3.Specification for ope run (runType = 'opeForecast')
 #############################
 # month X means that all months up to X (included) are used, so this is possible in month X+1
-forecastingMonth = 5
+forecastingMonth = 7
 # This year
-forecastingYear = 2024
+forecastingYear = 2023

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import copy
+import re
 from B_preprocess import b101_load_cleaned
 from E_viz import e110_ope_figs
 import datetime
@@ -115,8 +116,8 @@ def combine_models(fns):
         else:
             # check fyield_percentile < 0.1
             if df_best_adm['fyield_percentile'].values[0] < 0.1:
-                # if peak has a larger one use it
-                if df_adm[df_adm['algorithm'] == 'PeakNDVI']['fyield_percentile'].values[0] >= 0.1:
+                # if peak exists (in case of few obs we may have ML but no peak) has a larger one use it
+                if len(df_adm[df_adm['algorithm'] == 'PeakNDVI']) > 1 and df_adm[df_adm['algorithm'] == 'PeakNDVI']['fyield_percentile'].values[0] >= 0.1:
                     df_conservative_estimates = pd.concat([df_conservative_estimates, df_adm[df_adm['algorithm'] == 'PeakNDVI']])
                     list_replace.append('replaced because yield_percentile<0.1')
                 else:
@@ -125,7 +126,7 @@ def combine_models(fns):
             # check fyield_percentile > 0.9
             elif df_best_adm['fyield_percentile'].values[0] > 0.9:
                 # if peak has a smaller one use it
-                if df_adm[df_adm['algorithm'] == 'PeakNDVI']['fyield_percentile'].values[0] <= 0.9:
+                if len(df_adm[df_adm['algorithm'] == 'PeakNDVI']) > 1 and df_adm[df_adm['algorithm'] == 'PeakNDVI']['fyield_percentile'].values[0] <= 0.9:
                     df_conservative_estimates = pd.concat([df_conservative_estimates, df_adm[df_adm['algorithm'] == 'PeakNDVI']])
                     list_replace.append('replaced because yield_percentile>0.9')
                 else:
@@ -181,10 +182,11 @@ def make_consolidated_ope(config):
     # for crop_name in crop_Names: # by crop
     for crop_name in config.crops:
         print(crop_name)
-        fns_crop = [x for x in fns if crop_name in x]
+        fns_crop = [s for s in fns if re.search(f".*{crop_name}_forecast.*", s)]
         # first save a single file with all estimations, ordered by region and by fyield_rMAEp_hindcasting
         listDFs = []
-        for fn in fns:
+        # for fn in fns:
+        for fn in fns_crop:
             listDFs.append(pd.read_csv(fn, index_col=0))
         df = pd.concat(listDFs, axis=0, ignore_index=True)
         df = df.sort_values(['Crop_name', 'Region_name', 'algorithm', 'fyield_rRMSEp_prct_hindcasting'], ascending=[True, True, True, True])
@@ -246,7 +248,7 @@ def make_consolidated_ope(config):
             dict4nat[selection_type]['ppercentile'].append(percentile_below(df_stats_sum['Production'], prod))
 
             # map consolidated and text about national production
-            national_text = crop_name + ',' + config.country_name_in_shp_file + ', aggregated yield forecast (area weighted) = ' + \
+            national_text = crop_name + ', ' + config.country_name_in_shp_file + ', aggregated yield forecast (area weighted) = ' + \
                             str(np.round(prod / area, 2)) + ', \n % difference with last avail. 5 years = ' + \
                             str(np.round(100 * ((prod / area) - df_stats_sum['nat_yield'][-5:].mean()) / df_stats_sum[
                                 'nat_yield'][-5:].mean(), 2))

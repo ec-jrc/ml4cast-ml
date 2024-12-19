@@ -267,17 +267,17 @@ def config_reducer(modelSettings, run_name):
         modelSettings.feature_selections = ['none']
         modelSettings.addYieldTrend = [False]
         modelSettings.dataReduction = ['none']
-    elif run_name == 'months45': #North Darfur
-        want_keys = ['rs_met_reduced', 'rs_reduced']
+    elif run_name == 'test_new_trend': #North Darfur
+        want_keys = ['rs_met_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
         modelSettings.doOHEs = ['none']
-        modelSettings.feature_prct_grid = [5, 25, 50, 100]
         want_keys = ['Lasso'] #used in run month5
         #want_keys = ['XGBoost'] # used in run month5 month5_onlyXGB
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        # modelSettings.feature_selections = ['none']
+        modelSettings.feature_selections = ['none']
         # modelSettings.addYieldTrend = [False]
-        # modelSettings.dataReduction = ['none']
+        modelSettings.dataReduction = ['none']
+        modelSettings.feature_selections = ['none']
     elif run_name == 'warnGPR':
         want_keys = ['rs_met_reduced'] # sm not avail directly from asap
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))

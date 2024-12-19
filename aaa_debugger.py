@@ -1,6 +1,10 @@
 from D_modelling import d090_model_wrapper
 from A_config import a10_config
 import os
+import pandas as pd
+
+pd.set_option('display.width', 5000)
+pd.set_option('display.max_columns', None)
 
 # remove limits
 os.environ['MKL_NUM_THREADS'] = '8'

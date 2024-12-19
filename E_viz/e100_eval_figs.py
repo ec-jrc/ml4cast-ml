@@ -38,9 +38,11 @@ def output_row_to_ML_info_string(df, metric2use):
 def AU_error(b1, config, outputDir):
     # In this version I compute the rel RMSE by admin (aeach admin with its own mean yield) and then I weight them
     # using area of the last five years (to occount for the fact that larger errors are more tolerable if the area is small)
+    # 2024/12/19 note: the last five years has problem in Harvest data (e.g. Zambia) where some units do not have the last 5 yrs,
+    # I use teh full time series stats
     os.path.join(config.data_dir, 'Label_analysis')
     df_Stats5yrs = pd.read_csv(os.path.join(os.path.join(config.data_dir, 'Label_analysis' + str(config.prct2retain)),
-                                            config.AOI + '_5yrsStats_retainPRCT100.csv'))
+                                            config.AOI + '_LTstats_retainPRCT' + str(config.prct2retain) + '.csv'))
     df_regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
     # Now read mres, compute metric2use at the admin level, and make an area average add as a new columns
     b1['rRMSE_p_areaWeighted'] = -999
@@ -371,7 +373,8 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
     forcTimes = b1[var4time].unique()
     fp = fn_shape_gaul1
     gdf = gpd.read_file(fp)
-    gdf_gaul1_id = "asap1_id"
+    #
+    gdf_gaul1_id = config.adminID_column_name_in_shp_file
     for c in crops:
         for t in forcTimes:
             # get forecast_issue_calendar_month
@@ -432,8 +435,8 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
                 fn_spec = os.path.join(pathlib.Path(config.models_spec_dir), myID + '_' + c + '_' + est + '.json')
                 # print(fn_spec)
                 df = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
-                lims = [np.floor(np.min([df['yLoo_true'].values, df['yLoo_pred'].values])),
-                        np.ceil(np.max([df['yLoo_true'].values, df['yLoo_pred'].values]))]
+                lims = [np.floor(np.nanmin([df['yLoo_true'].values, df['yLoo_pred'].values])),
+                        np.ceil(np.nanmax([df['yLoo_true'].values, df['yLoo_pred'].values]))]
                 r2p = d140_modelStats.r2_nan(df['yLoo_true'].values, df['yLoo_pred'].values)
                 for au_code in df['adm_id'].unique():
                     x = df[df['adm_id'] == au_code]['yLoo_true'].values

@@ -28,8 +28,23 @@ class DataMixin:
         # [opeForecast] run the operational yield
 
         stats = b101_load_cleaned.LoadCleanedLabel(config)
+        # add empy records where ther is no yield
         firstYear = stats['Year'].min()
         lastYear = stats['Year'].max()
+        years = np.arange(firstYear, lastYear+1)
+        adm_ids = stats['adm_id'].unique()
+        crop_ids = stats['Crop_ID'].unique()
+        new_df = pd.DataFrame(np.array(np.meshgrid(adm_ids, crop_ids, years)).T.reshape(-1, 3),
+                              columns=['adm_id', 'Crop_ID', 'Year'])
+        # Merge the new DataFrame with the existing DataFrame
+        merged_df = pd.merge(new_df, stats, on=['adm_id', 'Crop_ID', 'Year'], how='left')
+        for col in ['adm_name', 'Crop_name']:
+            merged_df[col] = merged_df.groupby(['adm_id', 'Crop_ID'])[col].fillna(
+                merged_df.groupby(['adm_id', 'Crop_ID'])[col].transform('first'))
+        stats = merged_df
+        # Mesh created all combos of adm_ids, crop_ids, years. However, some combo may not have a single yield entry
+        # and can be dropped (they were making problems in ope)
+        stats = stats.groupby(['adm_id', 'Crop_ID']).filter(lambda x: x['Yield'].notna().any())
         # add empty record when there are no records
         # if working on a ML model and there is some crop-au combination to exclude, do it here upfront
         if not(self.uset['algorithm'] == 'Null_model' or self.uset['algorithm'] == 'Trend' or self.uset['algorithm'] == 'PeakNDVI'):

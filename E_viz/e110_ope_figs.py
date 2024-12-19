@@ -19,8 +19,8 @@ def map(b1, config, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_fil
     #forcTimes = b1[var4time].unique()
     fp = fn_shape_gaul1
     gdf = gpd.read_file(fp)
-    gdf_gaul1_id = "asap1_id"
-    gdf_gaul0_column = 'name0'
+    gdf_gaul1_id = config.adminID_column_name_in_shp_file #"asap1_id"
+    gdf_gaul0_column = config.gaul0_column_name_in_shp_file #'name0'
     for c in crops:
         df_c = b1[(b1['Crop_name'] == c)].copy()
         # statsByAdmin = df_c.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
