@@ -4,6 +4,7 @@ from matplotlib.pyplot import cm
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+import seaborn as sns
 import os
 import pathlib
 import calendar
@@ -75,6 +76,15 @@ def AU_error(b1, config, outputDir):
 
         dfAU = pd.concat([dfAU, rRMSE_pByAdmin])
     dfAU.to_csv(os.path.join(outputDir, 'all_model_best1_AU_error.csv'))
+    # test plot
+    forcTime = dfAU["forecast_time"].unique()
+    fig, axes = plt.subplots(2, 1, figsize=(14,10))
+    sns.barplot(dfAU[dfAU["forecast_time"] == forcTime[0]], x="adm_name", y="rrmse_prct", hue="Estimator", ax=axes[0], palette=['b', 'grey', 'r', 'g']).set_title('Forecast_time = ' + str(forcTime[0]))
+    sns.move_legend(axes[0], "upper right", title=None, frameon=False) #bbox_to_anchor=(1, 1)
+    sns.barplot(dfAU[dfAU["forecast_time"] == forcTime[1]], x="adm_name", y="rrmse_prct", hue="Estimator", ax=axes[1], palette=['b', 'grey', 'r', 'g']).set_title('Forecast_time = ' + str(forcTime[1]))
+    sns.move_legend(axes[1], "upper right", title=None, frameon=False)  # bbox_to_anchor=(1, 1)
+    plt.savefig(os.path.join(outputDir, 'all_model_best1_AU_error.png'))
+    plt.close(fig)
     return dfAU
 def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputDir):
     # In this version I compute the rel RMSE by admin (aeach admin with its own mean yield) and then I weight them
