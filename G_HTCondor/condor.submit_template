@@ -12,5 +12,5 @@ should_transfer_files    = YES
 output                   = /mnt/jeoproc/log/ml4castproc/{AOI}/out/job_$(Process).out
 error                    = /mnt/jeoproc/log/ml4castproc/{AOI}/err/job_$(Process).err
 log                      = /mnt/jeoproc/log/ml4castproc/{AOI}/log/job_$(Process).log
-batch_name               = "ml4cast_{AOI}"
+batch_name               = "ml4cast_{run_name}"
 queue tasks from {root_dir}/{condor_task_list_base_name}
