@@ -1,0 +1,65 @@
+{
+    "AOI": "Algeria",
+    "year_start": 2002,
+    "year_end": 2023,
+    "prct2retain": 90,
+    "crops": [
+        "Durum wheat",
+        "Soft wheat",
+        "Barley"
+    ],
+    "afi": "Multiple_WC-Algeria-ASAP",
+    "crop_au_exclusions": {},
+    "root_dir": "eos/jeodpp/data/projects/ML4CAST/DZ",
+    "data_dir": "eos/jeodpp/data/projects/ML4CAST/DZ/Tuning_data",
+    "fn_reference_shape": "V:\\foodsec\\Projects\\SNYF\\stable_input_data\\SHP_Files\\gaul1_asap.shp",
+    "country_name_in_shp_file": "Algeria",
+    "gaul0_column_name_in_shp_file": "name0",
+    "adminID_column_name_in_shp_file": "asap1_id",
+    "ope_data_dir": "eos/jeodpp/data/projects/ML4CAST/DZ/OpeForecast_data",
+    "output_dir": "eos/jeodpp/data/projects/ML4CAST/DZ/RUN_Multiple_WC-Algeria-ASAP",
+    "ope_run_dir": "eos/jeodpp/data/projects/ML4CAST/DZ/RUN_Multiple_WC-Algeria-ASAP/OPE_20241118",
+    "ope_run_out_dir": "eos/jeodpp/data/projects/ML4CAST/DZ/RUN_Multiple_WC-Algeria-ASAP/OPE_20241118/output",
+    "models_dir": "eos/jeodpp/data/projects/ML4CAST/DZ/RUN_Multiple_WC-Algeria-ASAP/TUNE_20241118",
+    "models_spec_dir": "eos/jeodpp/data/projects/ML4CAST/DZ/RUN_Multiple_WC-Algeria-ASAP/TUNE_20241118/Specs",
+    "models_out_dir": "eos/jeodpp/data/projects/ML4CAST/DZ/RUN_Multiple_WC-Algeria-ASAP/TUNE_20241118/Output_fast_tuning",
+    "ivars": [
+        "FPAR",
+        "rad",
+        "rainfall",
+        "temperature",
+        "SM_combined"
+    ],
+    "ivars_short": [
+        "FP",
+        "rad",
+        "Rain",
+        "T",
+        "SM"
+    ],
+    "ivars_units": [
+        "-",
+        "kJ m-2 dek-1",
+        "mm",
+        "\u00b0C",
+        "m3 m-3"
+    ],
+    "sos": 30,
+    "eos": 17,
+    "sosMonth": 10,
+    "eosMonth": 6,
+    "yield_units": "t/ha",
+    "area_unit": "ha",
+    "forecastingPrct": [
+        75,
+        100
+    ],
+    "forecastingMonths": [
+        7,
+        9
+    ],
+    "forecastingCalendarMonths": [
+        4,
+        6
+    ]
+}

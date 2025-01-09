@@ -108,6 +108,9 @@ def checkExistingSubmit(condor_task_list_base_name, condor_task_list_fn, config,
         # update spec_files_list
         new_file_list = []
         for el in spec_files_list:
+            # print(el)
+            # if el == '/eos/jeodpp/data/projects/ML4CAST/DZ/RUN_Multiple_WC-Algeria-ASAP/TUNE_DZ_20241226/Specs/006737_Barley_XGBoost@PeakFPARAndLast3.json':
+            #     print('here')
             # make the expected output name
             with open(el, 'r') as fp:
                 uset = json.load(fp)
@@ -204,6 +207,7 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
             if len(spec_files_list) > nMaxTask:
                 # the task was big there is another task to run, but we need to wait an hour
                 # time.sleep(60 * 60)
+                print('Waiting an hour to submit the rest')
                 time.sleep(60 * 60)
 
                 if len(spec_files_list2) > 0:
@@ -217,9 +221,12 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                     # adjust the condor.submit template
                     condSubPath2 = os.path.join(dir_condor_submit, 'condor.submit2')
                     with open('G_HTCondor/condor.submit_template') as tmpl:
-                        content = tmpl.read() 
-                        content = content.format(AOI=config.AOI,
-                                                 root_dir=config.models_dir, condor_task_list_base_name=condor_task_list_base_name2)  # , shDestination=shDestination)
+                        content = tmpl.read()
+                        content = content.format(run_name=run_name + '_' + runType, AOI=config.AOI,
+                                                 root_dir=config.models_dir,
+                                                 condor_task_list_base_name=condor_task_list_base_name2)
+                        # content = content.format(AOI=config.AOI,
+                        #                          root_dir=config.models_dir, condor_task_list_base_name=condor_task_list_base_name2)  # , shDestination=shDestination)
                     with open(condSubPath2, 'w') as out:
                         out.write(content)
                     # Make the dirs for condor output on /mnt/jeoproc/log/ml4castproc/, clean content
