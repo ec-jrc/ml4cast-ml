@@ -40,7 +40,8 @@ def mapDfColumn(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_merge
     """
     # join df with gdf
     gdf = gdf[gdf[gdf_gaul0_column] == gdf_gaul0_name]
-    merged = gdf.merge(df, how='left', left_on=gdf_merge_col, right_on=df_merge_col)
+    # merged = gdf.merge(df, how='left', left_on=gdf_merge_col, right_on=df_merge_col)
+    merged = gdf.merge(df, how='right', left_on=gdf_merge_col, right_on=df_merge_col)
     merged[df_col_admin_names] = merged[df_col_admin_names].fillna('')
 
     # Map it
@@ -103,7 +104,8 @@ def mapDfColumn2Ax(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_me
     """
     # join df with gdf
     gdf = gdf[gdf[gdf_gaul0_column] == gdf_gaul0_name]
-    merged = gdf.merge(df, how='left', left_on=gdf_merge_col, right_on=df_merge_col)
+    # merged = gdf.merge(df, how='left', left_on=gdf_merge_col, right_on=df_merge_col)
+    merged = gdf.merge(df, how='right', left_on=gdf_merge_col, right_on=df_merge_col)
     merged[df_col_admin_names] = merged[df_col_admin_names].fillna('')
 
     merged.boundary.plot(ax=ax, color="black", linewidth=0.5)
@@ -246,8 +248,8 @@ def trend_anlysis(config, prct2retain=100):
         xMinMax = [xc['Year'].min(), xc['Year'].max()]
         yMinMax = [np.floor(xc['Yield'].min()), np.ceil(xc['Yield'].max())]
         adm = xc['adm_name'].unique()
-        # fig, axs = plt.subplots(len(adm), 1, figsize=(10, 2*len(adm)))
-        fig, axs = plt.subplots(len(adm), 1, figsize=(10, 2.5 * len(adm)))
+        # fig, axs = plt.subplots(len(adm), 1, figsize=(10, 2.5 * len(adm)))
+        fig, axs = plt.subplots(max([len(adm),2]), 1, figsize=(10, 2.5 * len(adm))) # the max here is used because there might be just one admin, and subplot does not return axes
         axs = axs.flatten()
         axs_counter = 0
         for a in adm:
