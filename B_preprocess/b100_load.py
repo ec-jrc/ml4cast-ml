@@ -220,9 +220,9 @@ def LoadLabel(stat_file, start_year, end_year, make_charts=False, perc_threshold
                 data_year = data_crop[(data_crop['Year'] >= start_year) & (data_crop['Year'] <= end_year)]
 
                 # Positive and negative outliers
-                positive_outliers = data_year[stats.zscore(data_year['Yield']) > zScoreTreshold]
-                negative_outliers = data_year[stats.zscore(data_year['Yield']) < -zScoreTreshold]
-                avg = np.mean(data_year['Yield'].values)
+                positive_outliers = data_year[stats.zscore(data_year['Yield'], nan_policy='omit') > zScoreTreshold]
+                negative_outliers = data_year[stats.zscore(data_year['Yield'], nan_policy='omit') < -zScoreTreshold]
+                avg = np.nanmean(data_year['Yield'].values)
 
                 for outlier_df, flag in zip([positive_outliers, negative_outliers], ['Removed', 'Flagged']):
                     percent_diff = abs((outlier_df['Yield'].values - avg) / avg) * 100

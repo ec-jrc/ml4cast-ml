@@ -22,7 +22,7 @@ def saveYieldStats(config, prct2retain=100):
     np.set_printoptions(linewidth=desired_width)
     pd.set_option('display.max_columns',100)
 
-    # qaulity check and outlier removal
+    # quality check and outlier removal
     stat_file = os.path.join(config.data_dir, config.AOI + '_STATS.csv')
     stats = b100_load.LoadLabel(stat_file, config.year_start, config.year_end, make_charts=True, perc_threshold=-1, crops_names=config.crops)
 

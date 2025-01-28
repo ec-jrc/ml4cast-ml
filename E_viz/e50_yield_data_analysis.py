@@ -264,7 +264,8 @@ def trend_anlysis(config, prct2retain=100):
             else:
                 trend = 'n < 2, trend cannot be assessed'
                 p = np.NAN
-            axs[axs_counter].plot(X, y, label='Data') #, label=F'Theil-Sen trend line')
+            # axs[axs_counter].plot(X, y, label='Data') #, label=F'Theil-Sen trend line')
+            axs[axs_counter].scatter(X, y, label='Data')  # , label=F'Theil-Sen trend line')
             axs[axs_counter].set_xlim(xMinMax)
             axs[axs_counter].set_ylim(yMinMax)
             axs[axs_counter].locator_params(integer=True)

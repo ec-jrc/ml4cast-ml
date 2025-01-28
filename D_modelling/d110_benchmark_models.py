@@ -44,7 +44,12 @@ def run_LOYO(model, X_train, X_test, y_train, y_test, adm_id_train, adm_id_test,
             X_test_au, y_test_au = X_test[index], y_test[index]
             # treat nan in y
             nas = np.isnan(y_train_au)
-            reg = linear_model.LinearRegression().fit(X_train_au[~nas].reshape(-1, 1), y_train_au[~nas])
+
+            try:
+                reg = linear_model.LinearRegression().fit(X_train_au[~nas].reshape(-1, 1), y_train_au[~nas])
+            except:
+                print('error d110_benchmark on lin reg PeakNDVI')
+                print('Check out why')
             yloo_pred.extend(reg.predict(X_test_au.reshape(-1, 1)).tolist())
             yloo_true.extend(y_test_au.tolist())
             yloo_au.extend(adm_id_test[index].tolist())
