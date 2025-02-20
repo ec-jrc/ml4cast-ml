@@ -7,6 +7,7 @@ initialdir = {root_dir}
 arguments                = /eos/jeodpp/data/projects/ML4CAST/ml4cast-ml/G_HTCondor/run.sh $(Cluster) $(Process) $(tasks)
 request_cpus             = 1
 request_memory           = 10GB
+Requirements             = EOSisRunning
 transfer_input_files     = /eos/jeodpp/data/projects/ML4CAST/ml4cast-ml/condor_launcher.py
 should_transfer_files    = YES
 output                   = /mnt/jeoproc/log/ml4castproc/{AOI}/out/job_$(Process).out

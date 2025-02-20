@@ -143,8 +143,8 @@ def saveYieldStats(config, prct2retain=100):
     # bar plot of production, area and yield by region of retained statistics
     crops = x['Crop_name','first'].unique()
     for c in crops:
-        if c == 'Coffee':
-            print(c)
+        # if c == 'Coffee':
+        #     print(c)
         # production
         xc = x[x['Crop_name','first'] == c]
         xc = xc.sort_values(by=[('Area', 'mean')], ascending=False)

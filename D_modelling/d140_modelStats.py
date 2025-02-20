@@ -105,7 +105,26 @@ def allStats_overall(mRes):
         'rel_Pred_RMSE': rmse_nan(mRes['yLoo_true'], mRes['yLoo_pred'])/ avg_y_true * 100.0
     }
     return res
-
+def weighted_rmse_nan(x, y, w):
+    # scikit not resistant to nan
+    x = np.array(x)
+    y = np.array(y)
+    w = np.array(w)
+    nas = np.logical_or(np.isnan(x), np.isnan(y))
+    if not all(nas):
+        return metrics.mean_squared_error(x[~nas], y[~nas], sample_weight=w[~nas], squared=False)
+    else:
+        return np.nan
+def rmse_rrmse_weighed_overall(mRes, w):
+    # mean true y used for normalization
+    y_true = np.array(mRes['yLoo_true'])
+    nas = np.isnan(y_true)
+    avg_y_true = np.mean(y_true[~nas])
+    res = {
+        'Pred_RMSE': weighted_rmse_nan(mRes['yLoo_true'], mRes['yLoo_pred'], w),
+        'rel_Pred_RMSE': weighted_rmse_nan(mRes['yLoo_true'], mRes['yLoo_pred'], w) / avg_y_true * 100.0
+    }
+    return res
 def allStats_spatial(mRes):
     # mean true y used for normalization
     y_true = np.array(mRes['yLoo_true'])
@@ -124,14 +143,6 @@ def allStats_spatial(mRes):
         'Pred_RMSE':  mRes.groupby('Year').apply(lambda x: rmse_nan(x['yLoo_true'], x['yLoo_pred'])).reset_index(drop=True).mean(),
         'rel_Pred_RMSE': mRes.groupby('Year').apply(lambda x: rmse_nan(x['yLoo_true'], x['yLoo_pred'])).reset_index(drop=True).mean() / avg_y_true * 100.0
     }
-    # #compute RMSE on the poorest years (First Quantile lower 25 pecentile)
-    # mresFQ = mRes[mRes['yLoo_true'] <= mRes['yLoo_true'].quantile(0.25)]
-    # #res['Pred_RMSE_FQ'] = np.sqrt(metrics.mean_squared_error(mresFQ['yLoo_true'], mresFQ['yLoo_pred']))
-    # res['Pred_RMSE_FQ'] = rmse_nan(mresFQ['yLoo_true'], mresFQ['yLoo_pred'])
-    # res['Pred_rRMSE_FQ'] = res['Pred_RMSE_FQ'] / avg_y_true * 100.0
-    # # if (Compute_Pred_MrAE):
-    # #     # using the mean of the target value per AU, compute the % rmse
-    # #     res['Pred_MrAE'] = mean_rel_abs_error(mRes)
     return res
 
 

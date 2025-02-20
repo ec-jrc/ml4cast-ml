@@ -4,6 +4,8 @@ import pandas as pd
 import os
 from A_config import a10_config
 from E_viz import e100_eval_figs
+from D_modelling import d090_model_wrapper, d140_modelStats
+from D_modelling import d140_modelStats
 
 
 def gather_output(config):
@@ -115,7 +117,33 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
     var4time = 'forecast_time'
 
     mo = pd.read_csv(analysisOutputDir + '/' + 'all_model_output.csv')
-    # add the calendar month at which teh forcast can be done
+
+    # Until 2025 02 18, RMSE_p and rRMSE_p where computed using d140_modelStats.allStats_spatial
+    # that take the time average of the RMSE by year with the result that if a year has only few data and
+    # it is very good or bad, it will have a lot of weight. We decided then to go always for an overall rmse
+    # Here I recompute it; it will not be needed in the new runs
+    if not('RMSE_p_spatial' in mo.columns):
+        # it is not there, so the current 'RMSE_p', 'rRMSE_p' are spatial
+        # I have to rename them, and compute the overall
+        mo = mo.rename(columns={'RMSE_p': 'RMSE_p_spatial', 'rRMSE_p': 'rRMSE_p_spatial'})
+        mo['RMSE_p'] = None
+        mo['rRMSE_p'] = None
+        for index, row in mo.iterrows():
+            runID = row['runID']            # get run_id
+            myID = f'{runID:06d}'
+            fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) + '_crop_' + row['Crop'] + '_Yield_' + row['Estimator'] + '_mres.csv')
+            if os.path.exists(fn_mRes_out):
+                mRes = pd.read_csv(fn_mRes_out)
+            else:
+                fn_spec = os.path.join(config.models_spec_dir, str(myID) + '_' + row['Crop'] + '_' + row['Estimator'] + '.json')
+                mRes = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
+            res = d140_modelStats.allStats_overall(mRes)
+            mo.at[index, 'RMSE_p'] = res['Pred_RMSE']
+            mo.at[index, 'rRMSE_p'] = res['rel_Pred_RMSE']
+
+
+
+    # add the calendar month at which thh forcast can be done
     di = dict(zip(config.forecastingMonths, config.forecastingCalendarMonths))
     mo['forecast_issue_calendar_month'] = mo['forecast_time'].replace(di)
     mo['forecast_issue_calendar_month'] = mo['forecast_issue_calendar_month'].astype(
