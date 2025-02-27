@@ -9,6 +9,7 @@ import os
 runType = 'fast_tuning' #always 'fast_tuning'  when tuning   # this is fixed for tuning ['tuning', 'fast_tuning', 'opeForecast']
 
 if 'win' in sys.platform:
+    tune_on_condor = False
     # ZA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20241226'
@@ -26,7 +27,7 @@ if 'win' in sys.platform:
     # MW Malawi
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
     # run_name = 'MW_20250122'
-    # tune_on_condor = False
+
     # SO Somalia Gu
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\Gu\SOGuEXTRACTNAME_config.json'
     # # SO Somalia Deyr
