@@ -1,3 +1,5 @@
+import sys
+
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -12,11 +14,10 @@ import matplotlib.ticker as mticker
 
 def LoadPredictors_Save_Csv(config, runType):
     ''' Import ASAP data in the csv format, save csv '''
-    pd.set_option('display.max_columns', None)
-    desired_width=320
+    desired_width = 320
     pd.set_option('display.width', desired_width)
     np.set_printoptions(linewidth=desired_width)
-    pd.set_option('display.max_columns',1000)
+    pd.set_option('display.max_columns', 1000)
 
     dirIn = config.data_dir
     dirOut = config.models_dir
@@ -32,8 +33,29 @@ def LoadPredictors_Save_Csv(config, runType):
     # General part
     df = df[df['class_name']=='crop']
     df = df[df['classset_name'] == 'static masks']
+    # read stats cleaned to check what regions are present
+    stat_file = os.path.join(config.data_dir, config.AOI + '_STATS_cleaned' + str(config.prct2retain) + '.csv')
+    statsDf = pd.read_csv(stat_file)
     # read the table with id and region name
     regNames = pd.read_csv(os.path.join(dirIn, config.AOI + '_REGION_id.csv'))
+    A = set(df['adm_id'].unique())       # ASAP extraction admin Ids
+    B = set(statsDf['adm_id'].unique())
+    if A != B:
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!')
+        # Find elements in A that are not in B
+        in_A_not_B = A - B
+        # Find elements in B that are not in A
+        in_B_not_A = B - A
+        if in_A_not_B:
+            print("Elements in Asap extractions that are not in Region names:", in_A_not_B)
+            print("This may be due to the fact that there is no yield data for these units")
+        if in_B_not_A:
+            print("Elements in stat file that are not in Asap extraction:", in_B_not_A)
+            print('Make sure you run yield stats analysis to exclude the latter list')
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!')
+
+    # check correspondance
+
     # now link it with adm_id and name
     df = pd.merge(df, regNames, left_on=['adm_id'], right_on=['adm_id'])
     # remove the admin name form extraction, not needed, use the one from region file
@@ -193,11 +215,12 @@ def LoadLabel(stat_file, start_year, end_year, make_charts=False, perc_threshold
     df['Duplicate'] = pd.Series(dtype='object')
     df['LowYield'] = pd.Series(dtype='object')
 
-    summary = pd.DataFrame(columns=[
-        'adm_id', 'adm_name', 'Crop_ID', 'Crop_name',
-        'Outliers values', 'Outliers years', 'Outlier types',
-        'Duplicates n', 'Duplicates years', 'Trend'
-    ])
+    # summary = pd.DataFrame(columns=[
+    #     'adm_id', 'adm_name', 'Crop_ID', 'Crop_name',
+    #     'Outliers values', 'Outliers years', 'Outlier types',
+    #     'Duplicates n', 'Duplicates years', 'Trend'
+    # ])
+    summary = pd.DataFrame()
 
     for unit, unit_name in zip(units, units_names):
         data_unit = df[df['adm_id'] == unit]

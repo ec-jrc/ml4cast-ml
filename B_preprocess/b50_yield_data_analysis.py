@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -130,14 +131,55 @@ def saveYieldStats(config, prct2retain=100):
     y.to_csv(os.path.join(outDir, config.AOI + '_LTstats_retainPRCT' + str(prct2retain) + '.csv'), index=False)
 
     # save a cleaned stat file with the prct2retain to be retained
-
-    # empty df but same columns, same dtypes, and no row
-    stats_prct2retain = stats.iloc[:0,:].copy()
+    stats_prct2retain = stats.iloc[:0,:].copy() # empty df but same columns, same dtypes, and no row
     for c in crops:
         adm_id_2retain_for_crop = y[y['Crop_name|first'] == c]['adm_id|'].unique()
         tmp = stats[(stats['Crop_name'] == c) & (stats['adm_id'].isin(adm_id_2retain_for_crop))]
-        stats_prct2retain= pd.concat([stats_prct2retain, tmp])
+        stats_prct2retain = pd.concat([stats_prct2retain, tmp])
     cleaned_prct2retain_file = stat_file.replace('.csv', '_cleaned' + str(prct2retain) + '.csv')
+    # It may happen that some admin level for which I have yield, do not have ASAP data extracted
+    # because there is no AFI (e.g. Somalia). I have to point it out to operator, save a file showing which,
+    # and removing them from stats
+
+    dfASAP = pd.read_csv(os.path.join(config.data_dir, config.afi + '.csv'))
+    A = set(dfASAP['adm_id'].unique())  # ASAP extraction admin Ids
+    B = set(stats_prct2retain['adm_id'].unique())
+    doRemove = False
+    if A != B:
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print('b50 Warning')
+        # Find elements in A that are not in B
+        in_A_not_B = A - B
+        # Find elements in B that are not in A
+        in_B_not_A = B - A
+        if in_A_not_B:
+            print("Elements in Asap extractions that are not in Region names:", in_A_not_B)
+            print("This may be due to the fact that there is no yield data for these units")
+        if in_B_not_A:
+            print("Elements in yield stats that are not in Asap extraction:", in_B_not_A)
+            doRemove = True
+            # sys.exit()
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!')
+    if doRemove:
+        in_B_not_A_list = list(in_B_not_A)
+        name_list = [stats_prct2retain[stats_prct2retain['adm_id'] == x]['adm_name'].iloc[0] for x in in_B_not_A_list]
+        crops_list_of_list = [list(stats_prct2retain[stats_prct2retain['adm_id'] == x]['Crop_name'].unique()) for x in in_B_not_A_list]
+        print('The following admins will be removed from cleaned stats file')
+        for xt, yt, zt in zip(in_B_not_A_list, name_list, crops_list_of_list):
+            print(xt, yt, zt)
+        # print(str(in_B_not_A_list))
+        # print(str(name_list))
+        pro = input('Type Y to proceed\n')
+        if pro == 'Y':
+            # print a file
+            df_out = pd.DataFrame({"Dropped_admin_with_no_ASAP_data": in_B_not_A_list, "Dropped_admin_name": name_list,
+                                   "crops": crops_list_of_list})
+            dropped_adm_file = stat_file.replace('.csv', '_adm_dropped' + str(prct2retain) + '.csv')
+            df_out.to_csv(dropped_adm_file, index=False)
+            stats_prct2retain = stats_prct2retain[~stats_prct2retain["adm_id"].isin(in_B_not_A_list)]
+            # remove unmatched records from stas
+        else:
+            sys.exit('b50 terminated by user')
     stats_prct2retain.to_csv(cleaned_prct2retain_file, index=False)
 
     # bar plot of production, area and yield by region of retained statistics

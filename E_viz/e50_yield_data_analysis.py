@@ -205,7 +205,7 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
         else:
             print('Measurement units not foreseen')
             exit()
-        statsCrop['Production|mean'] = statsCrop['Production|mean'] / divider
+        statsCrop.loc[:,'Production|mean'] = statsCrop.loc[:,'Production|mean'] / divider
         lbl = c + ' production  [kt]'
         mapDfColumn(statsCrop, df_gaul1_id, 'Production|mean', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column, gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[3])
         # Total area
@@ -214,7 +214,7 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
         else:
             print('Measurement units not foreseen')
             exit()
-        statsCrop['Area|mean'] = statsCrop['Area|mean'] / divider
+        statsCrop.loc[:, 'Area|mean'] = statsCrop.loc[:, 'Area|mean'] / divider
         lbl = c + ' area [km^2]' #lbl = r'${\rm \/ Area \/ (1000 km^2)}$'
         mapDfColumn(statsCrop, df_gaul1_id, 'Area|mean', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
                     gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[4])
