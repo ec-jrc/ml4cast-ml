@@ -58,19 +58,21 @@ else:
     # run_name = 'ZA_20241226'
     # DZ
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/DZ/DZMultiple_WC-Algeria-ASAP_config.json'
-    # run_name = 'DZ_20241226'
+    # run_name = 'DZ_20250131'
     # ZM zambia
+    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZM/annual/Maize_(corn)_WC-Zambia-HARVESTAT.json'
+    run_name = 'ZM_20250128'
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZM/annual/Maize_(corn)_WC-Zambia-HARVESTAT.json'
-    # run_name = 'ZM_20241226'
+    # run_name = "ZM_20250128"
     # BE Benin ASAP
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/BE/BEMaize_(corn)_WC-Benin-ASAP.json'
     # run_name = 'BE_20241226'
     # MZ Mozambique
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET.json'
-    # run_name = 'MZ_20250122'
+    # run_name = 'MZ_20250130'
     # MW Malawi
-    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MW/main/Maize_(corn)_WC-Malawi-HARVESTAT.json'
-    run_name = 'MW_20250122'
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MW/main/Maize_(corn)_WC-Malawi-HARVESTAT.json'
+    # run_name = 'MW_20250123'
     tune_on_condor = True
     time_step_check = 60  # in minutes
 
