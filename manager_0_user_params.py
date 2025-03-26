@@ -14,11 +14,14 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20241226'
     # DZ
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\DZ\DZMultiple_WC-Algeria-ASAP_config.json'
-    # run_name = 'DZ_20241226'
+    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\DZ\DZMultiple_WC-Algeria-ASAP_config.json'
+    run_name = 'DZ_20250131'
+    # Morocco MO
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
+    # run_name = 'MO_test_mic'
     # ZM Zambia
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZM\annual\Maize_(corn)_WC-Zambia-HARVESTAT.json'
-    # # BE Benin ASAP
+    # BE Benin ASAP
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\BE\BEMaize_(corn)_WC-Benin-ASAP.json'
     # run_name = 'BE_20241226'
     # MZ Mozambique ASAP
@@ -26,7 +29,7 @@ if 'win' in sys.platform:
     # run_name = 'MZ_20250130'
     # MW Malawi
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
-    # run_name = 'MW_20250122'
+    # run_name = 'MW_per_476'
     # SO Somalia Gu Agropastoral
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuAgrop\SOGuAgrop_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
     # run_name = 'SOGuAgrop_test'
@@ -37,8 +40,8 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SODeyrAgrop\SODeyrAgrop_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
     # run_name = 'SODeyrAgrop_test'
     # # SO Somalia Deyr River
-    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SODeyrRiver\SODeyrRiver_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
-    run_name = 'SODeyrRiver_test'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SODeyrRiver\SODeyrRiver_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
+    # run_name = 'SODeyrRiver_test'
     # Morocco
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
     # # run_name = 'MO_20250213'

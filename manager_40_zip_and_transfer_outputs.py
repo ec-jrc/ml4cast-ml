@@ -7,7 +7,7 @@ if __name__ == '__main__':
     """
     Main function getting outputs once condor has terminated
     Files are zipped and copied here on bdap: /mnt/cidstorage/cidportal/data/cid-bulk22/Shared/tmp/projectData/ML4CAST/
-    On offcie pc I can find it here: U:\data\cid-bulk22\Shared\tmp\projectData\ML4CAST
+    In the office pc I can find it in cid: U:\data\cid-bulk22\Shared\tmp\projectData\ML4CAST
     """
     ##########################################################################################
     # USER PARAMS

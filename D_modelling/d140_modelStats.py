@@ -39,7 +39,8 @@ def rmse_nan(x, y):
     y = np.array(y)
     nas = np.logical_or(np.isnan(x), np.isnan(y))
     if not all(nas):
-        return metrics.mean_squared_error(x[~nas], y[~nas], squared=False)
+        #return metrics.mean_squared_error(x[~nas], y[~nas], squared=False)
+        return metrics.root_mean_squared_error(x[~nas], y[~nas])
     else:
         return np.nan
 
@@ -112,7 +113,8 @@ def weighted_rmse_nan(x, y, w):
     w = np.array(w)
     nas = np.logical_or(np.isnan(x), np.isnan(y))
     if not all(nas):
-        return metrics.mean_squared_error(x[~nas], y[~nas], sample_weight=w[~nas], squared=False)
+        #return metrics.mean_squared_error(x[~nas], y[~nas], sample_weight=w[~nas], squared=False)
+        return metrics.root_mean_squared_error(x[~nas], y[~nas], sample_weight=w[~nas])
     else:
         return np.nan
 def rmse_rrmse_weighed_overall(mRes, w):

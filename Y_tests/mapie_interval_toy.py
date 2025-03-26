@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import randint
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error
+# from sklearn.metrics import mean_squared_error
+from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from sklearn.datasets import make_sparse_uncorrelated
 
@@ -56,7 +57,8 @@ widths_non_nested = y_pis_non_nested[:, 1, 0] - y_pis_non_nested[:, 0, 0]
 coverage_non_nested = regression_coverage_score(
     y_test, y_pis_non_nested[:, 0, 0], y_pis_non_nested[:, 1, 0]
 )
-score_non_nested = mean_squared_error(y_test, y_pred_non_nested, squared=False)
+#score_non_nested = mean_squared_error(y_test, y_pred_non_nested, squared=False)
+score_non_nested = root_mean_squared_error(y_test, y_pred_non_nested)
 
 
 
