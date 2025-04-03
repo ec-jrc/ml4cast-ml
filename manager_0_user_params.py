@@ -11,8 +11,8 @@ runType = 'fast_tuning' #always 'fast_tuning'  when tuning   # this is fixed for
 if 'win' in sys.platform:
     tune_on_condor = False
     # MA multi shp
-    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
-    run_name = 'MA_20250331'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
+    # run_name = 'MA_20250331'
     # ZA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20241226'
@@ -23,7 +23,8 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
     # run_name = 'MO_test_mic'
     # ZM Zambia
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZM\annual\Maize_(corn)_WC-Zambia-HARVESTAT.json'
+    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZM\annual\Maize_(corn)_WC-Zambia-HARVESTAT.json'
+    run_name = 'test'
     # BE Benin ASAP
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\BE\BEMaize_(corn)_WC-Benin-ASAP.json'
     # run_name = 'BE_20241226'

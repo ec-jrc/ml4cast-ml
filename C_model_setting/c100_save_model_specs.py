@@ -129,6 +129,8 @@ def save_model_specs(config, modelSettings):
         # doRun = doRun or (
         #         crop == 'Maize_total' and algo == 'Lasso' and feature_set == 'rs' and ft_sel == 'none' and data_redct == 'PCA' and addYieldTrend == True)
         # skip = not(doRun)
+        if ft_sel == 'MRMR' and data_redct == 'PCA':
+            skip = True
         if skip == False:
             # debug
             print(runID, crop, algo, forecast_time, doOHE, feature_set, ft_sel, data_redct, addYieldTrend)

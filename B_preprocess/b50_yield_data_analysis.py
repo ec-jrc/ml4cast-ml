@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import shutil
 import matplotlib.pyplot as plt
 from B_preprocess import b100_load
 from E_viz import e50_yield_data_analysis
@@ -141,7 +142,53 @@ def saveYieldStats(config, prct2retain=100):
     # because there is no AFI (e.g. Somalia). I have to point it out to operator, save a file showing which,
     # and removing them from stats
 
+
+    if isinstance(config.fn_reference_shape, list) >1:
+        # this part replace the original extraction with one with stas id
+        # name os.path.join(config.data_dir, config.afi + '_original_before_new_adm_id.csv')
+        # make sure I do not mess it up
+        # when running it multiple time
+        if os.path.isfile(os.path.join(config.data_dir, config.afi + '_original_before_new_adm_id.csv')):
+            # it is there, so it was run already, delete the normal one and rename this a s norml
+            os.remove(os.path.join(config.data_dir, config.afi + '.csv'))
+            os.rename(os.path.join(config.data_dir, config.afi + '_original_before_new_adm_id.csv'), os.path.join(config.data_dir, config.afi + '.csv'))
     dfASAP = pd.read_csv(os.path.join(config.data_dir, config.afi + '.csv'))
+    if isinstance(config.fn_reference_shape, list) > 1:
+        regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
+        # We are in Marocco-like case, differnt boundaries over time.
+        # In this case the shp id "adm_id" does not match the one of stats
+        # that reports the sh id in Adjusted_jrc_id_in_shp
+        # Here I change the shp id using regNames and
+        # I have to manage that one Adjusted_jrc_id_in_shp may be needed by multiple stats ids
+        # Create a lookup table with unique couples of adm_id and Adjusted_jrc_id_in_shp
+        dfASAP = dfASAP.rename(columns={'adm_id': 'adm_id_in_shp'})
+        lookup_table = regNames[['adm_id', 'Adjusted_jrc_id_in_shp']].drop_duplicates()
+        # Create a new DataFrame to store the replicated records
+        replicated_df = pd.DataFrame()
+        # Iterate over each unique Adjusted_jrc_id_in_shp in the df DataFrame
+        for jrc_id in dfASAP['adm_id_in_shp'].unique():
+            # Get the adm_id values that match the current jrc_id
+            matching_adm_ids = lookup_table.loc[lookup_table['Adjusted_jrc_id_in_shp'] == jrc_id, 'adm_id']
+            # If there are matching adm_id values, replicate the records
+            if not matching_adm_ids.empty:
+                # Get the records in df that match the current jrc_id
+                matching_records = dfASAP.loc[dfASAP['adm_id_in_shp'] == jrc_id]
+                # Replicate the records for each matching adm_id
+                for adm_id in matching_adm_ids:
+                    # Create a new DataFrame with the replicated records
+                    new_records = matching_records.copy()
+                    new_records['adm_id'] = str(adm_id)
+                    # Append the new records to the replicated DataFrame
+                    replicated_df = pd.concat([replicated_df, new_records])
+
+        dfASAP = replicated_df
+        shutil.copyfile(os.path.join(config.data_dir, config.afi + '.csv'), os.path.join(config.data_dir, config.afi + '_original_before_new_adm_id.csv'))
+        dfASAP['adm_id'] = dfASAP['adm_id'].astype(str)
+        if os.path.isfile(os.path.join(config.data_dir, config.afi + '.csv')):
+            # it is there, so it was run already, delete the normal one and rename this a s norml
+            os.remove(os.path.join(config.data_dir, config.afi + '.csv'))
+        dfASAP.to_csv(os.path.join(config.data_dir, config.afi + '.csv'), index=False) #, mode='w') #, header=True)
+
     A = set(dfASAP['adm_id'].unique())  # ASAP extraction admin Ids
     B = set(stats_prct2retain['adm_id'].unique())
     doRemove = False

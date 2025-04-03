@@ -247,6 +247,7 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
 
             # loop on crops
             for c in uniqueCrops:
+                tmp = 0
                 # statsCrop = LTstats[LTstats['Crop_name|first'] == c]
                 # fig, axs = plt.subplots(2, 3, figsize=(15, 10))
                 # axs = axs.flatten()

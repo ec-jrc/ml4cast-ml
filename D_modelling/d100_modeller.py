@@ -2,6 +2,7 @@ import os
 import sys
 
 import pandas as pd
+import geopandas as gpd
 import numpy as np
 import datetime
 
@@ -38,7 +39,11 @@ class DataMixin:
                               columns=['adm_id', 'Crop_ID', 'Year'])
         # Merge the new DataFrame with the existing DataFrame
         merged_df = pd.merge(new_df, stats, on=['adm_id', 'Crop_ID', 'Year'], how='left')
-        for col in ['adm_name', 'Crop_name']:
+        list2fill = ['adm_name', 'Crop_name']
+        # if multi boundaries
+        if isinstance(config.fn_reference_shape, list) > 1:
+            list2fill = ['adm_name', 'Crop_name', 'fnid', 'Ref_shp', 'Adjusted_jrc_id_in_shp']
+        for col in list2fill:
             merged_df[col] = merged_df.groupby(['adm_id', 'Crop_ID'])[col].fillna(
                 merged_df.groupby(['adm_id', 'Crop_ID'])[col].transform('first'))
         stats = merged_df
@@ -59,8 +64,25 @@ class DataMixin:
                 validPerAdmin = stats[stats['Crop_name'] == crop].groupby(['adm_id'])['Yield'].count()
                 admin_ids_to_drop = validPerAdmin.index[validPerAdmin < 10].to_list()
                 stats = stats[~((stats['adm_id'].isin(admin_ids_to_drop)) & (stats['Crop_name'] == crop))]
-
-
+            # # if woriking on a country with multi-polygon (e.g. Morocco), keep only data related to the last admin boundaries
+            # if isinstance(config.fn_reference_shape, list) > 1:
+            #     gdf = gpd.read_file(config.fn_reference_shape[-1])
+            #     # get unique list of polys. take their jrc_id (it is the Adjusted_jrc_id_in_shp)
+            #     jrc_id_list = gdf['jrc_id'].unique().tolist()
+            #     stats2 = stats[stats['Adjusted_jrc_id_in_shp'].isin(jrc_id_list)]
+            #     # in data find the latest (most recent year, a Adjusted_jrc_id_in_shp can be used for a old admin) adm_id that have the Adjusted_jrc_id_in_shp
+            #     max_year_adm_ids = stats2.loc[stats2.groupby('Adjusted_jrc_id_in_shp')['Year'].idxmax()]
+            #     # Merge max_year_adm_ids with stats2 to filter
+            #     stats2_filtered = stats2.merge(max_year_adm_ids[['Adjusted_jrc_id_in_shp', 'adm_id']],
+            #                                    on='Adjusted_jrc_id_in_shp', suffixes=('_original', '_max_year'))
+            #     # Drop rows where adm_id does not match the max year adm_id
+            #     stats2_filtered = stats2_filtered[
+            #         stats2_filtered['adm_id_original'] == stats2_filtered['adm_id_max_year']]
+            #     # Drop unnecessary columns
+            #     stats2_filtered = stats2_filtered.drop(['adm_id_max_year'], axis=1)
+            #     # Rename adm_id_original back to adm_id
+            #     stats2_filtered = stats2_filtered.rename(columns={'adm_id_original': 'adm_id'})
+            #     print('qui')
         # Raw features for ope forecast are stored in a different dir to avoid overwrite of features used for training
         if runType == 'opeForecast':
             raw_features = pd.read_csv(os.path.join(config.ope_run_dir, config.AOI + '_features4scikit.csv'))
@@ -76,9 +98,11 @@ class DataMixin:
         else: #tuning or opeTune
             raw_features = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_features4scikit.csv'))
             # left join to keep only features with labels
-            yxData = pd.merge(stats, raw_features, how='left', left_on=['adm_id', 'Year', 'adm_name'], right_on=['adm_id', 'YearOfEOS', 'adm_name'])
-            # # outer join to keep all
-            # yxData = pd.merge(stats, raw_features, how='outer', left_on=['adm_id', 'Year', 'adm_name'], right_on=['adm_id', 'YearOfEOS', 'adm_name'])
+            # 2025 04 02 Michele removes 'adm_name' from jon (no match for Marocco), and renames it raw_features to avoid _x suffix
+            raw_features = raw_features.drop('adm_name', axis=1)
+            # yxData = pd.merge(stats, raw_features, how='left', left_on=['adm_id', 'Year', 'adm_name'], right_on=['adm_id', 'YearOfEOS', 'adm_name'])
+            yxData = pd.merge(stats, raw_features, how='left', left_on=['adm_id', 'Year'], right_on=['adm_id', 'YearOfEOS'])
+
 
         # retain only the crop to analysed
         yxData = yxData[yxData['Crop_name'] == self.uset['crop']]
