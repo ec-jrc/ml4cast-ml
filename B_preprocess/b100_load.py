@@ -28,11 +28,12 @@ def LoadPredictors_Save_Csv(config, runType):
         Path(dirOut).mkdir(parents=True, exist_ok=True)
         df = pd.read_csv(os.path.join(dirInOpe, config.afi + '.csv'))
     else:
-        if isinstance(config.fn_reference_shape, list) > 1:
-            # for some reason it reads badbly the id, here must be a string
-            df = pd.read_csv(os.path.join(dirIn, config.afi + '.csv'), dtype={'adm_id': str})
-        else:
-            df = pd.read_csv(os.path.join(dirIn, config.afi + '.csv'))
+        df = pd.read_csv(os.path.join(dirIn, config.afi + '.csv'))
+        # if isinstance(config.fn_reference_shape, list):
+        #     # for some reason it reads badbly the id, here must be a string
+        #     df = pd.read_csv(os.path.join(dirIn, config.afi + '.csv'), dtype={'adm_id': str})
+        # else:
+        #     df = pd.read_csv(os.path.join(dirIn, config.afi + '.csv'))
 
     # General part
     df = df[df['class_name']=='crop']
@@ -44,7 +45,7 @@ def LoadPredictors_Save_Csv(config, runType):
     regNames = pd.read_csv(os.path.join(dirIn, config.AOI + '_REGION_id.csv'))
 
     # All this below moved to b50, the extraction file is modified to be correct
-    # if isinstance(config.fn_reference_shape, list) >1:
+    # if isinstance(config.fn_reference_shape, list):
     #     # We are in Marocco-like case, differnt boundaries over time.
     #     # In this case the shp id "adm_id" does not match the one of stats
     #     # that reports the sh id in Adjusted_jrc_id_in_shp
@@ -266,6 +267,11 @@ def LoadLabel(stat_file, start_year, end_year, make_charts=False, perc_threshold
 
         for crop_name in crops_names:
             data_crop = data_unit[data_unit['Crop_name'] == crop_name]
+            duplicate_rows = data_crop[data_crop['Year'].isin(data_crop['Year'][data_crop['Year'].duplicated()])]
+            # Print the duplicate rows if they exist
+            if not duplicate_rows.empty:
+                print("Duplicate rows found:")
+                print(duplicate_rows)
 
             if len(data_crop) > 0:
                 years_duplicate = []

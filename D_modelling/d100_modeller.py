@@ -2,7 +2,7 @@ import os
 import sys
 
 import pandas as pd
-import geopandas as gpd
+# import geopandas as gpd
 import numpy as np
 import datetime
 
@@ -41,7 +41,7 @@ class DataMixin:
         merged_df = pd.merge(new_df, stats, on=['adm_id', 'Crop_ID', 'Year'], how='left')
         list2fill = ['adm_name', 'Crop_name']
         # if multi boundaries
-        if isinstance(config.fn_reference_shape, list) > 1:
+        if isinstance(config.fn_reference_shape, list):
             list2fill = ['adm_name', 'Crop_name', 'fnid', 'Ref_shp', 'Adjusted_jrc_id_in_shp']
         for col in list2fill:
             merged_df[col] = merged_df.groupby(['adm_id', 'Crop_ID'])[col].fillna(
@@ -58,31 +58,21 @@ class DataMixin:
                     for value_au in value_au_list:
                         mask = (stats['Crop_name'] == key_crop) & (stats['adm_name'] == value_au)
                         stats = stats[~mask]
-        # if working on benchmark, exclude admins having less than 10 obs
+        # if working on benchmark, exclude admins having less than n (10) obs
         else:
+            n = 10
+            if isinstance(config.fn_reference_shape, list):
+                n = 5 # there is nothing with 10 and still active
             for crop in stats['Crop_name'].unique():
                 validPerAdmin = stats[stats['Crop_name'] == crop].groupby(['adm_id'])['Yield'].count()
-                admin_ids_to_drop = validPerAdmin.index[validPerAdmin < 10].to_list()
+                admin_ids_to_drop = validPerAdmin.index[validPerAdmin < n].to_list()
                 stats = stats[~((stats['adm_id'].isin(admin_ids_to_drop)) & (stats['Crop_name'] == crop))]
-            # # if woriking on a country with multi-polygon (e.g. Morocco), keep only data related to the last admin boundaries
-            # if isinstance(config.fn_reference_shape, list) > 1:
-            #     gdf = gpd.read_file(config.fn_reference_shape[-1])
-            #     # get unique list of polys. take their jrc_id (it is the Adjusted_jrc_id_in_shp)
-            #     jrc_id_list = gdf['jrc_id'].unique().tolist()
-            #     stats2 = stats[stats['Adjusted_jrc_id_in_shp'].isin(jrc_id_list)]
-            #     # in data find the latest (most recent year, a Adjusted_jrc_id_in_shp can be used for a old admin) adm_id that have the Adjusted_jrc_id_in_shp
-            #     max_year_adm_ids = stats2.loc[stats2.groupby('Adjusted_jrc_id_in_shp')['Year'].idxmax()]
-            #     # Merge max_year_adm_ids with stats2 to filter
-            #     stats2_filtered = stats2.merge(max_year_adm_ids[['Adjusted_jrc_id_in_shp', 'adm_id']],
-            #                                    on='Adjusted_jrc_id_in_shp', suffixes=('_original', '_max_year'))
-            #     # Drop rows where adm_id does not match the max year adm_id
-            #     stats2_filtered = stats2_filtered[
-            #         stats2_filtered['adm_id_original'] == stats2_filtered['adm_id_max_year']]
-            #     # Drop unnecessary columns
-            #     stats2_filtered = stats2_filtered.drop(['adm_id_max_year'], axis=1)
-            #     # Rename adm_id_original back to adm_id
-            #     stats2_filtered = stats2_filtered.rename(columns={'adm_id_original': 'adm_id'})
-            #     print('qui')
+                # if woriking on a country with multi-polygon (e.g. Morocco), keep only data related to the last admin boundaries
+            if isinstance(config.fn_reference_shape, list):
+                df_act_adm = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_ACTIVE_ADMINS.csv'))
+                act_adm_list = df_act_adm['adm_id'].unique().tolist()
+                stats = stats[stats['adm_id'].isin(act_adm_list)]
+
         # Raw features for ope forecast are stored in a different dir to avoid overwrite of features used for training
         if runType == 'opeForecast':
             raw_features = pd.read_csv(os.path.join(config.ope_run_dir, config.AOI + '_features4scikit.csv'))

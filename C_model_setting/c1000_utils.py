@@ -128,14 +128,18 @@ def add_yield_trend_estimate(yxDatac, ny):
             minYearStats = df.dropna(subset=[yvar])['Year'].min()
             # old: minYearFeats = df.dropna(subset=df.columns[~df.columns.isin(['YieldFromTrend'])].values)['Year'].min()
             minYearFeats = df['YearOfEOS'].min()
-            df.loc[:, df['Year'].tolist()] = df[yvar].values #this is copying yield ts as additional columns
+            df.loc[:, df['Year'].tolist()] = df[yvar].values  # this is copying yield ts as additional columns
             # use different trend if we have more than ny before the first feature data point
             if minYearFeats - minYearStats > ny:
                 # trend estimated with ny years before
-                df.loc[:, 'YieldFromTrend'] = df.apply(trend1, args=(ny, minYearFeats, df['Year'].tolist()), axis=1)
+                try:
+                    df.loc[:, 'YieldFromTrend'] = df.apply(trend1, args=(ny, minYearFeats, df['Year'].tolist()), axis=1)
+                except:
+                    print('here')
             else:
                 # trend estimated using larger time series (left or right)
                 # a = trend2(df.iloc[0], ny, minYearFeats, df['Year'].tolist())
+                # df.loc[:, 'YieldFromTrend'] = df.apply(trend2, args=(ny, minYearFeats, df['Year'].astype(str).tolist()), axis=1)
                 df.loc[:, 'YieldFromTrend'] = df.apply(trend2, args=(ny, minYearFeats, df['Year'].tolist()), axis=1)
             # add the trend to yxDatac
             yxDatac.loc[(yxDatac['Crop_ID'] == c) & (yxDatac['adm_id'] == r), 'YieldFromTrend'] = df['YieldFromTrend']
