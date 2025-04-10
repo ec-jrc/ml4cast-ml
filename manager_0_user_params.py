@@ -11,11 +11,14 @@ runType = 'fast_tuning' #always 'fast_tuning'  when tuning   # this is fixed for
 if 'win' in sys.platform:
     tune_on_condor = False
     # MA multi shp
-    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
-    run_name = 'MA_20250331'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
+    # run_name = 'MA_20250331'
     # ZA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20241226'
+    # ZA con 2024 data
+    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+    run_name = 'ZA2024data_20250410'
     # DZ
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\DZ\DZMultiple_WC-Algeria-ASAP_config.json'
     # run_name = 'DZ_20250131'
@@ -56,7 +59,7 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SD\SDSudan_XXX.json'
     # run_name = 'SD_xx'
 else:
-    # limit multithreat (even setting njobs = 4, undelying libriaries were using more, see https://github.com/joblib/joblib/issues/793)
+    # limit multithread (even setting njobs = 4, undelying libriaries were using more, see https://github.com/joblib/joblib/issues/793)
     os.environ['MKL_NUM_THREADS'] = '1'
     os.environ['OPENBLAS_NUM_THREADS'] = '1'
     os.environ['OMP_NUM_THREADS'] = '1'
@@ -94,10 +97,11 @@ time_step_check = 60
 metric = 'RMSE_val'
 # ml models to rerun after fust tuning (obsrvation show that the best model found by standard tuning is within the first 10 found by fast tuning)
 n = 20
-#############################
-# 3.Specification for ope run (runType = 'opeForecast')
-#############################
-# month X means that all months up to X (included) are used, so this is possible in month X+1
-forecastingMonth = 5 # 7
-# This year
-forecastingYear = 2024 #2023
+# the param below are moved to the ope configuration file
+# #############################
+# # 3.Specification for ope run (runType = 'opeForecast')
+# #############################
+# # month X means that all months up to X (included) are used, so this is possible in month X+1
+# forecastingMonth = 5 # 7
+# # This year
+# forecastingYear = 2024 #2023

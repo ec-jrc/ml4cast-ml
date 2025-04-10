@@ -62,8 +62,8 @@ def AU_error(b1, config, outputDir):
         else:
             fn_spec = os.path.join(config.models_spec_dir, str(myID) + '_' + row['Crop'] + '_' + row['Estimator'] + '.json')
             mRes = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
-        # # if there was a crop_au_exclusions remove results (they are there for benchmark) as they would mess up the
-        # # comparison with hydrid model
+        # # if there was a crop_au_exclusions remove results (they are there for benchmark) as they would
+        # # perform very badly
         if bool(config.crop_au_exclusions):
             if row['Crop'] in config.crop_au_exclusions.keys():
                 # print(row['Estimator'])

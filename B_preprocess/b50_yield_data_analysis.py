@@ -156,8 +156,7 @@ def saveYieldStats(config, prct2retain=100):
     if isinstance(config.fn_reference_shape, list):
         regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
         # We are in Marocco-like case, differnt boundaries over time.
-        # In this case the shp id "adm_id" does not match the one of stats
-        # that reports the sh id in Adjusted_jrc_id_in_shp
+        # In this case the shp id "adm_id" does not match the one of stats, that reports the sh id in Adjusted_jrc_id_in_shp
         # Here I change the shp id using regNames and
         # I have to manage that one Adjusted_jrc_id_in_shp may be needed by multiple stats ids
         # Create a lookup table with unique couples of adm_id and Adjusted_jrc_id_in_shp

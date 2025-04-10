@@ -20,7 +20,7 @@ if __name__ == '__main__':
     different dir that can be updated and to avoid overwrite of features used for training (OpeForecast_data under root dir
     specified in config file).
     The script first refit the best model pipeline on all available years and then make the forecast.
-    The best model (can be also benchmark model is selected by crop and admin unit
+    The best model (can be also benchmark model is selected by crop and admin unit)
     '''
     pd.set_option('display.width', 5000)
     pd.set_option('display.max_columns', None)
@@ -30,8 +30,9 @@ if __name__ == '__main__':
     config_fn = upar.config_fn
     run_name = upar.run_name
     metric_for_model_selection = upar.metric
-    forecastingMonth = upar.forecastingMonth  # month X means that all months up to X (included) are used, so this is possible in month X+1
-    forecastingYear = upar.forecastingYear  # This year refer to time of EOS
+    config_ope = a10_config.read_ope(config_fn)
+    forecastingMonth = config_ope.forecastingMonth  # month X means that all months up to X (included) are used, so this is possible in month X+1
+    forecastingYear = config_ope.Year  # This year refer to time of EOS
     tune_on_condor = upar.tune_on_condor
     # END OF USER PARAMS
     ##########################################################################################
@@ -103,6 +104,7 @@ if __name__ == '__main__':
                 forecaster = d100_modeller.YieldModeller(uset)
                 # preprocess data according to specs
                 X, y, groups, feature_names, adm_ids = forecaster.preprocess(config, runType)
+
                 # X, y, groups extend beyond the years for which I have yield data (at least one year more, the year being forecasted):
                 # the years used for training (from year_start to year_end) in the config json.
                 # Here I split X, y in two set, the fitting and the forecasting one.

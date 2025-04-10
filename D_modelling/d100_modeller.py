@@ -52,7 +52,9 @@ class DataMixin:
         stats = stats.groupby(['adm_id', 'Crop_ID']).filter(lambda x: x['Yield'].notna().any())
         # add empty record when there are no records
         # if working on a ML model and there is some crop-au combination to exclude, do it here upfront
-        if not(self.uset['algorithm'] == 'Null_model' or self.uset['algorithm'] == 'Trend' or self.uset['algorithm'] == 'PeakNDVI'):
+        # do the same if I am in ope (the au error is not computed (they have in general very bad accuracy))
+        if not(self.uset['algorithm'] == 'Null_model' or self.uset['algorithm'] == 'Trend' or
+               self.uset['algorithm'] == 'PeakNDVI') or runType == 'opeForecast':
             if bool(config.crop_au_exclusions):
                 for key_crop, value_au_list in config.crop_au_exclusions.items():
                     for value_au in value_au_list:
@@ -175,7 +177,7 @@ class DataMixin:
                     exit()
 
                 # Perform data reduction if requested (PCA)
-                # Only on NDVI, RAD, Temp (precipitation, sm are excluded)
+                # Only on NDVI, RAD, Temp (precipitation, sm are excluded in therory but it is in)
                 if self.uset['data_reduction'] == 'PCA':
                     X, feature_names = d105_PCA_on_features.getPCA(self, feature_names, X)
                 # Perform One-Hot Encoding for AU if requested

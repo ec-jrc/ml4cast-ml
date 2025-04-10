@@ -42,6 +42,8 @@ def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, runI
                                 'avg_obs_yield_last5yrs': np.nan,
                                 'min_obs_yield': np.nan,
                                 'max_obs_yield': np.nan,
+                                '10percentile_obs_yield': np.nan,
+                                '90percentile_obs_yield': np.nan,
                                 'fyield_diff_pct (last 5 yrs in data avail)': np.nan,
                                 'avg_obs_area_last5yrs': np.nan,
                                 'fproduction(fyield*avg_obs_area_last5yrs)': np.nan,
@@ -61,7 +63,10 @@ def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, runI
         stats_region = stats[stats['adm_id'] == region].sort_values(by=['Year'])
         defAuError_region = defAuError[defAuError['adm_id'] == region]
         fyield_region = df_forecast.loc[df_forecast['adm_id'] == region, 'fyield'].values
+        # try:
         df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_rRMSEp_prct_hindcasting'] = defAuError_region.rrmse_prct.values[0]
+        # except:
+        #     print('debug tru f110 line 67')
         df_forecast.loc[df_forecast['adm_id'] == region, 'adm_id'] = stats_region.iloc[0]['adm_id']
         df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_percentile'] = \
             percentile_below(stats_region['Yield'], fyield_region)
@@ -73,6 +78,8 @@ def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, runI
         df_forecast.loc[df_forecast['adm_id'] == region, 'avg_obs_yield_last5yrs'] = stats_region['Yield'][-5::].mean() #avg_obs_yield_last5yrs
         df_forecast.loc[df_forecast['adm_id'] == region, 'min_obs_yield'] = stats_region['Yield'].min()
         df_forecast.loc[df_forecast['adm_id'] == region, 'max_obs_yield'] = stats_region['Yield'].max()
+        df_forecast.loc[df_forecast['adm_id'] == region, '10percentile_obs_yield'] = np.percentile(stats_region['Yield'],10)
+        df_forecast.loc[df_forecast['adm_id'] == region, '90percentile_obs_yield'] = np.percentile(stats_region['Yield'], 90)
         df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_diff_pct (last 5 yrs in data avail)'] = \
             100 * ((fyield_region - stats_region['Yield'][-5::].mean()) / stats_region['Yield'][-5::].mean()  )  # ADDED LAST 5 YEARS
         df_forecast.loc[df_forecast['adm_id'] == region, 'avg_obs_area_last5yrs'] = stats_region['Area'][-5::].mean()
@@ -103,7 +110,7 @@ def combine_models(fns):
     # get best by admin
     df_best = df.loc[df.groupby('adm_id')['fyield_rRMSEp_prct_hindcasting'].idxmin()]
 
-    # adjust high low est
+    # adjust high low est that are below or above 0.1 and 0.9 perct
     df_conservative_estimates = df.iloc[:0]
     list_replace = []
     for adm_id in df['adm_id'].unique():
@@ -137,13 +144,31 @@ def combine_models(fns):
                 list_replace.append('best')
     df_conservative_estimates['Consolidation_log'] = list_replace
 
-    # I have the df_conservative_estimates, now check that estimates do not exceed min max
+    # I have the df_conservative_estimates, now check that estimates do not exceed min max, for percetmile
+    use = 'percentiles' # 'minmax' or 'percentiles'
+
     # min
-    mask = df_conservative_estimates['fyield'] < df_conservative_estimates['min_obs_yield']
+    if use == 'minmax':
+        column_low = 'min_obs_yield'
+        column_high = 'max_obs_yield'
+    elif use == 'percentiles':
+        column_low = '10percentile_obs_yield'
+        column_high = '90percentile_obs_yield'
+    else:
+        exit('use not defined')
+    mask = df_conservative_estimates['fyield'] < df_conservative_estimates[column_low]
     if len(df_conservative_estimates[mask]) > 0:
         # replace estimate with max
-        df_conservative_estimates.loc[mask, 'fyield'] = df_conservative_estimates[mask]['min_obs_yield']
-        df_conservative_estimates.loc[mask, 'fyield_percentile'] = 1
+        df_conservative_estimates.loc[mask, 'fyield'] = df_conservative_estimates[mask][column_low]
+        if use == 'minmax':
+            df_conservative_estimates.loc[mask, 'fyield_percentile'] = 0
+            df_conservative_estimates.loc[mask, 'Consolidation_log'] = 'fyield < min, reset to min'
+        elif use == 'percentiles':
+            df_conservative_estimates.loc[mask, 'fyield_percentile'] = df_conservative_estimates[mask][column_low]
+            df_conservative_estimates.loc[mask, 'Consolidation_log'] = 'fyield < 10percentile, reset to 10percentile'
+        else:
+            exit('use not defined')
+
         df_conservative_estimates.loc[mask, 'fyield_diff_pct (last 5 yrs in data avail)'] = \
             100 * (df_conservative_estimates[mask]['fyield'] - df_conservative_estimates[mask]['avg_obs_yield_last5yrs']) / \
             df_conservative_estimates[mask]['avg_obs_yield_last5yrs']
@@ -151,18 +176,26 @@ def combine_models(fns):
                                                                              df_conservative_estimates[mask][
                                                                                  'avg_obs_area_last5yrs']
         df_conservative_estimates.loc[mask, 'fproduction_percentile'] = np.nan
-        df_conservative_estimates.loc[mask, 'Consolidation_log'] = 'fyield < min, reset to min'
+
     # max
-    mask = df_conservative_estimates['fyield'] > df_conservative_estimates['max_obs_yield']
+    mask = df_conservative_estimates['fyield'] > df_conservative_estimates[column_high]
     if len(df_conservative_estimates[mask]) > 0:
         # replace estimate with max
-        df_conservative_estimates.loc[mask, 'fyield'] = df_conservative_estimates[mask]['max_obs_yield']
+        df_conservative_estimates.loc[mask, 'fyield'] = df_conservative_estimates[mask][column_high]
+        if use == 'minmax':
+            df_conservative_estimates.loc[mask, 'fyield_percentile'] = 1
+            df_conservative_estimates.loc[mask, 'Consolidation_log'] = 'fyield > max, reset to max'
+        elif use == 'percentiles':
+            df_conservative_estimates.loc[mask, 'fyield_percentile'] = df_conservative_estimates[mask][column_high]
+            df_conservative_estimates.loc[mask, 'Consolidation_log'] = 'fyield > 90percentile, reset to 90percentile'
+        else:
+            exit('use not defined')
         df_conservative_estimates.loc[mask, 'fyield_percentile'] = 1
         df_conservative_estimates.loc[mask, 'fyield_diff_pct (last 5 yrs in data avail)'] = \
             100 * (df_conservative_estimates[mask]['fyield'] - df_conservative_estimates[mask]['avg_obs_yield_last5yrs']) / df_conservative_estimates[mask]['avg_obs_yield_last5yrs']
         df_conservative_estimates.loc[mask, 'fproduction(fyield*avg_obs_area_last5yrs)'] = df_conservative_estimates[mask]['fyield'] * df_conservative_estimates[mask]['avg_obs_area_last5yrs']
         df_conservative_estimates.loc[mask, 'fproduction_percentile'] =  np.nan
-        df_conservative_estimates.loc[mask, 'Consolidation_log'] = 'fyield > max, reset to max'
+
 
     return df_best, df_conservative_estimates
 

@@ -7,6 +7,20 @@ import json
 import sys
 from datetime import datetime
 
+class read_ope:
+  def __init__(self, full_path_config):
+    # Get the path
+    path = os.path.dirname(full_path_config)
+    # Get the base name and extension
+    base_name = os.path.basename(full_path_config)
+    extension = os.path.splitext(base_name)[1]
+    base_name_no_ext = os.path.splitext(base_name)[0]
+    full_path_config = os.path.join(path, base_name_no_ext + '_ope' + extension)
+    with open(full_path_config, 'r') as fp:
+        jdict = json.load(fp)
+    # month X means that all months up to X (included) are used, so this is possible in month X+1
+    self.forecastingMonth = int(jdict['forecastingMonth'])
+    self.Year = int(jdict['Year'])
 
 class read:
   def __init__(self, full_path_config, run_name, run_type=None):

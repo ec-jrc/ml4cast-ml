@@ -30,7 +30,7 @@ def barDfColumn(x, df, df_col_value, xticks, ylabel, crop_name, ax, sf_col_SD=No
 
 
 def mapDfColumn(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_merge_col, gdf_gaul0_column, gdf_gaul0_name,
-                lbl, cmap='tab20b', minmax=None, fn_fig=None, ax=None):
+                lbl, cmap='tab20b', minmax=None, fn_fig=None, ax=None, dropna=False):
     """
     df: the data pandas df
     df_merge_col: the column name used to merge with geopandas df
@@ -42,6 +42,7 @@ def mapDfColumn(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_merge
     gdf_gaul0_name: the name of the gaul0 unit of interest (may be different from the one in the df)
     lbl: label for the legen
     fn_fig: full path to output figure
+    dropna: if True, drops rows with missing 'geometry' values
     """
     # join df with gdf
     gdf = gdf[gdf[gdf_gaul0_column] == gdf_gaul0_name]
@@ -67,6 +68,8 @@ def mapDfColumn(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_merge
                 vmin=vmin, vmax=vmax, cmap=cmap) # tab20b
     # Add Labels (only plotted regions)
     #merged = merged[merged['Crop_name|first'] == c]
+    if dropna:
+        merged = merged.dropna(subset=['geometry'])
     merged['coords'] = merged['geometry'].apply(lambda x: x.representative_point().coords[:])
     merged['coords'] = [coords[0] for coords in merged['coords']]
     for idx, row in merged.iterrows():
@@ -164,7 +167,8 @@ def mapDfColumn2Ax(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_me
 
 def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0', adminID_column_name_in_shp_file = 'asap1_id', prct2retain=100):
     dir2use = os.path.join(config.data_dir, 'Label_analysis' + str(prct2retain))
-    if len(fn_shape_gaul1)==1:
+    if not isinstance(config.fn_reference_shape, list):
+    # if len(fn_shape_gaul1)==1:
         gdf_gaul1_id = adminID_column_name_in_shp_file
         df_gaul1_id = "adm_id|"
         gdf_gaul0_name = country_name_in_shp_file
@@ -228,75 +232,102 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
             fig.savefig(fn_fig)  # , dpi = 300)
             plt.close(fig)
     else:
-        # multiple shp to be used (e.g. Marocco)
-        # gdf_gaul1_id = adminID_column_name_in_shp_file
-        df_gaul1_id = "adm_id|"
-        # gdf_gaul0_name = country_name_in_shp_file
+        # Multiple shapefiles to be used (e.g. Morocco)
+        gdf_gaul1_id = adminID_column_name_in_shp_file
+        df_gaul1_id = adminID_column_name_in_shp_file
+        gdf_gaul0_name = country_name_in_shp_file
 
         units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
         area_unit = units['Area'].values[0]
         yield_unit = units['Yield'].values[0]
-        # https://towardsdatascience.com/a-beginners-guide-to-create-a-cloropleth-map-in-python-using-geopandas-and-matplotlib-9cc4175ab630
+
+        # Loop through all shapefiles in fn_shape_gaul1
         for shp in fn_shape_gaul1:
-            # load shp
+            # Load shapefile
             fp = shp
             gdf = gpd.read_file(fp)
-            # load stats
-            LTstats = pd.read_csv(os.path.join(dir2use, config.AOI + '_LTstats_retainPRCT' + str(prct2retain) + '.csv'))
+
+            # Load statistics
+            LTstats = pd.read_csv(
+                os.path.join(dir2use, config.AOI + '_LTstats_retainPRCT' + str(prct2retain) + '.csv'))
+
+            # Load regions
+            regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
+            lookup_table = regNames[['adm_id', 'Adjusted_jrc_id_in_shp']].drop_duplicates()
+
+            # Perform left join and overwrite LTstats
+            LTstats = pd.merge(LTstats, lookup_table, left_on='adm_id|', right_on='adm_id', how='left')
+            LTstats = LTstats.rename(columns={'Adjusted_jrc_id_in_shp': gdf_gaul1_id})
+
             uniqueCrops = LTstats['Crop_name|first'].unique()
 
-            # loop on crops
+            # Loop through all crops
             for c in uniqueCrops:
-                tmp = 0
-                # statsCrop = LTstats[LTstats['Crop_name|first'] == c]
-                # fig, axs = plt.subplots(2, 3, figsize=(15, 10))
-                # axs = axs.flatten()
-                # # Yield|count (valid obs)
-                # lbl = c + ' Number of valida yield data'
-                #
-                # mapDfColumn(statsCrop, df_gaul1_id, 'Yield|count', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
-                #             gdf_gaul0_name, lbl, cmap='tab20b', fn_fig=None, ax=axs[0])
-                # # Percent crop area
-                # lbl = c + ' % of national crop area in the adm. unit'
-                # mapDfColumn(statsCrop, df_gaul1_id, 'Crop_perc_area|', 'adm_name|first', gdf, gdf_gaul1_id,
-                #             gdf_gaul0_column,
-                #             gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[1], minmax=[0, 100])
-                # # % national production
-                # lbl = c + ' % national production'
-                # mapDfColumn(statsCrop, df_gaul1_id, 'Crop_perc_production|', 'adm_name|first', gdf, gdf_gaul1_id,
-                #             gdf_gaul0_column,
-                #             gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[2], minmax=[0, 100])
-                # # Total production
-                # if area_unit == 'ha' and yield_unit == 't/ha':
-                #     divider = 1000
-                # elif area_unit == 'ha' and yield_unit == 'kg/ha':
-                #     divider = 1000000
-                # else:
-                #     print('Measurement units not foreseen')
-                #     exit()
-                # statsCrop.loc[:, 'Production|mean'] = statsCrop.loc[:, 'Production|mean'] / divider
-                # lbl = c + ' production  [kt]'
-                # mapDfColumn(statsCrop, df_gaul1_id, 'Production|mean', 'adm_name|first', gdf, gdf_gaul1_id,
-                #             gdf_gaul0_column, gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[3])
-                # # Total area
-                # if area_unit == 'ha':
-                #     divider = 100
-                # else:
-                #     print('Measurement units not foreseen')
-                #     exit()
-                # statsCrop.loc[:, 'Area|mean'] = statsCrop.loc[:, 'Area|mean'] / divider
-                # lbl = c + ' area [km^2]'  # lbl = r'${\rm \/ Area \/ (1000 km^2)}$'
-                # mapDfColumn(statsCrop, df_gaul1_id, 'Area|mean', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
-                #             gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[4])
-                # # yield
-                # lbl = c + ' Yield'
-                # mapDfColumn(statsCrop, df_gaul1_id, 'Yield|mean', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
-                #             gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[5])
-                #
-                # fn_fig = os.path.join(dir2use, config.AOI + '_map_' + c + str(prct2retain) + '.png')
-                # fig.tight_layout()
-                # fig.savefig(fn_fig)  # , dpi = 300)
-                # plt.close(fig)
+                statsCrop = LTstats[LTstats['Crop_name|first'] == c]
+                fig, axs = plt.subplots(2, 3, figsize=(15, 10))
+                axs = axs.flatten()
+
+                # Yield|count (valid obs)
+                lbl = c + ' Number of valid yield data'
+                mapDfColumn(statsCrop, df_gaul1_id, 'Yield|count', 'adm_name|first', gdf, gdf_gaul1_id,
+                            gdf_gaul0_column,
+                            country_name_in_shp_file, lbl, cmap='tab20b', fn_fig=None, ax=axs[0], dropna=True)
+
+                # Percent crop area
+                lbl = c + ' % of national crop area in the adm. unit'
+                mapDfColumn(statsCrop, df_gaul1_id, 'Crop_perc_area|', 'adm_name|first', gdf, gdf_gaul1_id,
+                            gdf_gaul0_column,
+                            country_name_in_shp_file, lbl, cmap='YlGn', fn_fig=None, ax=axs[1], minmax=[0, 100],
+                            dropna=True)
+
+                # % national production
+                lbl = c + ' % national production'
+                mapDfColumn(statsCrop, df_gaul1_id, 'Crop_perc_production|', 'adm_name|first', gdf, gdf_gaul1_id,
+                            gdf_gaul0_column,
+                            country_name_in_shp_file, lbl, cmap='YlGn', fn_fig=None, ax=axs[2], minmax=[0, 100],
+                            dropna=True)
+
+                # Total production
+                if area_unit == 'ha' and yield_unit == 't/ha':
+                    divider = 1000
+                elif area_unit == 'ha' and yield_unit == 'kg/ha':
+                    divider = 1000000
+                else:
+                    print('Measurement units not foreseen')
+                    exit()
+                statsCrop.loc[:, 'Production|mean'] = statsCrop.loc[:, 'Production|mean'] / divider
+                lbl = c + ' production [kt]'
+                mapDfColumn(statsCrop, df_gaul1_id, 'Production|mean', 'adm_name|first', gdf, gdf_gaul1_id,
+                            gdf_gaul0_column,
+                            country_name_in_shp_file, lbl, cmap='YlGn', fn_fig=None, ax=axs[3],
+                            dropna=True)
+
+                # Total area
+                if area_unit == 'ha':
+                    divider = 100
+                else:
+                    print('Measurement units not foreseen')
+                    exit()
+                statsCrop.loc[:, 'Area|mean'] = statsCrop.loc[:, 'Area|mean'] / divider
+                lbl = c + ' area [km^2]'
+                mapDfColumn(statsCrop, df_gaul1_id, 'Area|mean', 'adm_name|first', gdf, gdf_gaul1_id,
+                            gdf_gaul0_column,
+                            country_name_in_shp_file, lbl, cmap='YlGn', fn_fig=None, ax=axs[4],
+                            dropna=True)
+
+                # Yield
+                lbl = c + ' Yield'
+                mapDfColumn(statsCrop, df_gaul1_id, 'Yield|mean', 'adm_name|first', gdf, gdf_gaul1_id,
+                            gdf_gaul0_column,
+                            country_name_in_shp_file, lbl, cmap='YlGn', fn_fig=None, ax=axs[5],
+                            dropna=True)
+
+                # Save figure for the current crop and shapefile
+                fn_fig = os.path.join(dir2use, config.AOI + '_map_' + c + '_' + os.path.basename(shp) + str(
+                    prct2retain) + '.png')
+                fig.tight_layout()
+                fig.savefig(fn_fig)
+                plt.close(fig)
 def trend_anlysis(config, prct2retain=100):
     # test significance
     alpha = 0.01

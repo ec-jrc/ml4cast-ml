@@ -164,7 +164,7 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
     b4.to_csv(analysisOutputDir + '/' + 'all_model_best4.csv', index=False)
 
     # and absolute ML best (plus benchmarks)
-    # get best 4 ML configurations by lead time, crop type and y var PLUS benchmarks
+
     moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
     b1ML = moML.groupby(['Crop', var4time]).apply(
         lambda x: x.sort_values([metric2use], ascending=sortAscending).head(1)).reset_index(drop=True)
