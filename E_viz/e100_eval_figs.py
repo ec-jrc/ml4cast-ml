@@ -89,8 +89,29 @@ def AU_error(b1, config, outputDir):
 
         dfAU = pd.concat([dfAU, rRMSE_pByAdmin])
     dfAU.to_csv(os.path.join(outputDir, 'all_model_best1_AU_error.csv'))
-    # test plot
     crops = dfAU['Crop'].unique()
+    # exclude country based on rRMSEp threshold on the first forecast
+    if True:
+        rrmse_prct_threshold = 50
+        first_forecast_time = dfAU['forecast_time'].min()
+        dfExc = dfAU.loc[dfAU['forecast_time'] == first_forecast_time, :]
+        stringOut = '"crop_au_exclusions": {'
+        for crop in crops:
+            dfExcCrop = dfExc[dfExc['Crop'] == crop].copy()
+            # keep ML only
+            dfExcCrop = dfExcCrop[~dfExcCrop['Estimator'].isin(['Trend', 'PeakNDVI', 'Null_model'])]
+            dfExcCrop = dfExcCrop[dfExcCrop['rrmse_prct'] > rrmse_prct_threshold]
+            # out: "crop_au_exclusions": {"Sunflower": ["Northern Cape"]},
+            lst2excl = dfExcCrop['adm_name'].unique().tolist()
+            s = '[' + ', '.join(
+                '"' + elem + '"' for elem in
+                lst2excl) + ']'
+            stringOut = stringOut + '"' + crop + '": ' + s + ", "
+        #remove final comma and finalize the line
+        stringOut = stringOut.rstrip(', ') + "}"
+        with open(os.path.join(outputDir, 'rRMSEpGT' + str(rrmse_prct_threshold) + '_exclusion_string.txt'), "w") as file:
+            file.write(stringOut)
+    # Plot
     for crop in crops:
         dfAUc = dfAU[dfAU['Crop'] == crop].copy()
         forcTime = dfAUc["forecast_time"].unique()

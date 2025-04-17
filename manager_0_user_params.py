@@ -17,8 +17,8 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20241226'
     # ZA con 2024 data
-    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-    run_name = 'ZA2024data_20250410'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+    # run_name = 'ZA_20250410'
     # DZ
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\DZ\DZMultiple_WC-Algeria-ASAP_config.json'
     # run_name = 'DZ_20250131'
@@ -39,25 +39,33 @@ if 'win' in sys.platform:
     # run_name = 'MW_per_476'
     # SO Somalia Gu Agropastoral
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuAgrop\SOGuAgrop_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
-    # run_name = 'SOGuAgrop_test'
+    # run_name = 'SOGuAgrop_20250403'
     # SO Somalia Gu Riverine
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuRiver\SOGuRiver_Somalia_Maize_irrigated-Somalia-HARVESTAT_config.json'
-    # run_name = 'SOGuRiver_test'
+    #config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuRiver\SOGuRiver_Somalia_Maize_irrigated-Somalia-HARVESTAT_config.json'
+    # SO Somalia Gu Riverine with exclusions
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuRiver\SOGuRiver_Somalia_Maize_irrigated-Somalia-HARVESTAT_config_exclusions.json'
+    # run_name = 'SOGuRiver_20250414'
     # # SO Somalia Deyr Agropastoral
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SODeyrAgrop\SODeyrAgrop_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
-    # run_name = 'SODeyrAgrop_test'
+    # run_name = 'SODeyrAgrop_20250404'
     # # SO Somalia Deyr River
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SODeyrRiver\SODeyrRiver_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
-    # run_name = 'SODeyrRiver_test'
+    # run_name = 'SODeyrRiver_20250404'
     # Morocco
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
     # # run_name = 'MO_20250213'
-    # SD Sudan ASAP
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SD\SDSudan_XXX.json'
-    # run_name = 'SD_xx'
+    # SD Sudan ASAP sorghum millet
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SD\SD_sorghum_millet.json'
+    # run_name = 'SD_test'
+    # NG Nigeria
+    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NG\Wet\NGMaize_(corn)_WC-HARVESTAT_config.json'
+    run_name = 'NG_test'
     # AO Angola
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SD\SDSudan_XXX.json'
     # run_name = 'SD_xx'
+    # TN
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\TN\Winter\TNMultiple_WC-Tunisia-ASAP_config.json'
+    # run_name = 'TN_test'
 else:
     # limit multithread (even setting njobs = 4, undelying libriaries were using more, see https://github.com/joblib/joblib/issues/793)
     os.environ['MKL_NUM_THREADS'] = '1'
