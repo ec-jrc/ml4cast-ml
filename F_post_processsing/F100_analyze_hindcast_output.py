@@ -176,10 +176,52 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
     b1.to_csv(analysisOutputDir + '/' + 'all_model_best1.csv', index=False)
     # compute error at AU level
     b1withAUerror = e100_eval_figs.AU_error(b1, config, analysisOutputDir)
+    # in order to assign the same colors and keep a defined order I have to do have a unique label for all ML models
+    b1withAUerror['tmp_est'] = b1withAUerror['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
+
+
+
+
     # plot scatter of Ml and bechmark, one plot per crop and forecasting time (this function is saving mRes)
     #e100_eval_figs.scatter_plots_and_maps(b1, config, mlsettings, var4time, analysisOutputDir, fn_shape_gaul1,
     e100_eval_figs.scatter_plots_and_maps(b1withAUerror, config, mlsettings, var4time, analysisOutputDir, fn_shape_gaul1,
                                           country_name_in_shp_file, gdf_gaul0_column=gdf_gaul0_column)
+    # add best by admin
+    # take best (whatever, by admin)
+    b1AU = b1withAUerror.copy().reset_index(drop=True)
+    bestByAU = b1AU.loc[b1AU.groupby(['adm_id', 'forecast_time', 'Crop_ID|'])['rmse'].idxmin()]
+    # of this hybrid best, compute avg rrmse_prct and avg rrmse_prct weighted by area
+    # to be comparable with that of the single models, I have to compute it the same way,
+    # through d140_modelStats.allStats_spatial(mRes) and using as mRES the mixture of different models
+    for crop in bestByAU['Crop'].unique():
+        for ft in bestByAU['forecast_time'].unique():
+            hybrid_mRes = pd.DataFrame()
+            cropFtDf = bestByAU.loc[(bestByAU['Crop'] == crop) & (bestByAU['forecast_time'] == ft)]
+            # now for each estimator present, I have to get the corresponding mRES and cherry pick only where it is best
+            for est in cropFtDf['Estimator'].unique():
+                # get admin ids where this est is best
+                admWhreIsBest = cropFtDf[cropFtDf['Estimator'] == est]['adm_id'].to_list()
+                # get run_id
+                runID = cropFtDf.loc[cropFtDf['Estimator'] == est]['runID'].iloc[0]
+                myID = f'{runID:06d}'
+                fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+                                           '_crop_' + crop + '_Yield_' + est + '_mres.csv')
+                mRes = pd.read_csv(fn_mRes_out)
+                mResToRetain = mRes.loc[mRes['adm_id'].isin(admWhreIsBest)]
+                hybrid_mRes = pd.concat([hybrid_mRes, mResToRetain])
+            res = d140_modelStats.allStats_overall(hybrid_mRes)
+            mResWithArea = hybrid_mRes.merge(cropFtDf[['adm_id|', 'Area|mean']], how='left', left_on='adm_id',
+                                             right_on='adm_id|')
+            resw = d140_modelStats.rmse_rrmse_weighed_overall(hybrid_mRes, mResWithArea['Area|mean'])
+            # add it to b1
+            tmp = pd.DataFrame([{'Estimator': 'BestByAdmin', 'tmp_est': 'BestByAdmin', 'rRMSE_p': res['rel_Pred_RMSE'],
+                                 'rRMSE_p_areaWeighted': resw['rel_Pred_RMSE'],
+                                 'forecast_time': ft, 'Crop': crop,
+                                 'forecast_issue_calendar_month': cropFtDf['forecast_issue_calendar_month'].iloc[0],
+                                 'runID': -999}])
+            b1withAUerror = pd.concat([b1withAUerror, tmp], ignore_index=True)
+    # save main statistical indicators indicators in a csv file
+    e100_eval_figs.summary_stats(b1withAUerror, config, 'rRMSE_p', mlsettings, var4time, analysisOutputDir)
     # plot it by forecasting time (simple bars for each forecasting time), mRes is created above
     e100_eval_figs.bars_by_forecast_time2(b1withAUerror, config, 'rRMSE_p', mlsettings, var4time, analysisOutputDir)
     # e100_eval_figs.bars_by_forecast_time(b1, config, metric2use, mlsettings, var4time, analysisOutputDir)

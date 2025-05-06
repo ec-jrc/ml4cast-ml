@@ -142,7 +142,7 @@ def AU_error(b1, config, outputDir):
         text = ''
         if bool(config.crop_au_exclusions):
             if crop in config.crop_au_exclusions.keys():
-                text = ', Omitting: ' + ",".join(config.crop_au_exclusions[crop])
+                text = ', Ml omitting: ' + ",".join(config.crop_au_exclusions[crop])
         plt.suptitle(crop + text)
         plt.tight_layout()
         plt.savefig(os.path.join(outputDir, 'all_model_best1_AU_error_' + crop + '.png'))
@@ -152,39 +152,42 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
     # In this version I compute the rel RMSE by admin (aeach admin with its own mean yield) and then I weight them
     # using area of the last five years (to occount for the fact that larger errors are more tolerable if the area is small)
 
-    # take best (whatever, by admin)
-    b1AU = b1.copy().reset_index(drop=True)
-    bestByAU = b1AU.loc[b1AU.groupby(['adm_id', 'forecast_time', 'Crop_ID|'])['rmse'].idxmin()]
-    # get overall stats (dropping AU duplicated)
+    # get overall stats (dropping AU duplicated, here I have for the same run ID results for each AU, here
+    # I am interested only in overall results, that is the same for all duplicates)
     b1 = b1.drop_duplicates(subset='runID', keep='first')
-    # of this hybrid best, compute avg rrmse_prct and avg rrmse_prct weighted by area
-    # to be comparable with that of the single models, I have to compute it the same way,
-    # through d140_modelStats.allStats_spatial(mRes) and using as mRES the mixture of different models
-    for crop in bestByAU['Crop'].unique():
-        for ft in bestByAU['forecast_time'].unique():
-            hybrid_mRes = pd.DataFrame()
-            cropFtDf = bestByAU.loc[(bestByAU['Crop']==crop) & (bestByAU['forecast_time']==ft)]
-            # now for each estimator present, I have to get the corresponding mRES and cherry pick only where it is best
-            for est in cropFtDf['Estimator'].unique():
-                # get admin ids where this est is best
-                admWhreIsBest = cropFtDf[cropFtDf['Estimator']==est]['adm_id'].to_list()
-                # get run_id
-                runID = cropFtDf.loc[cropFtDf['Estimator']==est]['runID'].iloc[0]
-                myID = f'{runID:06d}'
-                fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
-                                           '_crop_' + crop + '_Yield_' + est + '_mres.csv')
-                mRes = pd.read_csv(fn_mRes_out)
-                mResToRetain = mRes.loc[mRes['adm_id'].isin(admWhreIsBest)]
-                hybrid_mRes = pd.concat([hybrid_mRes, mResToRetain])
-            res = d140_modelStats.allStats_overall(hybrid_mRes)
-            mResWithArea = hybrid_mRes.merge(cropFtDf[['adm_id|', 'Area|mean']], how='left', left_on='adm_id',
-                                      right_on='adm_id|')
-            resw = d140_modelStats.rmse_rrmse_weighed_overall(hybrid_mRes, mResWithArea['Area|mean'])
-            # add it to b1
-            tmp = pd.DataFrame([{'Estimator': 'BestByAdmin', 'tmp_est': 'BestByAdmin','rRMSE_p': res['rel_Pred_RMSE'],
-                                 'rRMSE_p_areaWeighted': resw['rel_Pred_RMSE'],
-                                 'forecast_time': ft, 'Crop': crop, 'forecast_issue_calendar_month': cropFtDf['forecast_issue_calendar_month'].iloc[0]}])
-            b1 = pd.concat([b1, tmp], ignore_index=True)
+
+    # # take best (whatever, by admin)
+    # b1AU = b1.copy().reset_index(drop=True)
+    # bestByAU = b1AU.loc[b1AU.groupby(['adm_id', 'forecast_time', 'Crop_ID|'])['rmse'].idxmin()]
+    #
+    # # of this hybrid best, compute avg rrmse_prct and avg rrmse_prct weighted by area
+    # # to be comparable with that of the single models, I have to compute it the same way,
+    # # through d140_modelStats.allStats_spatial(mRes) and using as mRES the mixture of different models
+    # for crop in bestByAU['Crop'].unique():
+    #     for ft in bestByAU['forecast_time'].unique():
+    #         hybrid_mRes = pd.DataFrame()
+    #         cropFtDf = bestByAU.loc[(bestByAU['Crop']==crop) & (bestByAU['forecast_time']==ft)]
+    #         # now for each estimator present, I have to get the corresponding mRES and cherry pick only where it is best
+    #         for est in cropFtDf['Estimator'].unique():
+    #             # get admin ids where this est is best
+    #             admWhreIsBest = cropFtDf[cropFtDf['Estimator']==est]['adm_id'].to_list()
+    #             # get run_id
+    #             runID = cropFtDf.loc[cropFtDf['Estimator']==est]['runID'].iloc[0]
+    #             myID = f'{runID:06d}'
+    #             fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
+    #                                        '_crop_' + crop + '_Yield_' + est + '_mres.csv')
+    #             mRes = pd.read_csv(fn_mRes_out)
+    #             mResToRetain = mRes.loc[mRes['adm_id'].isin(admWhreIsBest)]
+    #             hybrid_mRes = pd.concat([hybrid_mRes, mResToRetain])
+    #         res = d140_modelStats.allStats_overall(hybrid_mRes)
+    #         mResWithArea = hybrid_mRes.merge(cropFtDf[['adm_id|', 'Area|mean']], how='left', left_on='adm_id',
+    #                                   right_on='adm_id|')
+    #         resw = d140_modelStats.rmse_rrmse_weighed_overall(hybrid_mRes, mResWithArea['Area|mean'])
+    #         # add it to b1
+    #         tmp = pd.DataFrame([{'Estimator': 'BestByAdmin', 'tmp_est': 'BestByAdmin','rRMSE_p': res['rel_Pred_RMSE'],
+    #                              'rRMSE_p_areaWeighted': resw['rel_Pred_RMSE'],
+    #                              'forecast_time': ft, 'Crop': crop, 'forecast_issue_calendar_month': cropFtDf['forecast_issue_calendar_month'].iloc[0]}])
+    #         b1 = pd.concat([b1, tmp], ignore_index=True)
 
     # def calculate_averages(group):
     #     standard_avg = group['rrmse_prct'].mean()  # Standard average
@@ -229,7 +232,7 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
             text = ''
             if bool(config.crop_au_exclusions):
                 if crop in config.crop_au_exclusions.keys():
-                    text = ', Omitting: ' + ",".join(config.crop_au_exclusions[crop])
+                    text = ', ML omitting: ' + ",".join(config.crop_au_exclusions[crop])
             axs[0, ax_c].set_title(crop + text)
             axs[0, ax_c].set(ylim=(0, ymax * 1.1))
             axs[0, ax_c].set(xlabel='')
@@ -269,7 +272,110 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
             text = ''
             if bool(config.crop_au_exclusions):
                 if crop in config.crop_au_exclusions.keys():
-                    text = ', Omitting: ' + ",".join(config.crop_au_exclusions[crop])
+                    text = ', ML omitting: ' + ",".join(config.crop_au_exclusions[crop])
+            axs[1, ax_c].set_title(crop + text)
+            axs[1, ax_c].set(ylim=(0, ymax * 1.1))
+            axs[1, ax_c].set(xlabel='')
+            ax_c = ax_c + 1
+        if len(crops) == 1:
+            axs[0, 1].remove()
+            axs[1, 1].remove()
+        # h, l = p.get_legend_handles_labels()
+        # plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+        # fig.text(0.90, 0.775, 'Average of', ha='left')
+        # fig.text(0.90, 0.755, 'admin-level error', ha='left')
+        # fig.text(0.90, 0.275, 'Crop-area weighted', ha='left')
+        # fig.text(0.90, 0.255, 'average of', ha='left')
+        # fig.text(0.90, 0.235, 'admin-level error', ha='left')
+        fig.text(0.90, 0.775, 'rRMSE', ha='left')
+
+        fig.text(0.90, 0.275, 'Crop-area weighted', ha='left')
+        fig.text(0.90, 0.255, 'rRMSE', ha='left')
+
+        plt.tight_layout()
+        #get forecastingPrct from t (forecastingMonths)
+        forecastingPrct = config.forecastingPrct[config.forecastingMonths.index(t)]
+        fig_name = outputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '_all_crops_performances.png'
+        plt.savefig(fig_name)
+        plt.close(fig)
+
+def summary_stats(b1, config, metric2use, mlsettings, var4time, outputDir):
+    # compute summary stats for hindcasting
+
+    # get overall stats (dropping AU duplicated, here I have for the same run ID results for each AU, here
+    # I am interested only in overall results, that is the same for all duplicates)
+    b1_overall = b1.drop_duplicates(subset='runID', keep='first').copy()
+    for t in b1[var4time].unique():
+        # get forecast % forecast_issue_calendar_month
+        # forecastingPrct = config.forecastingPrct[config.forecastingMonths.index(t)]
+        forecast_issue_calendar_month = calendar.month_abbr[b1[b1[var4time] == t]['forecast_issue_calendar_month'].iloc[0]]
+        crops = b1['Crop'].unique()
+        # get % area anlysed
+        for crop in crops:
+            # in order to assign the same colors I have to do some workaround
+            tmp = b1[(b1[var4time] == t) & (b1['Crop'] == crop)].copy()
+            # sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
+            sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3, 'BestByAdmin': 4}
+            tmp['pltOrder'] = tmp['tmp_est'].map(sort_dict)
+            tmp = tmp.sort_values('pltOrder')
+            # get area weigthed rRMSE
+            # tmp = areaWeighted_rRMSE(tmp, df_regNames, df_Stats)
+            p = sns.barplot(tmp, x="tmp_est", y=metric2use, hue="tmp_est",
+                            palette=colors, ax=axs[0, ax_c], dodge=False, width=0.4, legend="full")
+            # axs[0, ax_c].set_position([axs[0, ax_c].get_position().x0, axs[0, ax_c].get_position().y0 * 0.8,
+            #                            axs[0, ax_c].get_position().width, axs[0, ax_c].get_position().height * 0.8])
+            ml_row = tmp[tmp['tmp_est'] == 'ML']
+            [info_string0, info_string1, info_string2, info_string3] = output_row_to_ML_info_string(ml_row, metric2use)
+            posx = 0.7 # was 0.875 before bestbyadmin
+            axs[0, ax_c].text(posx, -0.1, metric2use + ' = ' + info_string0, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
+            axs[0, ax_c].text(posx, -0.14, info_string1, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
+            axs[0, ax_c].text(posx, -0.18, info_string2, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
+            axs[0, ax_c].text(posx, -0.22, info_string3, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
+            axs[0, ax_c].get_legend().set_visible(False)
+            text = ''
+            if bool(config.crop_au_exclusions):
+                if crop in config.crop_au_exclusions.keys():
+                    text = ', ML omitting: ' + ",".join(config.crop_au_exclusions[crop])
+            axs[0, ax_c].set_title(crop + text)
+            axs[0, ax_c].set(ylim=(0, ymax * 1.1))
+            axs[0, ax_c].set(xlabel='')
+            ax_c = ax_c + 1
+        h, l = p.get_legend_handles_labels()
+        # h, l = axs[0, ax_c-1].get_legend_handles_labels()
+        # plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+        axs[0, ax_c-1].legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+        ax_c = 0
+        # Second row fo area weighted
+
+        for crop in crops:
+            # in order to assign the same colors I have to do some workaround
+            tmp = b1[(b1[var4time] == t) & (b1['Crop'] == crop)].copy()
+            sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
+            tmp['pltOrder'] = tmp['tmp_est'].map(sort_dict)
+            tmp = tmp.sort_values('pltOrder')
+            # get area weigthed rRMSE
+            # tmp = areaWeighted_rRMSE(tmp, df_regNames, df_Stats)
+            p = sns.barplot(tmp, x="tmp_est", y='rRMSE_p_areaWeighted', hue="tmp_est",
+                            palette=colors, ax=axs[1, ax_c], dodge=False, width=0.4, legend="full")
+            # axs[1, ax_c].set_position([axs[1, ax_c].get_position().x0, axs[1, ax_c].get_position().y0 * 0.8,
+            #                            axs[1, ax_c].get_position().width, axs[1, ax_c].get_position().height * 0.8])
+            ml_row = tmp[tmp['tmp_est'] == 'ML']
+            [info_string0, info_string1, info_string2, info_string3] = output_row_to_ML_info_string(ml_row,
+                                                                                                    metric2use)
+            info_string0 = str(round(ml_row['rRMSE_p_areaWeighted'].values[0], 2))
+            axs[1, ax_c].text(posx, -0.1, 'rRMSE_p_AW' + ' = ' + info_string0, transform=axs[1, ax_c].transAxes,
+                              horizontalalignment='center')
+            axs[1, ax_c].text(posx, -0.14, info_string1, transform=axs[1, ax_c].transAxes,
+                              horizontalalignment='center')
+            axs[1, ax_c].text(posx, -0.18, info_string2, transform=axs[1, ax_c].transAxes,
+                              horizontalalignment='center')
+            axs[1, ax_c].text(posx, -0.22, info_string3, transform=axs[1, ax_c].transAxes,
+                              horizontalalignment='center')
+            axs[1, ax_c].get_legend().set_visible(False)
+            text = ''
+            if bool(config.crop_au_exclusions):
+                if crop in config.crop_au_exclusions.keys():
+                    text = ', ML omitting: ' + ",".join(config.crop_au_exclusions[crop])
             axs[1, ax_c].set_title(crop + text)
             axs[1, ax_c].set(ylim=(0, ymax * 1.1))
             axs[1, ax_c].set(xlabel='')
@@ -297,8 +403,7 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
         plt.close(fig)
 
 def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'): #onfig, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'
-    # in order to assign the same colors and keep a defined order I have to do some workaround
-    b1['tmp_est'] = b1['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
+
     df_regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
     crops = b1['Crop'].unique()
     forcTimes = b1[var4time].unique()

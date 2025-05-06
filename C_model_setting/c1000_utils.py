@@ -135,7 +135,7 @@ def add_yield_trend_estimate(yxDatac, ny):
                 try:
                     df.loc[:, 'YieldFromTrend'] = df.apply(trend1, args=(ny, minYearFeats, df['Year'].tolist()), axis=1)
                 except:
-                    print('here')
+                    print('here c1000')
             else:
                 # trend estimated using larger time series (left or right)
                 # a = trend2(df.iloc[0], ny, minYearFeats, df['Year'].tolist())

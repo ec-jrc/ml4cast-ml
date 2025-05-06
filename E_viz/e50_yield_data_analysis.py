@@ -196,11 +196,11 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
             # Percent crop area
             lbl = c + ' % of national crop area in the adm. unit'
             mapDfColumn(statsCrop, df_gaul1_id, 'Crop_perc_area|', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
-                        gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[1], minmax=[0,100])
+                        gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[1]) # , minmax=[0,100]
             # % national production
             lbl = c +' % national production'
             mapDfColumn(statsCrop, df_gaul1_id, 'Crop_perc_production|', 'adm_name|first', gdf, gdf_gaul1_id, gdf_gaul0_column,
-                        gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[2], minmax=[0,100])
+                        gdf_gaul0_name, lbl, cmap='YlGn', fn_fig=None, ax=axs[2]) #, minmax=[0,100]
             # Total production
             if area_unit == 'ha' and yield_unit == 't/ha':
                 divider = 1000

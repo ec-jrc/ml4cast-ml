@@ -16,15 +16,20 @@ pd.set_option('display.max_columns', None)
 # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
 # runType = 'tuning'
 
-fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuRiver\RUN_Somalia_SWALIM_Maize_irrigated-Somalia-HARVESTAT\TUNE_SOGuRiver_20250414\Specs\000572_Sorghum_riverine_Lasso.json'
-config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuRiver\SOGuRiver_Somalia_Maize_irrigated-Somalia-HARVESTAT_config_exclusions.json'
-runType = 'fast_tuning'
-run_name = 'SOGuRiver_20250414'
-
-# fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZM\annual\RUN_Maize_(corn)_WC-Zambia-HARVESTAT\TUNE_test\Specs\000000_Sunflower_ Seed_Null_model.json'
-# config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZM\annual\Maize_(corn)_WC-Zambia-HARVESTAT.json'
+# fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuRiver\RUN_Somalia_SWALIM_Maize_irrigated-Somalia-HARVESTAT\TUNE_SOGuRiver_20250414\Specs\000572_Sorghum_riverine_Lasso.json'
+# config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuRiver\SOGuRiver_Somalia_Maize_irrigated-Somalia-HARVESTAT_config_exclusions.json'
 # runType = 'fast_tuning'
-# run_name = 'test'
+# run_name = 'SOGuRiver_20250414'
+
+# fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SD\RUN_All_crops-Sudan-ASAP\TUNE_SD_test\Specs\003070_Millet_SVR_linear@PeakFPARAndLast3.json'
+# config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SD\SD_sorghum_millet.json'
+# runType = 'fast_tuning'
+# run_name = 'SD_test'
+
+fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZA_20241226\Specs\001208_Maize_total_Lasso.json'
+config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+runType = 'tuning'
+run_name = 'ZA_20241226'
 
 
 config = a10_config.read(config_fn, run_name, run_type=runType)
