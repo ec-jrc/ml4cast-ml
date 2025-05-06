@@ -307,13 +307,28 @@ def summary_stats(b1, config, metric2use, mlsettings, var4time, outputDir):
     b1_overall = b1.drop_duplicates(subset='runID', keep='first').copy()
     for t in b1[var4time].unique():
         # get forecast % forecast_issue_calendar_month
-        # forecastingPrct = config.forecastingPrct[config.forecastingMonths.index(t)]
+        forecastingPrct = config.forecastingPrct[config.forecastingMonths.index(t)]
         forecast_issue_calendar_month = calendar.month_abbr[b1[b1[var4time] == t]['forecast_issue_calendar_month'].iloc[0]]
         crops = b1['Crop'].unique()
+        df = pd.DataFrame(columns=['Crop', 'Prct_area_used', 'Prct_season_forecasts','Calendar_month_forecast','ML_omit_admins', 'Benchs_better_than_ML', 'ML_estimator', 'ML_rRMSEp', 'R2_rRMSEp', 'BestByAdmin_rRMSEp'])
         # get % area anlysed
         for crop in crops:
-            # in order to assign the same colors I have to do some workaround
-            tmp = b1[(b1[var4time] == t) & (b1['Crop'] == crop)].copy()
+            tmp = b1_overall[(b1_overall[var4time] == t) & (b1_overall['Crop'] == crop)].copy()
+            if bool(config.crop_au_exclusions):
+                txt_excl = config.crop_au_exclusions[crop]
+            else:
+                txt_excl = 'none'
+            # benchmark better than models
+            rRMSE_p_ML = tmp.loc[tmp['tmp_est'] == 'ML']['rRMSE_p'][0]
+            Benchs_better_than_ML = tmp[(tmp['rRMSE_p'] < rRMSE_p_ML) & (tmp['Estimator'] != 'BestByAdmin')]['Estimator'].unique()
+            if len(Benchs_better_than_ML) > 0:
+                Benchs_better_than_ML = str(Benchs_better_than_ML)
+            else:
+                Benchs_better_than_ML = 'none'
+            row = pd.DataFrame([crop, config.prct2retain, forecastingPrct, forecast_issue_calendar_month, txt_excl, Benchs_better_than_ML, tmp[tmp['tmp_est'] == 'ML']['Estimator'][0], tmp[tmp['tmp_est'] == 'ML']['rRMSE_p'][0],
+                                tmp[tmp['tmp_est'] == 'ML']['avg_R2_p_overall'][0], tmp[tmp['tmp_est'] == 'BestByAdmin']['rRMSE_p'][0]],
+                               columns=['Crop', 'Prct_area_used', 'Prct_season_forecasts','Calendar_month_forecast','ML_omit_admins', 'Benchs_better_than_ML', 'ML_estimator', 'ML_rRMSEp', 'R2_rRMSEp', 'BestByAdmin_rRMSEp'])
+            df = pd.concat([df, row], ignore_index=True)
             # sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
             sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3, 'BestByAdmin': 4}
             tmp['pltOrder'] = tmp['tmp_est'].map(sort_dict)
