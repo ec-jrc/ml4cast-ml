@@ -100,7 +100,7 @@ class mlSettings:
     if 'win' in sys.platform:
         self.nJobsForGridSearchCv = 8
     else:
-        self.nJobsForGridSearchCv = 1
+        self.nJobsForGridSearchCv = 2
 
     # Input data scaling. Admitted values:
     # z_f: z-score features

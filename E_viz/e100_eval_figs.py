@@ -299,123 +299,43 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
         plt.savefig(fig_name)
         plt.close(fig)
 
-def summary_stats(b1, config, metric2use, mlsettings, var4time, outputDir):
+def summary_stats(b1, config, var4time, outputDir):
     # compute summary stats for hindcasting
 
     # get overall stats (dropping AU duplicated, here I have for the same run ID results for each AU, here
     # I am interested only in overall results, that is the same for all duplicates)
     b1_overall = b1.drop_duplicates(subset='runID', keep='first').copy()
+    df = pd.DataFrame(
+        columns=['Crop', 'Prct_area_used', 'Prct_season_forecasts', 'Calendar_month_forecast', 'ML_omit_admins',
+                 'Benchs_better_than_ML', 'ML_estimator', 'ML_rRMSEp', 'R2_rRMSEp', 'BestByAdmin_rRMSEp'])
     for t in b1[var4time].unique():
         # get forecast % forecast_issue_calendar_month
         forecastingPrct = config.forecastingPrct[config.forecastingMonths.index(t)]
         forecast_issue_calendar_month = calendar.month_abbr[b1[b1[var4time] == t]['forecast_issue_calendar_month'].iloc[0]]
         crops = b1['Crop'].unique()
-        df = pd.DataFrame(columns=['Crop', 'Prct_area_used', 'Prct_season_forecasts','Calendar_month_forecast','ML_omit_admins', 'Benchs_better_than_ML', 'ML_estimator', 'ML_rRMSEp', 'R2_rRMSEp', 'BestByAdmin_rRMSEp'])
+
         # get % area anlysed
         for crop in crops:
+            # print(t, crop)
             tmp = b1_overall[(b1_overall[var4time] == t) & (b1_overall['Crop'] == crop)].copy()
+            txt_excl = 'none'
             if bool(config.crop_au_exclusions):
-                txt_excl = config.crop_au_exclusions[crop]
-            else:
-                txt_excl = 'none'
+                if crop in config.crop_au_exclusions.keys():
+                    txt_excl = config.crop_au_exclusions[crop]
             # benchmark better than models
-            rRMSE_p_ML = tmp.loc[tmp['tmp_est'] == 'ML']['rRMSE_p'][0]
+            rRMSE_p_ML = tmp.loc[tmp['tmp_est'] == 'ML']['rRMSE_p'].iloc[0]
             Benchs_better_than_ML = tmp[(tmp['rRMSE_p'] < rRMSE_p_ML) & (tmp['Estimator'] != 'BestByAdmin')]['Estimator'].unique()
             if len(Benchs_better_than_ML) > 0:
                 Benchs_better_than_ML = str(Benchs_better_than_ML)
             else:
                 Benchs_better_than_ML = 'none'
-            row = pd.DataFrame([crop, config.prct2retain, forecastingPrct, forecast_issue_calendar_month, txt_excl, Benchs_better_than_ML, tmp[tmp['tmp_est'] == 'ML']['Estimator'][0], tmp[tmp['tmp_est'] == 'ML']['rRMSE_p'][0],
-                                tmp[tmp['tmp_est'] == 'ML']['avg_R2_p_overall'][0], tmp[tmp['tmp_est'] == 'BestByAdmin']['rRMSE_p'][0]],
+            row = pd.DataFrame([[crop, config.prct2retain, forecastingPrct, forecast_issue_calendar_month, txt_excl, Benchs_better_than_ML, tmp[tmp['tmp_est'] == 'ML']['Estimator'].iloc[0], tmp[tmp['tmp_est'] == 'ML']['rRMSE_p'].iloc[0],
+                                tmp[tmp['tmp_est'] == 'ML']['avg_R2_p_overall'].iloc[0], tmp[tmp['tmp_est'] == 'BestByAdmin']['rRMSE_p'].iloc[0]]],
                                columns=['Crop', 'Prct_area_used', 'Prct_season_forecasts','Calendar_month_forecast','ML_omit_admins', 'Benchs_better_than_ML', 'ML_estimator', 'ML_rRMSEp', 'R2_rRMSEp', 'BestByAdmin_rRMSEp'])
             df = pd.concat([df, row], ignore_index=True)
-            # sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
-            sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3, 'BestByAdmin': 4}
-            tmp['pltOrder'] = tmp['tmp_est'].map(sort_dict)
-            tmp = tmp.sort_values('pltOrder')
-            # get area weigthed rRMSE
-            # tmp = areaWeighted_rRMSE(tmp, df_regNames, df_Stats)
-            p = sns.barplot(tmp, x="tmp_est", y=metric2use, hue="tmp_est",
-                            palette=colors, ax=axs[0, ax_c], dodge=False, width=0.4, legend="full")
-            # axs[0, ax_c].set_position([axs[0, ax_c].get_position().x0, axs[0, ax_c].get_position().y0 * 0.8,
-            #                            axs[0, ax_c].get_position().width, axs[0, ax_c].get_position().height * 0.8])
-            ml_row = tmp[tmp['tmp_est'] == 'ML']
-            [info_string0, info_string1, info_string2, info_string3] = output_row_to_ML_info_string(ml_row, metric2use)
-            posx = 0.7 # was 0.875 before bestbyadmin
-            axs[0, ax_c].text(posx, -0.1, metric2use + ' = ' + info_string0, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
-            axs[0, ax_c].text(posx, -0.14, info_string1, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
-            axs[0, ax_c].text(posx, -0.18, info_string2, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
-            axs[0, ax_c].text(posx, -0.22, info_string3, transform=axs[0, ax_c].transAxes, horizontalalignment='center')
-            axs[0, ax_c].get_legend().set_visible(False)
-            text = ''
-            if bool(config.crop_au_exclusions):
-                if crop in config.crop_au_exclusions.keys():
-                    text = ', ML omitting: ' + ",".join(config.crop_au_exclusions[crop])
-            axs[0, ax_c].set_title(crop + text)
-            axs[0, ax_c].set(ylim=(0, ymax * 1.1))
-            axs[0, ax_c].set(xlabel='')
-            ax_c = ax_c + 1
-        h, l = p.get_legend_handles_labels()
-        # h, l = axs[0, ax_c-1].get_legend_handles_labels()
-        # plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-        axs[0, ax_c-1].legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-        ax_c = 0
-        # Second row fo area weighted
 
-        for crop in crops:
-            # in order to assign the same colors I have to do some workaround
-            tmp = b1[(b1[var4time] == t) & (b1['Crop'] == crop)].copy()
-            sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
-            tmp['pltOrder'] = tmp['tmp_est'].map(sort_dict)
-            tmp = tmp.sort_values('pltOrder')
-            # get area weigthed rRMSE
-            # tmp = areaWeighted_rRMSE(tmp, df_regNames, df_Stats)
-            p = sns.barplot(tmp, x="tmp_est", y='rRMSE_p_areaWeighted', hue="tmp_est",
-                            palette=colors, ax=axs[1, ax_c], dodge=False, width=0.4, legend="full")
-            # axs[1, ax_c].set_position([axs[1, ax_c].get_position().x0, axs[1, ax_c].get_position().y0 * 0.8,
-            #                            axs[1, ax_c].get_position().width, axs[1, ax_c].get_position().height * 0.8])
-            ml_row = tmp[tmp['tmp_est'] == 'ML']
-            [info_string0, info_string1, info_string2, info_string3] = output_row_to_ML_info_string(ml_row,
-                                                                                                    metric2use)
-            info_string0 = str(round(ml_row['rRMSE_p_areaWeighted'].values[0], 2))
-            axs[1, ax_c].text(posx, -0.1, 'rRMSE_p_AW' + ' = ' + info_string0, transform=axs[1, ax_c].transAxes,
-                              horizontalalignment='center')
-            axs[1, ax_c].text(posx, -0.14, info_string1, transform=axs[1, ax_c].transAxes,
-                              horizontalalignment='center')
-            axs[1, ax_c].text(posx, -0.18, info_string2, transform=axs[1, ax_c].transAxes,
-                              horizontalalignment='center')
-            axs[1, ax_c].text(posx, -0.22, info_string3, transform=axs[1, ax_c].transAxes,
-                              horizontalalignment='center')
-            axs[1, ax_c].get_legend().set_visible(False)
-            text = ''
-            if bool(config.crop_au_exclusions):
-                if crop in config.crop_au_exclusions.keys():
-                    text = ', ML omitting: ' + ",".join(config.crop_au_exclusions[crop])
-            axs[1, ax_c].set_title(crop + text)
-            axs[1, ax_c].set(ylim=(0, ymax * 1.1))
-            axs[1, ax_c].set(xlabel='')
-            ax_c = ax_c + 1
-        if len(crops) == 1:
-            axs[0, 1].remove()
-            axs[1, 1].remove()
-        # h, l = p.get_legend_handles_labels()
-        # plt.legend(h, l, title="Model", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-        # fig.text(0.90, 0.775, 'Average of', ha='left')
-        # fig.text(0.90, 0.755, 'admin-level error', ha='left')
-        # fig.text(0.90, 0.275, 'Crop-area weighted', ha='left')
-        # fig.text(0.90, 0.255, 'average of', ha='left')
-        # fig.text(0.90, 0.235, 'admin-level error', ha='left')
-        fig.text(0.90, 0.775, 'rRMSE', ha='left')
+    df.to_csv(outputDir + '/all_crops_performances.csv', index=False)
 
-        fig.text(0.90, 0.275, 'Crop-area weighted', ha='left')
-        fig.text(0.90, 0.255, 'rRMSE', ha='left')
-
-        plt.tight_layout()
-        #get forecastingPrct from t (forecastingMonths)
-        forecastingPrct = config.forecastingPrct[config.forecastingMonths.index(t)]
-        fig_name = outputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '_all_crops_performances.png'
-        plt.savefig(fig_name)
-        plt.close(fig)
 
 def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'): #onfig, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0'
 

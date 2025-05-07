@@ -193,6 +193,7 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
     # of this hybrid best, compute avg rrmse_prct and avg rrmse_prct weighted by area
     # to be comparable with that of the single models, I have to compute it the same way,
     # through d140_modelStats.allStats_spatial(mRes) and using as mRES the mixture of different models
+    adm_id_for_best = -900 # I need to assign a fake id (later I drop rows with duplicate id)
     for crop in bestByAU['Crop'].unique():
         for ft in bestByAU['forecast_time'].unique():
             hybrid_mRes = pd.DataFrame()
@@ -218,10 +219,11 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
                                  'rRMSE_p_areaWeighted': resw['rel_Pred_RMSE'],
                                  'forecast_time': ft, 'Crop': crop,
                                  'forecast_issue_calendar_month': cropFtDf['forecast_issue_calendar_month'].iloc[0],
-                                 'runID': -999}])
+                                 'runID': adm_id_for_best}])
+            adm_id_for_best = adm_id_for_best -1
             b1withAUerror = pd.concat([b1withAUerror, tmp], ignore_index=True)
     # save main statistical indicators indicators in a csv file
-    e100_eval_figs.summary_stats(b1withAUerror, config, 'rRMSE_p', mlsettings, var4time, analysisOutputDir)
+    e100_eval_figs.summary_stats(b1withAUerror, config, var4time, analysisOutputDir)
     # plot it by forecasting time (simple bars for each forecasting time), mRes is created above
     e100_eval_figs.bars_by_forecast_time2(b1withAUerror, config, 'rRMSE_p', mlsettings, var4time, analysisOutputDir)
     # e100_eval_figs.bars_by_forecast_time(b1, config, metric2use, mlsettings, var4time, analysisOutputDir)

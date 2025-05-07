@@ -5,7 +5,7 @@ from D_modelling import d090_model_wrapper
 
 
 def launcher(fn, config_fn, run_name, runType):
-    # limit threads for Condor
+    # limit threads for Condor (cahnge here, in confilg njobs, in condor submit requested cpus
     os.environ['MKL_NUM_THREADS'] = '2'
     os.environ['OPENBLAS_NUM_THREADS'] = '2'
     os.environ['OMP_NUM_THREADS'] = '2'
