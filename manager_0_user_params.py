@@ -93,6 +93,8 @@ else:
     # MA Morocco variable boundaries
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MA/MAfews_config.json'
     # run_name = 'MA_20250404'
+    # MA WITHOUT GPR MA_20250512
+    # run_name = 'MA_20250512'
     # MW Malawi
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MW/main/Maize_(corn)_WC-Malawi-HARVESTAT.json'
     # run_name = 'MW_20250123'

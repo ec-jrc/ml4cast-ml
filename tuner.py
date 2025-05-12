@@ -136,6 +136,7 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
     nMaxTask = 7500
     start_time = time.time()
     config = a10_config.read(config_fn, run_name, run_type=runType)
+    modelSettings = a10_config.mlSettings(forecastingMonths=0) # just to get condor param
 
     if tune_on_condor == False:
         # get the produced spec file list
@@ -185,7 +186,8 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
             condSubPath1 = os.path.join(dir_condor_submit, 'condor.submit1')
             with open('G_HTCondor/condor.submit_template') as tmpl:
                 content = tmpl.read()
-                content = content.format(run_name=run_name + '_' + runType, AOI=config.AOI, root_dir=config.models_dir, condor_task_list_base_name=condor_task_list_base_name1) #, shDestination=shDestination)
+                content = content.format(run_name=run_name + '_' + runType, AOI=config.AOI, root_dir=config.models_dir,
+                                         condor_task_list_base_name=condor_task_list_base_name1,  rcpu=modelSettings.condor_param['request_cpus']) #, shDestination=shDestination)
             with open(condSubPath1, 'w') as out:
                 out.write(content)
             # Make the dirs for condor output on /mnt/jeoproc/log/ml4castproc/, clean content
@@ -224,7 +226,7 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                         content = tmpl.read()
                         content = content.format(run_name=run_name + '_' + runType, AOI=config.AOI,
                                                  root_dir=config.models_dir,
-                                                 condor_task_list_base_name=condor_task_list_base_name2)
+                                                 condor_task_list_base_name=condor_task_list_base_name2, rcpu=modelSettings.condor_param['request_cpus'])
                         # content = content.format(AOI=config.AOI,
                         #                          root_dir=config.models_dir, condor_task_list_base_name=condor_task_list_base_name2)  # , shDestination=shDestination)
                     with open(condSubPath2, 'w') as out:

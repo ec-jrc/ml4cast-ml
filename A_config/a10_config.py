@@ -89,7 +89,7 @@ class read:
         self.forecastingCalendarMonths =self.forecastingCalendarMonths + list([int(real_months[np.argmin(np.abs(prct_months-float(prct)))])])
 
 class mlSettings:
-  def __init__(self, forecastingMonths):
+  def __init__(self, forecastingMonths=0):
     # Define settings used in the ML workflow
 
     #set forcasting month (1 is the first)
@@ -100,7 +100,14 @@ class mlSettings:
     if 'win' in sys.platform:
         self.nJobsForGridSearchCv = 8
     else:
-        self.nJobsForGridSearchCv = 1
+        # Three params are needed for condor:
+        # a) nJobsForGridSearchCv
+        # b) NUM_THREADS (used in condor launcher)
+        # c) request_cpus (used in condor.submit_template)
+        # c must be a*b or I will use more CPU than requested. Requesting more cpu make job allocation slower
+        self.condor_param = {'nJobsForGridSearchCv': 1, 'NUM_THREADS': 1, 'request_cpus': 1}
+        #self.nJobsForGridSearchCv = 1
+        self.nJobsForGridSearchCv = self.condor_param['nJobsForGridSearchCv']
 
     # Input data scaling. Admitted values:
     # z_f: z-score features
@@ -272,46 +279,9 @@ def config_reducer(modelSettings, run_name):
         modelSettings.feature_selections = ['none']
         modelSettings.addYieldTrend = [False]
         modelSettings.dataReduction = ['none']
-    elif run_name == 'aaa_debug_sunflower':
-        want_keys = ['rs_met_reduced']
-        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
-        modelSettings.doOHEs = ['none']
-        want_keys = ['Lasso'] #used in run month5
+    elif run_name == 'MA_20250512':
+        want_keys = ['Lasso', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        modelSettings.feature_selections = ['none']
-        modelSettings.addYieldTrend = [False]
-        modelSettings.dataReduction = ['none']
-    elif run_name == 'test_new_trend2': #North Darfur
-        want_keys = ['rs_met_reduced']
-        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
-        modelSettings.doOHEs = ['none']
-        want_keys = ['Lasso'] #used in run month5
-        #want_keys = ['XGBoost'] # used in run month5 month5_onlyXGB
-        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        modelSettings.feature_selections = ['none']
-        # modelSettings.addYieldTrend = [False]
-        modelSettings.dataReduction = ['none']
-        modelSettings.feature_selections = ['none']
-    elif run_name == 'warnGPR':
-        want_keys = ['rs_met_reduced'] # sm not avail directly from asap
-        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
-        modelSettings.doOHEs = ['none']
-        modelSettings.feature_prct_grid = [5, 25, 50, 100]
-        want_keys = ['GPR'] # used in run month5 month5_onlyXGB
-        modelSettings.feature_selections = ['none']
-        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        modelSettings.addYieldTrend = [False]
-        modelSettings.dataReduction = ['none']
-    elif run_name == 'test_asap8':
-        want_keys = ['rs_met_reduced']  # sm not avail directly from asap
-        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
-        modelSettings.doOHEs = ['none']
-        modelSettings.feature_prct_grid = [5, 25, 50, 100]
-        want_keys = ['Lasso']  # used in run month5 month5_onlyXGB
-        modelSettings.feature_selections = ['none']
-        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        modelSettings.addYieldTrend = [False]
-        modelSettings.dataReduction = ['none']
     else: #some default
         want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))

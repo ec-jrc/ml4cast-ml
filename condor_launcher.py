@@ -5,10 +5,11 @@ from D_modelling import d090_model_wrapper
 
 
 def launcher(fn, config_fn, run_name, runType):
-    # limit threads for Condor (cahnge here, in confilg njobs, in condor submit requested cpus
-    os.environ['MKL_NUM_THREADS'] = '2'
-    os.environ['OPENBLAS_NUM_THREADS'] = '2'
-    os.environ['OMP_NUM_THREADS'] = '2'
+    # limit threads for Condor
+    modelSettings = a10_config.mlSettings(forecastingMonths=0)
+    os.environ['MKL_NUM_THREADS'] = modelSettings.condor_param['NUM_THREADS'] #'2'
+    os.environ['OPENBLAS_NUM_THREADS'] = modelSettings.condor_param['NUM_THREADS'] #'2'
+    os.environ['OMP_NUM_THREADS'] = modelSettings.condor_param['NUM_THREADS'] #'2'
     config = a10_config.read(config_fn, run_name, run_type=runType)
 
     if 'win' in sys.platform:
