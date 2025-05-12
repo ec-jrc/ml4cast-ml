@@ -51,7 +51,7 @@ class read:
 
     self.ope_data_dir = os.path.join(self.root_dir, jdict['ope_data_dir'])
     run_stamp = datetime.today().strftime('%Y%m%d')
-    self.ope_run_dir = os.path.join(self.output_dir, 'OPE_'+ run_name + '_made_on_' + str(run_stamp))
+    self.ope_run_dir = os.path.join(self.output_dir, 'OPE_'+ run_name + '_made_' + str(run_stamp))
     self.ope_run_out_dir = os.path.join(self.ope_run_dir, 'output')
     self.models_dir = os.path.join(self.output_dir, 'TUNE_' + run_name)
     self.models_spec_dir = os.path.join(self.models_dir, 'Specs')
@@ -100,7 +100,7 @@ class mlSettings:
     if 'win' in sys.platform:
         self.nJobsForGridSearchCv = 8
     else:
-        self.nJobsForGridSearchCv = 2
+        self.nJobsForGridSearchCv = 1
 
     # Input data scaling. Admitted values:
     # z_f: z-score features
@@ -315,5 +315,5 @@ def config_reducer(modelSettings, run_name):
     else: #some default
         want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        want_keys = ['rs_met_sm_reduced',  'rs',  'rs_reduced', 'rs_sm_reduced', 'met_sm_reduced']
+        # want_keys = ['rs_met_sm_reduced',  'rs',  'rs_reduced', 'rs_sm_reduced', 'met_sm_reduced']
     return modelSettings

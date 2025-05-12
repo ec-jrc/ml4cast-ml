@@ -34,7 +34,8 @@ for m in modality:
     # copy files
     prefix = 'NGWet_'
     # files_to_copy = [f for f in os.listdir(original_tuning_dir) if f.startswith(prefix)]
-    files_to_copy = ['NGWet_CROP_id.csv', 'NGWet_measurement_units.csv', 'NGWet_REGION_id.csv', 'NGWet_STATS_cleaned90.csv']
+    #files_to_copy = ['NGWet_CROP_id.csv', 'NGWet_measurement_units.csv', 'NGWet_REGION_id.csv', 'NGWet_STATS_cleaned90.csv']
+    files_to_copy = ['NGWet_CROP_id.csv', 'NGWet_measurement_units.csv', 'NGWet_REGION_id.csv', 'NGWet_STATS.csv']
     for i, file in enumerate(files_to_copy):
         source_path = os.path.join(original_tuning_dir, file)
         filename, file_extension = os.path.splitext(file)

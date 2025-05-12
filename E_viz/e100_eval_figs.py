@@ -334,6 +334,10 @@ def summary_stats(b1, config, var4time, outputDir):
                                columns=['Crop', 'Prct_area_used', 'Prct_season_forecasts','Calendar_month_forecast','ML_omit_admins', 'Benchs_better_than_ML', 'ML_estimator', 'ML_rRMSEp', 'R2_rRMSEp', 'BestByAdmin_rRMSEp'])
             df = pd.concat([df, row], ignore_index=True)
 
+    best_times = df.loc[df.groupby('Crop')['BestByAdmin_rRMSEp'].idxmin()][['Crop', 'Prct_season_forecasts']].set_index(
+        'Crop')
+    df['BestTime'] = df['Crop'].map(best_times['Prct_season_forecasts'])
+    df.insert(3, 'BestTime', df.pop('BestTime'))
     df.to_csv(outputDir + '/all_crops_performances.csv', index=False)
 
 

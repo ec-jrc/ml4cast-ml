@@ -87,6 +87,8 @@ class DataMixin:
                               right_on=['adm_id', 'adm_name', 'YearOfEOS', 'Crop_ID', 'Crop_name'])
             # transfer year of features to year of stats to have it working with trend (there in year of data because there is no histo yield for the time to be forecasted)
             yxData.loc[yxData['Year'].isna(), "Year"] = yxData["YearOfEOS"].astype('int32')
+            yxData = yxData[yxData['Year'] <= config.forecastingYear]
+            # limt data to forecast year requested (to avoid having nan i some cricustnace)
         else: #tuning or opeTune
             raw_features = pd.read_csv(os.path.join(config.models_dir, config.AOI + '_features4scikit.csv'))
             # left join to keep only features with labels

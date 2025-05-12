@@ -130,6 +130,7 @@ def combine_models(fns):
                 else:
                     df_conservative_estimates = pd.concat([df_conservative_estimates, df_best_adm])
                     list_replace.append('best, but yield_percentile<0.1 that could not be replaced with Peak')
+
             # check fyield_percentile > 0.9
             elif df_best_adm['fyield_percentile'].values[0] > 0.9:
                 # if peak has a smaller one use it
@@ -144,7 +145,7 @@ def combine_models(fns):
                 list_replace.append('best')
     df_conservative_estimates['Consolidation_log'] = list_replace
 
-    # I have the df_conservative_estimates, now check that estimates do not exceed min max, for percetmile
+    # I have the df_conservative_estimates, now check that estimates do not exceed min max, or percentile
     use = 'percentiles' # 'minmax' or 'percentiles'
 
     # min
@@ -299,7 +300,7 @@ def make_consolidated_ope(config):
                            'fproduction_percentile':  dict4nat[selection_type]['ppercentile']})
 
         fn_parts = os.path.basename(fn_out).split('_')
-        fn_parts[1] = 'national-forecast'
+        fn_parts[1] = 'national'#'national-forecast'
         fn_parts.append(selection_type)
         filename = os.path.join(dirName, '_'.join(fn_parts)+'.csv')
         df.to_csv(filename)

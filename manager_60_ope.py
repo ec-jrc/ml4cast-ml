@@ -42,6 +42,8 @@ if __name__ == '__main__':
 
     # load region specific data info
     config = a10_config.read(config_fn, run_name)
+    # pass the year info to standard confi to reach preprocess
+    config.forecastingYear = forecastingYear
     modelSettings = a10_config.mlSettings(forecastingMonths=forecastingMonth)
     runType = 'opeForecast'
     # get the month when forecasts are issued
@@ -53,7 +55,9 @@ if __name__ == '__main__':
         forecast_issue_calendar_month = forecast_issue_calendar_month - 12
     forecast_issue_calendar_month = calendar.month_abbr[forecast_issue_calendar_month]
     # make necessary directories
+    config.ope_run_dir = config.ope_run_dir + '_mInSeas' + str(forecastingMonth) + '_Year' + str(forecastingYear)
     Path(config.ope_run_dir).mkdir(parents=True, exist_ok=True)
+    config.ope_run_out_dir = os.path.join(config.ope_run_dir, 'output')
     Path(config.ope_run_out_dir).mkdir(parents=True, exist_ok=True)
     # prepare data (as compared to fitting data, ope forecasts are updated to the time of analysis)
     b100_load.LoadPredictors_Save_Csv(config, runType)

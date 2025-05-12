@@ -10,33 +10,46 @@ runType = 'fast_tuning' #always 'fast_tuning'  when tuning   # this is fixed for
 
 if 'win' in sys.platform:
     tune_on_condor = False
+    # AO Angola
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\AO\Main\Maize_(corn)_WC-Angola-harvestat.json'
+    # run_name = 'AO_test'
+    # BE Benin ASAP
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\BE\BEMaize_(corn)_WC-Benin-ASAP.json'
+    # run_name = 'BE_20241226'
     # MA multi shp
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
     # run_name = 'MA_20250331'
-    # ZA
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-    # run_name = 'ZA_20241226'
-    # ZA con 2024 data
-    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-    run_name = 'ZA_20250410'
     # DZ
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\DZ\DZMultiple_WC-Algeria-ASAP_config.json'
     # run_name = 'DZ_20250131'
     # Morocco MO
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
     # run_name = 'MO_test_mic'
-    # ZM Zambia
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZM\annual\Maize_(corn)_WC-Zambia-HARVESTAT.json'
     # run_name = 'test'
-    # BE Benin ASAP
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\BE\BEMaize_(corn)_WC-Benin-ASAP.json'
-    # run_name = 'BE_20241226'
     # MZ Mozambique ASAP
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET.json'
     # run_name = 'MZ_20250130'
+    # MZ Mozambique ASAP
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET-shorter_calendar90.json'
+    # run_name = 'MZ_20250507'
     # MW Malawi
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
-    # run_name = 'MW_per_476'
+    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
+    run_name = 'MW_20250123'
+    # Morocco
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
+    # # run_name = 'MO_20250213'
+    # run_name = 'SD_test'
+    # NG Nigeria
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NG\Wet\NGMaize_(corn)_WC-HARVESTAT_config.json'
+    # run_name = 'NG_test'
+    # NG Nigeria bi
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NG\Wet_bi\NG_bi_Maize_(corn)_WC-HARVESTAT_config.json'
+    # run_name = 'NGbi_20250507'
+    # # NG Nigeria mono correct split
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NG\Wet_mono\NG_mono_Maize_(corn)_WC-HARVESTAT_config.json'
+    # run_name = 'NGmono_20250507'
+    # SD Sudan ASAP sorghum millet
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SD\SD_sorghum_millet.json'
     # SO Somalia Gu Agropastoral
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuAgrop\SOGuAgrop_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
     # run_name = 'SOGuAgrop_20250403'
@@ -44,7 +57,7 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuAgrop\SOGuAgrop_Somalia_Maize_rainfed-Somalia-HARVESTAT_config_exclusions.json'
     # run_name = 'SOGuAgrop_20250428excl'
     # SO Somalia Gu Riverine
-    #config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuRiver\SOGuRiver_Somalia_Maize_irrigated-Somalia-HARVESTAT_config.json'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuRiver\SOGuRiver_Somalia_Maize_irrigated-Somalia-HARVESTAT_config.json'
     # SO Somalia Gu Riverine with exclusions
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuRiver\SOGuRiver_Somalia_Maize_irrigated-Somalia-HARVESTAT_config_exclusions.json'
     # run_name = 'SOGuRiver_2025414excl'
@@ -54,53 +67,47 @@ if 'win' in sys.platform:
     # # SO Somalia Deyr River
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SODeyrRiver\SODeyrRiver_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
     # run_name = 'SODeyrRiver_20250404'
-    # Morocco
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
-    # # run_name = 'MO_20250213'
-    # SD Sudan ASAP sorghum millet
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SD\SD_sorghum_millet.json'
-    # run_name = 'SD_test'
-    # NG Nigeria
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NG\Wet\NGMaize_(corn)_WC-HARVESTAT_config.json'
-    # run_name = 'NG_test'
-    # NG Nigeria bi
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NG\Wet_bi\NGMaize_(corn)_WC-HARVESTAT_config.json'
-    # run_name = 'NGbi_test'
-    # # NG Nigeria mono
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NG\Wet_mono\NGMaize_(corn)_WC-HARVESTAT_config.json'
-    # run_name = 'NGmono_test'
-    # AO Angola
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\AO\Main\Maize_(corn)_WC-Angola-harvestat.json'
-    # run_name = 'AO_test'
     # TN
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
     # run_name = 'TN_20250424'
+    # ZA
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+    # run_name = 'ZA_20241226'
+    # ZA con 2024 data
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+    # run_name = 'ZA_20250410'
+    # ZM Zambia
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZM\annual\Maize_(corn)_WC-Zambia-HARVESTAT.json'
 
 
 else:
-    # ZA
-    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-    # run_name = 'ZA_20241226'
-    # ZA2 data updated to 2024
-    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer2024data/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-    # run_name = 'ZA_20250410'
+    # AO angola
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/AO/Main/Maize_(corn)_WC-Angola-harvestat.json'
+    # run_name = 'AO_2025017'
     # DZ
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/DZ/DZMultiple_WC-Algeria-ASAP_config.json'
     # run_name = 'DZ_20250131'
-    # ZM zambia
-    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZM/annual/Maize_(corn)_WC-Zambia-HARVESTAT.json'
-    # run_name = 'ZM_20250403'
-    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZM/annual/Maize_(corn)_WC-Zambia-HARVESTAT.json'
-    # run_name = "ZM_20250128"
     # BE Benin ASAP
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/BE/BEMaize_(corn)_WC-Benin-ASAP.json'
     # run_name = 'BE_20241226'
-    # MZ Mozambique
-    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET.json'
-    # run_name = 'MZ_20250130'
+    # MA Morocco variable boundaries
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MA/MAfews_config.json'
+    # run_name = 'MA_20250404'
     # MW Malawi
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MW/main/Maize_(corn)_WC-Malawi-HARVESTAT.json'
     # run_name = 'MW_20250123'
+    # MZ Mozambique
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET.json'
+    # run_name = 'MZ_20250130'
+    # MZ Mozambique shorter calendar and 90 % area
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET-shorter_calendar90.json'
+    # run_name = 'MZ_MZ_20250507'
+    # NG Nigeria bi correct split
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/NG/Wet_bi/NG_bi_Maize_(corn)_WC-HARVESTAT_config.json'
+    # run_name = 'NGbi_20250407'
+    # # NG Nigeria mono correct split
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/NG/Wet_mono/NG_mono_Maize_(corn)_WC-HARVESTAT_config.json'
+    # run_name = 'NGmono_20250407'
     # Somalia
     # Gu Agropop
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/SOGuAgrop/SOGuAgrop_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
@@ -120,9 +127,6 @@ else:
     # Dyer river
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/SODeyrRiver/SODeyrRiver_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
     # run_name = 'SODeyrRiver_20250404'
-    # Morocco variable boundaries
-    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MA/MAfews_config.json'
-    # run_name = 'MA_20250404'
     # TN Tunisia
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/TN/Winter2/TNMultiple_WC-Tunisia-ASAP_config.json'
     # run_name = 'TN_20250411'
@@ -130,17 +134,17 @@ else:
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/TN/Winter2/TNMultiple_WC-Tunisia-ASAP_config_excl.json'
     # run_name = 'TN_20250424'
     # SD Sudan
-    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/SD/SD_sorghum_millet.json'
-    run_name = 'SD_sor_mil_20250428'
-    # NG Nigeria bi
-    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/NG/Wet_bi/NGMaize_(corn)_WC-HARVESTAT_config.json'
-    # run_name = 'NGbi_2025017'
-    # # NG Nigeria mono
-    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/NG/Wet_mono/NGMaize_(corn)_WC-HARVESTAT_config.json'
-    # run_name = 'NGmono_2025017'
-    # AO angola
-    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/AO/Main/Maize_(corn)_WC-Angola-harvestat.json'
-    # run_name = 'AO_2025017'
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/SD/SD_sorghum_millet.json'
+    # run_name = 'SD_sor_mil_20250428'
+    # ZA
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+    # run_name = 'ZA_20241226'
+    # ZA2 data updated to 2024
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer2024data/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+    # run_name = 'ZA_20250410'
+    # ZM zambia
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZM/annual/Maize_(corn)_WC-Zambia-HARVESTAT.json'
+    # run_name = 'ZM_20250403'
     tune_on_condor = True
     time_step_check = 60  # in minutes
 
