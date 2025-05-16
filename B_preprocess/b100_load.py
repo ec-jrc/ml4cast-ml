@@ -13,7 +13,10 @@ import matplotlib.ticker as mticker
 
 
 def LoadPredictors_Save_Csv(config, runType):
-    ''' Import ASAP data in the csv format, save csv '''
+    ''' Import ASAP data in the csv format,
+    check agreement with yiled stats data (regions missing in ASAP or missing in stats)
+    polish it, organize it as formatted dekadak data,
+    save as csv (.._predictors.csv) '''
     desired_width = 320
     pd.set_option('display.width', desired_width)
     np.set_printoptions(linewidth=desired_width)
@@ -29,11 +32,6 @@ def LoadPredictors_Save_Csv(config, runType):
         df = pd.read_csv(os.path.join(dirInOpe, config.afi + '.csv'))
     else:
         df = pd.read_csv(os.path.join(dirIn, config.afi + '.csv'))
-        # if isinstance(config.fn_reference_shape, list):
-        #     # for some reason it reads badbly the id, here must be a string
-        #     df = pd.read_csv(os.path.join(dirIn, config.afi + '.csv'), dtype={'adm_id': str})
-        # else:
-        #     df = pd.read_csv(os.path.join(dirIn, config.afi + '.csv'))
 
     # General part
     df = df[df['class_name']=='crop']
@@ -43,38 +41,6 @@ def LoadPredictors_Save_Csv(config, runType):
     statsDf = pd.read_csv(stat_file)
     # read the table with id and region name
     regNames = pd.read_csv(os.path.join(dirIn, config.AOI + '_REGION_id.csv'))
-
-    # All this below moved to b50, the extraction file is modified to be correct
-    # if isinstance(config.fn_reference_shape, list):
-    #     # We are in Marocco-like case, differnt boundaries over time.
-    #     # In this case the shp id "adm_id" does not match the one of stats
-    #     # that reports the sh id in Adjusted_jrc_id_in_shp
-    #     # Here I change the shp id using regNames and
-    #     # I have to manage that one Adjusted_jrc_id_in_shp may be needed by multiple stats ids
-    #     # Create a lookup table with unique couples of adm_id and Adjusted_jrc_id_in_shp
-    #     df = df.rename(columns={'adm_id': 'adm_id_in_shp'})
-    #     lookup_table = regNames[['adm_id', 'Adjusted_jrc_id_in_shp']].drop_duplicates()
-    #     # Create a new DataFrame to store the replicated records
-    #     replicated_df = pd.DataFrame()
-    #     # Iterate over each unique Adjusted_jrc_id_in_shp in the df DataFrame
-    #     for jrc_id in df['adm_id_in_shp'].unique():
-    #         # Get the adm_id values that match the current jrc_id
-    #         matching_adm_ids = lookup_table.loc[lookup_table['Adjusted_jrc_id_in_shp'] == jrc_id, 'adm_id']
-    #         # If there are matching adm_id values, replicate the records
-    #         if not matching_adm_ids.empty:
-    #             # Get the records in df that match the current jrc_id
-    #             matching_records = df.loc[df['adm_id_in_shp'] == jrc_id]
-    #             # Replicate the records for each matching adm_id
-    #             for adm_id in matching_adm_ids:
-    #                 # Create a new DataFrame with the replicated records
-    #                 new_records = matching_records.copy()
-    #                 new_records['adm_id'] = adm_id
-    #                 # Append the new records to the replicated DataFrame
-    #                 replicated_df = pd.concat([replicated_df, new_records])
-    #
-    #     df = replicated_df
-
-
 
     A = set(df['adm_id'].unique())       # ASAP extraction admin Ids
     B = set(statsDf['adm_id'].unique())
@@ -94,8 +60,6 @@ def LoadPredictors_Save_Csv(config, runType):
         print('ASAP file: ' + os.path.join(dirIn, config.afi + '.csv'))
         print('!!!!!!!!!!!!!!!!!!!!!!!!!')
 
-    # check correspondance
-
     # now link it with adm_id and name
     df = pd.merge(df, regNames, left_on=['adm_id'], right_on=['adm_id'])
     # remove the admin name form extraction, not needed, use the one from region file
@@ -111,15 +75,15 @@ def LoadPredictors_Save_Csv(config, runType):
     # add dekad of the year
     #df['dek'] = df['Date'].map(f_dek_utilities.f_datetime2dek)
     # as of today (2024-07-23, SM no yet gap filled), SM may have missing data in 2001 and 2002, use linear interpolation to fix
-    # Now (2024 09 13) this is kept to run old versions, can be dismissed once th testing is finished
+    # Now (2024 09 13), SM is nicely gapfilled using valencia method, this following piece of code
+    # is kept to run old versions, can be dismissed once th testing is finished
     for au in df['adm_id'].unique():
         df.loc[(df['adm_id'] == au) & (df['variable_name'] == 'soil_moisture'), 'mean'] =  df.loc[(df['adm_id'] == au) & (df['variable_name'] == 'soil_moisture'), 'mean'].interpolate(method='linear', axis=0)
-        #df[(df['adm_id'] == au) & (df['variable_name'] == 'soil_moisture')]['interpol_SM'] = df[(df['adm_id'] == au) & (df['variable_name'] == 'soil_moisture')]['mean'].interpolate(method='linear', axis=0)
-        #print(au)
     # save files
     df.to_csv(os.path.join(dirOut, config.AOI + '_predictors.csv'), index=False)
 
 def build_features(config, runType):
+    # created monthly features and than reashape as scikit format
     # config is the config object
     pd.set_option('display.max_columns', None)
     desired_width = 320
@@ -131,16 +95,15 @@ def build_features(config, runType):
     if runType == 'opeForecast':
         dirOut = config.ope_run_dir
 
-    # sosDek = config.sos
-    # eosDek = config.eos
-    sosMonth = config.sosMonth #int(np.ceil(sosDek/3)) # Take the full month of the dekad
-    eosMonth = config.eosMonth #int(np.ceil(eosDek/3)) #same here
+    sosMonth = config.sosMonth
+    eosMonth = config.eosMonth
     # open predictors
     fn = os.path.join(dirOut, config.AOI + '_predictors.csv')
     df = pd.read_csv(fn)
     df["Datetime"] = pd.to_datetime(df.Date)
     df["Year"] = df.Datetime.dt.year
     df["Month"] = df.Datetime.dt.month
+    # Aggregate to monthly values (min, max, avg, sum for variable values)
     df_month = df.groupby(by=[df.Year, df.Month,
                               df.variable_name, df.adm_name]).agg(
                                 # adm_name=('adm_name', 'first'),
@@ -177,12 +140,9 @@ def build_features(config, runType):
         if len(month_list) != len(months):
             df_month = df_month[df_month["YearOfEOS"] != year2check]
 
-
     df_month.to_csv(os.path.join(dirOut, config.AOI + '_monthly_features.csv'), index=False)
 
-
     #Reshape the df to scikit format
-
     MonthSep = 'M'
     ivars = config.ivars
     ivars_short = config.ivars_short
@@ -193,9 +153,6 @@ def build_features(config, runType):
         # dfM_au = k[k['adm_id'] == au]
         YY_list = df_au['YearOfEOS'].unique()
         for yy in YY_list:
-            # if yy == 2025 and au == 20409:
-            #     print(au)
-            #     print(yy)
             df_au_yy =  df_au[df_au['YearOfEOS'] == yy]
             row = [df_au['adm_id'].iloc[0],df_au['adm_name'].iloc[0], df_au_yy['YearOfEOS'].iloc[0]]
             columns = ['adm_id', 'adm_name', 'YearOfEOS']

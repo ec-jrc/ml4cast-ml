@@ -4,7 +4,10 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import shutil
+import math
+import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from B_preprocess import b100_load
 from E_viz import e50_yield_data_analysis
 
@@ -45,6 +48,54 @@ def saveYieldStats(config, prct2retain=100):
     #     print('Missing records are present, inspect ' + os.path.join(config.data_dir, config.AOI + '_missing_data.csv'))
     # tmp.to_csv(os.path.join(outDir, config.AOI + '_missing_data.csv'), index=False)
 
+    # look into correlation among crops [(config.crops])
+    yield_cols = [x + '_yield' for x in config.crops]
+    cols = ['adm_id', 'Year', 'adm_name'] + yield_cols
+    df_corr = pd.DataFrame(columns=cols)
+    ids = stats['adm_id'].unique()
+    yrs = stats['Year'].unique()
+
+    for y in yrs:
+        for i in ids:
+            yield_values = []
+            for c in config.crops:
+                # if we are working on 90% data, one or more crop may be missing (the admin is there for other but missing for one or more)
+                row = stats.loc[
+                    (stats['adm_id'] == i) & (stats['Year'] == y) & (stats['Crop_name'] == c), 'Yield']  # .iloc[0]
+                if row.empty:
+                    val = np.nan
+                else:
+                    val = row.iloc[0]
+                yield_values.append(val)
+            adm_name = stats.loc[stats['adm_id'] == i, 'adm_name'].iloc[0]
+            df_corr.loc[len(df_corr)] = [i, y, adm_name] + yield_values
+    # pairwise combinations
+    n = math.comb(len(yield_cols), 2)
+    fig, axs = plt.subplots(1, n, figsize=(n*3, 5), constrained_layout=True)
+    axs = axs.flatten()
+    c = 0
+    for i in range(len(yield_cols)):
+        for j in range(i + 1, len(yield_cols)):
+            column1 = yield_cols[i]
+            column2 = yield_cols[j]
+            # g = sns.scatterplot(data=tips, x="total_bill", y="tip", hue="time", ax=axs[c])
+            # axs[c].scatter(df_corr[column1], df_corr[column2], edgecolor='k', linewidth=0.5)
+            # plt.xlabel(column1)
+            # plt.ylabel(column2)
+            # axs[c].set_title('r=' + str(df_corr[column1].corr(df_corr[column2]))
+            cmap = sns.color_palette('husl', len(df_corr['Year'].unique()))
+            cmap = mcolors.ListedColormap(cmap)
+
+            g = axs[c].scatter(df_corr[column1], df_corr[column2], c=df_corr['Year'], cmap=cmap, edgecolor='k', linewidth=0.5)
+            axs[c].set_xlabel(column1)
+            axs[c].set_ylabel(column2)
+            axs[c].set_title('r=' + str(df_corr[column1].corr(df_corr[column2])))
+            classes = [str(year) for year in df_corr['Year'].unique()]
+            plt.legend(handles=g.legend_elements()[0], labels=classes)
+            c = c + 1
+    fig.tight_layout()
+    fig_name = os.path.join(outDir, config.AOI + '_yield_corr' + str(prct2retain) + '.png')
+    fig.savefig(fig_name)
     # Last5yrs stats
     if True:
         region_ids = stats['adm_id'].unique()
