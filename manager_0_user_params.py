@@ -20,8 +20,8 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
     # run_name = 'MA_20250331'
     # DZ
-    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\DZ\DZMultiple_WC-Algeria-ASAP_config.json'
-    run_name = 'DZ_20250131'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\DZ\DZMultiple_WC-Algeria-ASAP_config.json'
+    # run_name = 'DZ_20250131'
     # Morocco MO
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
     # run_name = 'MO_test_mic'
@@ -72,7 +72,10 @@ if 'win' in sys.platform:
     # run_name = 'TN_20250424'
     # UA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\UA\UA_a4c_config.json'
-    # run_name = 'buttami'
+    # run_name = 'UA20250516'
+    # UA ASAP data and afi
+    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\UA\UA_a4c_config_ASAP_data_ASAP_AFI.json'
+    run_name = 'buttami'
     # ZA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20241226'

@@ -8,6 +8,7 @@ import math
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+from matplotlib.lines import Line2D
 from B_preprocess import b100_load
 from E_viz import e50_yield_data_analysis
 
@@ -71,31 +72,59 @@ def saveYieldStats(config, prct2retain=100):
             df_corr.loc[len(df_corr)] = [i, y, adm_name] + yield_values
     # pairwise combinations
     n = math.comb(len(yield_cols), 2)
-    fig, axs = plt.subplots(1, n, figsize=(n*3, 5), constrained_layout=True)
+
+    # Prepare year-to-color mapping
+    years = sorted(df_corr['Year'].unique())
+    year_to_idx = {year: idx for idx, year in enumerate(years)}
+    df_corr['Year_idx'] = df_corr['Year'].map(year_to_idx)
+    # husl, tab20, tab20b, Set3
+    colors = sns.color_palette('tab20', len(years))
+    cmap = mcolors.ListedColormap(colors)
+
+    # Set up subplots
+    n = len(yield_cols) * (len(yield_cols) - 1) // 2
+    fig, axs = plt.subplots(1, n, figsize=(n * 4, 5), constrained_layout=False)
     axs = axs.flatten()
     c = 0
+
     for i in range(len(yield_cols)):
         for j in range(i + 1, len(yield_cols)):
             column1 = yield_cols[i]
             column2 = yield_cols[j]
-            # g = sns.scatterplot(data=tips, x="total_bill", y="tip", hue="time", ax=axs[c])
-            # axs[c].scatter(df_corr[column1], df_corr[column2], edgecolor='k', linewidth=0.5)
-            # plt.xlabel(column1)
-            # plt.ylabel(column2)
-            # axs[c].set_title('r=' + str(df_corr[column1].corr(df_corr[column2]))
-            cmap = sns.color_palette('husl', len(df_corr['Year'].unique()))
-            cmap = mcolors.ListedColormap(cmap)
 
-            g = axs[c].scatter(df_corr[column1], df_corr[column2], c=df_corr['Year'], cmap=cmap, edgecolor='k', linewidth=0.5)
+            axs[c].scatter(
+                df_corr[column1],
+                df_corr[column2],
+                c=df_corr['Year_idx'],
+                cmap=cmap,
+                edgecolor='k',
+                linewidth=0.3,
+                s=18,
+                alpha=0.6
+            )
+
             axs[c].set_xlabel(column1)
             axs[c].set_ylabel(column2)
-            axs[c].set_title('r=' + str(df_corr[column1].corr(df_corr[column2])))
-            classes = [str(year) for year in df_corr['Year'].unique()]
-            plt.legend(handles=g.legend_elements()[0], labels=classes)
-            c = c + 1
-    fig.tight_layout()
+            corr_val = df_corr[[column1, column2]].dropna().corr().iloc[0, 1]
+            axs[c].set_title(f'r = {corr_val:.2f}')
+            c += 1
+
+    # Create legend on the right
+    legend_elements = [
+        Line2D([0], [0], marker='o', color='w', label=str(yr),
+               markerfacecolor=colors[idx], markersize=6, markeredgecolor='k')
+        for yr, idx in year_to_idx.items()
+    ]
+    fig.legend(handles=legend_elements, title="Year", loc='center left', bbox_to_anchor=(0.92, 0.53))
+
+    # Adjust layout for legend space
+    plt.tight_layout(rect=[0, 0, 0.90, 1])
+
+    # Save figure
     fig_name = os.path.join(outDir, config.AOI + '_yield_corr' + str(prct2retain) + '.png')
-    fig.savefig(fig_name)
+    fig.savefig(fig_name, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+
     # Last5yrs stats
     if True:
         region_ids = stats['adm_id'].unique()
