@@ -37,23 +37,28 @@ def output_row_to_ML_info_string(df, metric2use):
 
 
 def AU_error(b1, config, outputDir):
-    # In this version I compute the rel RMSE by admin (aeach admin with its own mean yield) and then I weight them
+    # Starting from b1 (best 1 model, avg statistics)
+
+    # In this version I compute the rel RMSE by admin (each admin with its own mean yield) and then I weight them
     # using area of the last five years (to occount for the fact that larger errors are more tolerable if the area is small)
     # 2024/12/19 note: the last five years has problem in Harvest data (e.g. Zambia) where some units do not have the last 5 yrs,
-    # I use teh full time series stats
+    # therefore I use the full time series stats
+
     os.path.join(config.data_dir, 'Label_analysis')
-    df_Stats5yrs = pd.read_csv(os.path.join(os.path.join(config.data_dir, 'Label_analysis' + str(config.prct2retain)),
+    df_Stats = pd.read_csv(os.path.join(os.path.join(config.data_dir, 'Label_analysis' + str(config.prct2retain)),
                                             config.AOI + '_LTstats_retainPRCT' + str(config.prct2retain) + '.csv'))
     df_regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
     # Now read mres, compute metric2use at the admin level, and make an area average add as a new columns
     b1['rRMSE_p_areaWeighted'] = -999
     b1 = b1.reset_index()  # the index was repeating
     dfAU = pd.DataFrame()
+
+    # for each best model and benchmarks, compute error at the admin level using mRes
     for index, row in b1.iterrows():
         # get run_id
         runID = row['runID']
-        # est = row['Estimator']
         myID = f'{runID:06d}'
+        # build the mRes file name, read it if present, mae it if not present
         fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
                                    '_crop_' + row['Crop'] + '_Yield_' + row['Estimator'] +
                                    '_mres.csv')
@@ -62,24 +67,22 @@ def AU_error(b1, config, outputDir):
         else:
             fn_spec = os.path.join(config.models_spec_dir, str(myID) + '_' + row['Crop'] + '_' + row['Estimator'] + '.json')
             mRes = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
-        # # if there was a crop_au_exclusions remove results (they are there for benchmark) as they would
-        # # perform very badly
+
+        # if there was a crop_au_exclusions for ML, remove results for all (they are there for benchmark) to make a fair
+        # comparison
         if bool(config.crop_au_exclusions):
             if row['Crop'] in config.crop_au_exclusions.keys():
                 # print(row['Estimator'])
                 au_id_to_remove = df_regNames[df_regNames['adm_name'].isin(config.crop_au_exclusions[row['Crop']])]['adm_id'].tolist()
                 mRes = mRes.loc[~mRes['adm_id'].isin(au_id_to_remove)]
 
-        #     for key_crop, value_au_list in config.crop_au_exclusions.items():
-        #         mo = mo.loc[~((mo['Crop'] == 'key_crop') & (mo['B'] == 'b'))]
-        #         print()
         rRMSE_pByAdmin = d140_modelStats.statsByAdmin(mRes)
         rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
-        rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_Stats5yrs[df_Stats5yrs['Crop_name|first'] == row['Crop']], how='left',
+        rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_Stats[df_Stats['Crop_name|first'] == row['Crop']], how='left',
                                               left_on='adm_id', right_on='adm_id|')
         # The wighted avg was computed using au rrmse, which is not coorect, It has to be computed using all data at once,
         # weighting each single error-admin by the area-admin
-        #row['rRMSE_p_areaWeighted'] = np.average(rRMSE_pByAdmin.rrmse_prct, weights=rRMSE_pByAdmin['Area|mean'])
+
         mResWithArea = mRes.merge(rRMSE_pByAdmin[['adm_id|', 'Area|mean']], how='left', left_on='adm_id', right_on='adm_id|')
         z = d140_modelStats.rmse_rrmse_weighed_overall(mRes, mResWithArea['Area|mean'])
         row['rRMSE_p_areaWeighted'] = z['rel_Pred_RMSE']
@@ -296,7 +299,7 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
         plt.tight_layout()
         #get forecastingPrct from t (forecastingMonths)
         forecastingPrct = config.forecastingPrct[config.forecastingMonths.index(t)]
-        fig_name = outputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '_all_crops_performances.png'
+        fig_name = outputDir + '/' + 'forecast_mInSeas' + str(t) + '_early_' + str(forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '_all_crops_performances.png'
         plt.savefig(fig_name)
         plt.close(fig)
 
@@ -442,10 +445,10 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
                 index = index + 1
             fig.tight_layout()
             fig2.tight_layout()
-            fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(
+            fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_early_' + str(
                 forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_scatter_by_admin.png'
             fig.savefig(fig_name)
-            fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(
+            fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_early_' + str(
                 forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_scatter_by_year.png'
             fig2.savefig(fig_name)
             # now plot the best by au
@@ -458,7 +461,7 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
             fig3.subplots_adjust(wspace=0.01, hspace=0.01)
             for ax in axs3:
                 ax.set_anchor('NW')
-            fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_issue_early_' + str(
+            fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_early_' + str(
                 forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_AU_rrmse.png'
             fig3.savefig(fig_name)
             plt.close(fig)

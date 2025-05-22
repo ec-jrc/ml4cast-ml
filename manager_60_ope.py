@@ -55,7 +55,7 @@ if __name__ == '__main__':
         forecast_issue_calendar_month = forecast_issue_calendar_month - 12
     forecast_issue_calendar_month = calendar.month_abbr[forecast_issue_calendar_month]
     # make necessary directories
-    config.ope_run_dir = config.ope_run_dir + '_mInSeas' + str(forecastingMonth) + '_Year' + str(forecastingYear)
+    config.ope_run_dir = config.ope_run_dir + '_mInSeas' + str(forecastingMonth) + '_Y' + str(forecastingYear)
     Path(config.ope_run_dir).mkdir(parents=True, exist_ok=True)
     config.ope_run_out_dir = os.path.join(config.ope_run_dir, 'output')
     Path(config.ope_run_out_dir).mkdir(parents=True, exist_ok=True)
@@ -99,8 +99,8 @@ if __name__ == '__main__':
                 uset = json.load(fp)
             print(uset)
             forecast_fn = os.path.join(config.ope_run_out_dir, datetime.datetime.today().strftime('%Y%m%d') + '_' +
-                                       uset['crop'] + '_forecast_month_season_' + str(uset['forecast_time'])
-                                       + '_issue_early_' + str(forecast_issue_calendar_month) + '_' + uset[
+                                       uset['crop'] + '_forecast_mInSeas' + str(uset['forecast_time'])
+                                       + '_early_' + str(forecast_issue_calendar_month) + '_' + uset[
                                            'algorithm'] +
                                        '.csv')
             if not os.path.exists(forecast_fn):

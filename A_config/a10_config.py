@@ -51,7 +51,7 @@ class read:
 
     self.ope_data_dir = os.path.join(self.root_dir, jdict['ope_data_dir'])
     run_stamp = datetime.today().strftime('%Y%m%d')
-    self.ope_run_dir = os.path.join(self.output_dir, 'OPE_'+ run_name + '_made_' + str(run_stamp))
+    self.ope_run_dir = os.path.join(self.output_dir, 'OPE_'+ run_name + '_' + str(run_stamp))
     self.ope_run_out_dir = os.path.join(self.ope_run_dir, 'output')
     self.models_dir = os.path.join(self.output_dir, 'TUNE_' + run_name)
     self.models_spec_dir = os.path.join(self.models_dir, 'Specs')
