@@ -121,7 +121,7 @@ def saveYieldStats(config, prct2retain=100):
     plt.tight_layout(rect=[0, 0, 0.90, 1])
 
     # Save figure
-    fig_name = os.path.join(outDir, config.AOI + '_yield_corr' + str(prct2retain) + '.png')
+    fig_name = os.path.join(outDir, 'AAA' + config.AOI + '_yield_corr' + str(prct2retain) + '.png')
     fig.savefig(fig_name, dpi=300, bbox_inches='tight')
     plt.close(fig)
 
@@ -174,6 +174,36 @@ def saveYieldStats(config, prct2retain=100):
         y5 = x5.copy()
         y5.columns = y5.columns.map(lambda v: '|'.join([str(i) for i in v]))
         y5.to_csv(os.path.join(outDir, config.AOI + '_5yrsStats_retainPRCT' + str(prct2retain) + '.csv'), index=False)
+        # plot total crop area by crop to understand importance
+        areaTot5y = y5.groupby('Crop_name|first')['Area|mean'].sum().reset_index()
+        areaTot5y = areaTot5y.sort_values(by='Area|mean', ascending=False)
+        # Create a bar plot
+        plt.figure(figsize=(12, 5))
+        plt.bar(areaTot5y['Crop_name|first'].values, areaTot5y['Area|mean'].values)
+        # plt.xlabel('Crop_name|first')
+        plt.ylabel('Total area')
+        plt.xticks(rotation=90, fontsize=12)  # Rotate x-axis labels for better readability
+        plt.tight_layout()
+        plt.savefig(os.path.join(outDir,'AAA' + config.AOI + '_5yrsStats_retainPRCT' + str(prct2retain) + '_total_crop_area.png'))
+        # for the first 3 most important crops, plot area by admin
+        top3 = areaTot5y['Crop_name|first'].values[0:3]
+        fig, axs = plt.subplots(3, 1, figsize=(25, 15)) #35
+        axs = axs.flatten()
+        axc = 0
+        for c in top3:
+            df = y5[y5['Crop_name|first']==c]
+            df = df.sort_values(by='Area|mean', ascending=False)
+            xlbs = df['adm_name|first'].str.slice(0, 8).values
+            axs[axc].bar(xlbs, df['Area|mean'].values)
+            axs[axc].set_ylabel('Total area')
+            axs[axc].set_title(c)
+            axs[axc].set_xticklabels(axs[axc].get_xticklabels(), rotation=45)
+            axs[axc].tick_params(axis='x', labelsize=12)
+            axc = axc + 1
+            print()
+        plt.tight_layout()
+        plt.savefig(
+            os.path.join(outDir, 'AAA' + config.AOI + '_5yrsStats_retainPRCT' + str(prct2retain) + '_top3crops_area_by_adm.png'))
 
     # LT stats
     #Mean by: Region, Crop

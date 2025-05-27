@@ -292,7 +292,9 @@ def config_reducer(modelSettings, run_name):
         modelSettings.addYieldTrend = [False]
         modelSettings.dataReduction = ['none']
     else: #some default
-        want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf']
+        # want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf']
+        # Remove GPR to slow
+        want_keys = ['Lasso', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         # want_keys = ['rs_met_sm_reduced',  'rs',  'rs_reduced', 'rs_sm_reduced', 'met_sm_reduced']
     return modelSettings

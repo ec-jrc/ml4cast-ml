@@ -26,18 +26,21 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
     # run_name = 'MO_test_mic'
     # run_name = 'test'
+    # MW Malawi
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
+    # run_name = 'MW_20250123'
     # MZ Mozambique ASAP
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET.json'
     # run_name = 'MZ_20250130'
     # MZ Mozambique ASAP
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET-shorter_calendar90.json'
     # run_name = 'MZ_20250507'
-    # MW Malawi
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
-    # run_name = 'MW_20250123'
     # Morocco
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
     # # run_name = 'MO_20250213'
+    # NE Niger
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NE\Main\NEMain_Maize_(corn)_WC-Niger-HARVESTAT_config.json'
+    # run_name = 'NE_test'
     # run_name = 'SD_test'
     # NG Nigeria
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NG\Wet\NGMaize_(corn)_WC-HARVESTAT_config.json'
@@ -59,7 +62,7 @@ if 'win' in sys.platform:
     # run_name = 'SOGuAgrop_20250428excl'
     # SO Somalia Gu Riverine
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuRiver\SOGuRiver_Somalia_Maize_irrigated-Somalia-HARVESTAT_config.json'
-    # SO Somalia Gu Riverine with exclusions
+    # # SO Somalia Gu Riverine with exclusions
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SOGuRiver\SOGuRiver_Somalia_Maize_irrigated-Somalia-HARVESTAT_config_exclusions.json'
     # run_name = 'SOGuRiver_2025414excl'
     # # SO Somalia Deyr Agropastoral
@@ -72,11 +75,11 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
     # run_name = 'TN_20250424'
     # UA
-    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\UA\UA_a4c_config.json'
-    run_name = 'UA20250516'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\UA\UA_a4c_config.json'
+    # run_name = 'UA20250516'
     # UA ASAP data and afi
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\UA\UA_a4c_config_ASAP_data_ASAP_AFI.json'
-    # run_name = 'buttami'
+    # run_name = 'UA20250519a'
     # ZA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20241226'
@@ -88,7 +91,7 @@ if 'win' in sys.platform:
 
 
 else:
-    # AO angola
+    # AO Angola
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/AO/Main/Maize_(corn)_WC-Angola-harvestat.json'
     # run_name = 'AO_2025017'
     # DZ
@@ -99,7 +102,7 @@ else:
     # run_name = 'BE_20241226'
     # MA Morocco variable boundaries
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MA/MAfews_config.json'
-    # # run_name = 'MA_20250404'
+    # # # run_name = 'MA_20250404'
     # # MA WITHOUT GPR MA_20250512
     # run_name = 'MA_20250512'
     # MW Malawi
@@ -109,8 +112,8 @@ else:
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET.json'
     # run_name = 'MZ_20250130'
     # MZ Mozambique shorter calendar and 90 % area
-    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET-shorter_calendar90.json'
-    # run_name = 'MZ_MZ_20250507'
+    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET-shorter_calendar90.json'
+    run_name = 'MZ_MZ_20250507'
     # NG Nigeria bi correct split
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/NG/Wet_bi/NG_bi_Maize_(corn)_WC-HARVESTAT_config.json'
     # run_name = 'NGbi_20250407'
@@ -149,8 +152,8 @@ else:
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/UA/UA_a4c_config_ASAP_data_ASAP_AFI.json'
     # run_name = 'UA20250519a'
     # SD Sudan
-    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/SD/SD_sorghum_millet.json'
-    run_name = 'SD_sor_mil_20250428'
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/SD/SD_sorghum_millet.json'
+    # run_name = 'SD_sor_mil_20250428'
     # ZA
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20241226'
