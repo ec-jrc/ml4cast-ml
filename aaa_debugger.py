@@ -26,12 +26,17 @@ pd.set_option('display.max_columns', None)
 # runType = 'fast_tuning'
 # run_name = 'SD_test'
 
-fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZA_20241226\Specs\001208_Maize_total_Lasso.json'
-config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-runType = 'tuning'
-run_name = 'ZA_20241226'
+# fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\RUN_Maize_(corn)_WC-Mozambique-FEWSNET\TUNE_MZ_20250527\Specs\000108_Maize_SVR_linear.json'
+# config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET.json'
+# runType = 'tuning'
+# run_name = 'MZ_20250527'
 
+fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\RUN_Multiple_WC-Marocco-custom_units\TUNE_MA_20250512\Specs\000000_Wheat_durum_Null_model.json'
+config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
+runType = 'tuning'
+run_name = 'MA_20250512'
 
 config = a10_config.read(config_fn, run_name, run_type=runType)
 config.nJobsForGridSearchCv = 8
-d090_model_wrapper.fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False)
+d090_model_wrapper.fit_and_validate_single_model(fn, config, runType, run2get_mres_only=True)
+# d090_model_wrapper.fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False)

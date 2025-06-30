@@ -122,7 +122,7 @@ class mlSettings:
     #      1. benchmarks (Null_model, PeakNDVI, Trend)
     #      2. skModels (scikit-learn models).
     # Options and feature definition do not apply to benchmarks.
-    # Benchmark model to be considered
+    # Benchmark model to be considered (benchmarks can be considered "special" to included Tab
     self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend']
     # Feature engineering types (all ML model will be tested using default monthly values and these ft eng settings)
     # ft settings must start with @

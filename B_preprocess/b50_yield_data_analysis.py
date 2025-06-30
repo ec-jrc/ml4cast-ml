@@ -14,7 +14,7 @@ from E_viz import e50_yield_data_analysis
 
 
 def saveYieldStats(config, prct2retain=100):
-    '''Compute statistics and save csv of the country stats
+    '''Compute statistics and save csv of the country stats, plot yield correlation among crops
        - keep only from year of interest for the admin level stats'''
     # prct2retain is the percentage to retain
     if prct2retain > 100:
@@ -35,6 +35,11 @@ def saveYieldStats(config, prct2retain=100):
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
     area_unit = units['Area'].values[0]
     yield_unit = units['Yield'].values[0]
+    if 'Production' in units.columns:
+        prod_units = units['Production'].values[0]
+    else:
+        prod_units = 'kt'
+
 
     # keep only from year of interest for the admin level stats
     stats = stats[stats['Year'] >= config.year_start]
@@ -71,7 +76,7 @@ def saveYieldStats(config, prct2retain=100):
             adm_name = stats.loc[stats['adm_id'] == i, 'adm_name'].iloc[0]
             df_corr.loc[len(df_corr)] = [i, y, adm_name] + yield_values
     # pairwise combinations
-    n = math.comb(len(yield_cols), 2)
+    # n = math.comb(len(yield_cols), 2)
 
     # Prepare year-to-color mapping
     years = sorted(df_corr['Year'].unique())
@@ -83,47 +88,52 @@ def saveYieldStats(config, prct2retain=100):
 
     # Set up subplots
     n = len(yield_cols) * (len(yield_cols) - 1) // 2
-    fig, axs = plt.subplots(1, n, figsize=(n * 4, 5), constrained_layout=False)
-    axs = axs.flatten()
-    c = 0
+    if n > 0: #with one crop n = 0, no need of correlation
+        fig, axs = plt.subplots(1, n, figsize=(n * 4, 5), constrained_layout=False)
+        if n == 1:      #when there are 2 crops, n = 1
+            axs = [axs]
+        else:
+            axs = axs.flatten()
+        # axs = axs.flatten()
+        c = 0
 
-    for i in range(len(yield_cols)):
-        for j in range(i + 1, len(yield_cols)):
-            column1 = yield_cols[i]
-            column2 = yield_cols[j]
+        for i in range(len(yield_cols)):
+            for j in range(i + 1, len(yield_cols)):
+                column1 = yield_cols[i]
+                column2 = yield_cols[j]
 
-            axs[c].scatter(
-                df_corr[column1],
-                df_corr[column2],
-                c=df_corr['Year_idx'],
-                cmap=cmap,
-                edgecolor='k',
-                linewidth=0.3,
-                s=18,
-                alpha=0.6
-            )
+                axs[c].scatter(
+                    df_corr[column1],
+                    df_corr[column2],
+                    c=df_corr['Year_idx'],
+                    cmap=cmap,
+                    edgecolor='k',
+                    linewidth=0.3,
+                    s=18,
+                    alpha=0.6
+                )
 
-            axs[c].set_xlabel(column1)
-            axs[c].set_ylabel(column2)
-            corr_val = df_corr[[column1, column2]].dropna().corr().iloc[0, 1]
-            axs[c].set_title(f'r = {corr_val:.2f}')
-            c += 1
+                axs[c].set_xlabel(column1)
+                axs[c].set_ylabel(column2)
+                corr_val = df_corr[[column1, column2]].dropna().corr().iloc[0, 1]
+                axs[c].set_title(f'r = {corr_val:.2f}')
+                c += 1
 
-    # Create legend on the right
-    legend_elements = [
-        Line2D([0], [0], marker='o', color='w', label=str(yr),
-               markerfacecolor=colors[idx], markersize=6, markeredgecolor='k')
-        for yr, idx in year_to_idx.items()
-    ]
-    fig.legend(handles=legend_elements, title="Year", loc='center left', bbox_to_anchor=(0.92, 0.53))
+        # Create legend on the right
+        legend_elements = [
+            Line2D([0], [0], marker='o', color='w', label=str(yr),
+                   markerfacecolor=colors[idx], markersize=6, markeredgecolor='k')
+            for yr, idx in year_to_idx.items()
+        ]
+        fig.legend(handles=legend_elements, title="Year", loc='center left', bbox_to_anchor=(0.92, 0.53))
 
-    # Adjust layout for legend space
-    plt.tight_layout(rect=[0, 0, 0.90, 1])
+        # Adjust layout for legend space
+        plt.tight_layout(rect=[0, 0, 0.90, 1])
 
-    # Save figure
-    fig_name = os.path.join(outDir, 'AAA' + config.AOI + '_yield_corr' + str(prct2retain) + '.png')
-    fig.savefig(fig_name, dpi=300, bbox_inches='tight')
-    plt.close(fig)
+        # Save figure
+        fig_name = os.path.join(outDir, 'AAA' + config.AOI + '_yield_corr' + str(prct2retain) + '.png')
+        fig.savefig(fig_name, dpi=300, bbox_inches='tight')
+        plt.close(fig)
 
     # Last5yrs stats
     if True:
@@ -175,12 +185,25 @@ def saveYieldStats(config, prct2retain=100):
         y5.columns = y5.columns.map(lambda v: '|'.join([str(i) for i in v]))
         y5.to_csv(os.path.join(outDir, config.AOI + '_5yrsStats_retainPRCT' + str(prct2retain) + '.csv'), index=False)
         # plot total crop area by crop to understand importance
-        areaTot5y = y5.groupby('Crop_name|first')['Area|mean'].sum().reset_index()
+        grouped = y5.groupby('Crop_name|first')
+        sum_area = grouped['Area|mean'].sum()
+        mask = y5['Area|mean'].isna() & y5['Yield|mean'].notna()
+        # Then, group by 'Crop_name|first' and calculate the percentage
+        percentage_yield_covered_by_area = (1 -len(y5[mask].groupby('Crop_name|first')) / len(y5.groupby('Crop_name|first'))) * 100
+        # Combine the results
+        areaTot5y = pd.DataFrame({
+            'Area|mean': sum_area,
+            'percentage_yield_covered_by_area': percentage_yield_covered_by_area
+        }).reset_index()
+
+        # areaTot5y = y5.groupby('Crop_name|first')['Area|mean'].sum().reset_index()
         areaTot5y = areaTot5y.sort_values(by='Area|mean', ascending=False)
         # Create a bar plot
         plt.figure(figsize=(12, 5))
         plt.bar(areaTot5y['Crop_name|first'].values, areaTot5y['Area|mean'].values)
-        # plt.xlabel('Crop_name|first')
+        for i, (value, top_value) in enumerate(zip(areaTot5y['Area|mean'].values, areaTot5y['percentage_yield_covered_by_area'].values)):
+            plt.text(i, value + 1, str(round(top_value)), ha='center')
+        plt.title('Values above bars is % of units having area data')
         plt.ylabel('Total area')
         plt.xticks(rotation=90, fontsize=12)  # Rotate x-axis labels for better readability
         plt.tight_layout()
@@ -204,6 +227,7 @@ def saveYieldStats(config, prct2retain=100):
         plt.tight_layout()
         plt.savefig(
             os.path.join(outDir, 'AAA' + config.AOI + '_5yrsStats_retainPRCT' + str(prct2retain) + '_top3crops_area_by_adm.png'))
+        plt.close()
 
     # LT stats
     #Mean by: Region, Crop
@@ -373,6 +397,8 @@ def saveYieldStats(config, prct2retain=100):
             divider = 1000
         elif area_unit == 'ha' and yield_unit == 'kg/ha':
             divider = 1000000
+        elif prod_units == '100t':
+            divider = 10
         else:
             print('Measurement units not foreseen')
             exit()
@@ -407,6 +433,8 @@ def saveYieldStats(config, prct2retain=100):
         # area
         if area_unit == 'ha':
             divider = 100
+        elif area_unit == 'km2':
+            divider = 1
         else:
             print('Measurement units not foreseen')
             exit()

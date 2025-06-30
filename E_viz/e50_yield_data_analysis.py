@@ -176,6 +176,10 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
         units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
         area_unit = units['Area'].values[0]
         yield_unit = units['Yield'].values[0]
+        if 'Production' in units.columns:
+            prod_units = units['Production'].values[0]
+        else:
+            prod_units = 'kt'
         #https://towardsdatascience.com/a-beginners-guide-to-create-a-cloropleth-map-in-python-using-geopandas-and-matplotlib-9cc4175ab630
         #load shp
         fp = fn_shape_gaul1
@@ -206,6 +210,8 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
                 divider = 1000
             elif area_unit == 'ha' and yield_unit == 'kg/ha':
                 divider = 1000000
+            elif prod_units == '100t':
+                divider = 10
             else:
                 print('Measurement units not foreseen')
                 exit()
@@ -215,6 +221,8 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
             # Total area
             if area_unit == 'ha':
                 divider = 100
+            elif area_unit == 'km2':
+                divider = 1
             else:
                 print('Measurement units not foreseen')
                 exit()
@@ -240,6 +248,10 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
         units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
         area_unit = units['Area'].values[0]
         yield_unit = units['Yield'].values[0]
+        if 'Production' in units.columns:
+            prod_units = units['Production'].values[0]
+        else:
+            prod_units = 'kt'
 
         # Loop through all shapefiles in fn_shape_gaul1
         for shp in fn_shape_gaul1:
@@ -292,6 +304,8 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
                     divider = 1000
                 elif area_unit == 'ha' and yield_unit == 'kg/ha':
                     divider = 1000000
+                elif prod_units == '100t':
+                    divider = 10
                 else:
                     print('Measurement units not foreseen')
                     exit()
@@ -305,6 +319,8 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
                 # Total area
                 if area_unit == 'ha':
                     divider = 100
+                elif area_unit == 'km2':
+                    divider = 1
                 else:
                     print('Measurement units not foreseen')
                     exit()
@@ -341,6 +357,10 @@ def trend_anlysis(config, prct2retain=100):
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
     area_unit = units['Area'].values[0]
     yield_unit = units['Yield'].values[0]
+    if 'Production' in units.columns:
+        prod_units = units['Production'].values[0]
+    else:
+        prod_units = 'kt'
     crops = x['Crop_name'].unique()
     for c in crops:
         xc = x[x['Crop_name'] == c]

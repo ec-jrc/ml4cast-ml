@@ -11,8 +11,8 @@ runType = 'fast_tuning' #always 'fast_tuning'  when tuning   # this is fixed for
 if 'win' in sys.platform:
     tune_on_condor = False
     # AO Angola
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\AO\Main\Maize_(corn)_WC-Angola-harvestat.json'
-    # run_name = 'AO_test'
+    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\AO\Main\Maize_(corn)_WC-Angola-harvestat.json'
+    run_name = 'AO_2025017'
     # BE Benin ASAP
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\BE\BEMaize_(corn)_WC-Benin-ASAP.json'
     # run_name = 'BE_20241226'
@@ -22,10 +22,9 @@ if 'win' in sys.platform:
     # DZ
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\DZ\DZMultiple_WC-Algeria-ASAP_config.json'
     # run_name = 'DZ_20250131'
-    # Morocco MO
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
-    # run_name = 'MO_test_mic'
-    # run_name = 'test'
+    # Morocco MA
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
+    # run_name = 'MA_20250512'
     # MW Malawi
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
     # run_name = 'MW_20250123'
@@ -33,14 +32,14 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET.json'
     # run_name = 'MZ_20250130'
     # MZ Mozambique ASAP
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET-shorter_calendar90.json'
-    # run_name = 'MZ_20250507'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET.json'
+    # run_name = 'MZ_20250527'
     # Morocco
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
     # # run_name = 'MO_20250213'
     # NE Niger
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NE\Main\NEMain_Maize_(corn)_WC-Niger-HARVESTAT_config.json'
-    # run_name = 'NE_test'
+    # run_name = 'NE_20250527'
     # run_name = 'SD_test'
     # NG Nigeria
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NG\Wet\NGMaize_(corn)_WC-HARVESTAT_config.json'
@@ -50,7 +49,7 @@ if 'win' in sys.platform:
     # run_name = 'NGbi_20250507'
     # # NG Nigeria mono correct split
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NG\Wet_mono\NG_mono_Maize_(corn)_WC-HARVESTAT_config.json'
-    # run_name = 'NGmono_20250507'
+    # run_name = 'NGmono_20250407'
     # SD Sudan ASAP sorghum millet
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SD\SD_sorghum_millet.json'
     # run_name = 'SD_sor_mil_20250428'
@@ -88,6 +87,7 @@ if 'win' in sys.platform:
     # run_name = 'ZA_20250410'
     # ZM Zambia
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZM\annual\Maize_(corn)_WC-Zambia-HARVESTAT.json'
+    # run_name = 'ZM_20250403'
 
 
 else:
@@ -112,8 +112,8 @@ else:
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET.json'
     # run_name = 'MZ_20250130'
     # MZ Mozambique shorter calendar and 90 % area
-    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET-shorter_calendar90.json'
-    run_name = 'MZ_MZ_20250507'
+    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET.json'
+    run_name = 'MZ_20250527'
     # NG Nigeria bi correct split
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/NG/Wet_bi/NG_bi_Maize_(corn)_WC-HARVESTAT_config.json'
     # run_name = 'NGbi_20250407'

@@ -10,6 +10,7 @@ from E_viz import e100_eval_figs
 from D_modelling import d090_model_wrapper, d140_modelStats
 from D_modelling import d140_modelStats
 from F_post_processsing import F110_process_opeForecast_output
+from B_preprocess import b101_load_cleaned
 def gather_output(config):
     analysisOutputDir = os.path.join(config.models_out_dir, 'Analysis')
     pathlib.Path(analysisOutputDir).mkdir(parents=True, exist_ok=True)
@@ -178,7 +179,28 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
 
     # Work at tha AU level
     # compute error at AU level
-    b1withAUerror = e100_eval_figs.AU_error(b1, config, analysisOutputDir)
+
+    # Marocco has boundary changing over time, it is a special case, I want to keep errors only on the last set of boundaries
+    if config.AOI == 'MA':
+        print('**************************************************************')
+        print('Special case with chenging bounadriies')
+        print('cosi non va prende ids multipli ')
+        print('**************************************************************')
+        # open the cleaned stats file to determine which are the admin ids connected to the last shape
+        s = b101_load_cleaned.LoadCleanedLabel(config)
+        # Get the first record with the maximum 'Year'
+        first_max_year_record = s.loc[s['Year'] == s['Year'].max()].head(1)
+        last_shp = first_max_year_record['Ref_shp'].iloc[0]
+        # now get all the admin ids that are using this shp
+        s = s[s['Ref_shp'] == last_shp]
+        adm_id_in_shp_2keep = s['adm_id'].to_list()
+        #add a suffix to results
+        suffix = '_last_shp'
+    else:
+        adm_id_in_shp_2keep = None
+        suffix = ''
+
+    b1withAUerror = e100_eval_figs.AU_error(b1, config, analysisOutputDir, suffix, adm_id_in_shp_2keep=adm_id_in_shp_2keep)
     # in order to assign the same colors and keep a defined order I have to do have a unique label for all ML models
     b1withAUerror['tmp_est'] = b1withAUerror['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
 
@@ -186,7 +208,7 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
 
 
     # plot scatter of Ml and bechmark, one plot per crop and forecasting time (this function is saving mRes)
-    #e100_eval_figs.scatter_plots_and_maps(b1, config, mlsettings, var4time, analysisOutputDir, fn_shape_gaul1,
+
     e100_eval_figs.scatter_plots_and_maps(b1withAUerror, config, mlsettings, var4time, analysisOutputDir, fn_shape_gaul1,
                                           country_name_in_shp_file, gdf_gaul0_column=gdf_gaul0_column)
     # add best by admin
@@ -279,13 +301,19 @@ def national_error_hindcasting(df, dirName, config, selection_type, df_stats_sum
         mask = np.logical_or(np.isnan(dfYr['yLoo_true']), np.isnan(dfYr['yLoo_pred'])) # mask both for a fair comparison
         ma = np.ma.MaskedArray(dfYr['yLoo_true'], mask=mask)
         Y_nat_obs = np.ma.average(ma, weights=dfYr['avg_obs_area_last5yrs'])
+        # if all are masked, it returns masked, return nan instead
+        if np.ma.is_masked(Y_nat_obs):
+            Y_nat_obs = np.nan
         ma = np.ma.MaskedArray(dfYr['yLoo_pred'], mask=mask)
         Y_nat_est = np.ma.average(ma, weights=dfYr['avg_obs_area_last5yrs'])
+        if np.ma.is_masked(Y_nat_est):
+            Y_nat_est = np.nan
         mResNat.loc[len(mResNat)] = [yr, Y_nat_est, Y_nat_obs]
     # Compute rmse and rrmse
     rmseNat = d140_modelStats.rmse_nan(mResNat['Y_est'], mResNat['Y_obs'])
     rrmseNatprct = rmseNat / mResNat['Y_obs'].mean()*100
     r2Nat = d140_modelStats.r2_nan(mResNat['Y_est'], mResNat['Y_obs'])
+    mResNat = mResNat.sort_values(by='Year')
     # make a time plot
     plt.figure(figsize=(5, 3))
     plt.plot(mResNat['Year'], mResNat['Y_est'], "-o", color='green', label="Predicted")
@@ -295,7 +323,7 @@ def national_error_hindcasting(df, dirName, config, selection_type, df_stats_sum
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
 
     plt.ylabel("Yield [" + units['Yield'].iloc[0] + "]")
-    title = 'Crop: ' + crop + ". Ope type: " + selection_type + ". Hindcasting: R2 = " + str(round(r2Nat, 2)) + ", rRMSE % = " + str(round(rrmseNatprct, 2))
+    title = 'Crop: ' + crop + ". Ope type: " + selection_type + ". Hindcasting: R2 = " + str(round(r2Nat, 2)) + ", RMSE = " + str(round(rmseNat, 2)) + ", rRMSE % = " + str(round(rrmseNatprct, 2))
     title = '\n'.join(textwrap.wrap(title, 40))
     plt.title(title)
     plt.tight_layout()

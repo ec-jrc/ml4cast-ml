@@ -36,7 +36,7 @@ def output_row_to_ML_info_string(df, metric2use):
     return [info_string0, info_string1, info_string2, info_string3]
 
 
-def AU_error(b1, config, outputDir):
+def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
     # Starting from b1 (best 1 model, avg statistics)
 
     # In this version I compute the rel RMSE by admin (each admin with its own mean yield) and then I weight them
@@ -114,6 +114,10 @@ def AU_error(b1, config, outputDir):
         stringOut = stringOut.rstrip(', ') + "}"
         with open(os.path.join(outputDir, 'rRMSEpGT' + str(rrmse_prct_threshold) + '_exclusion_string.txt'), "w") as file:
             file.write(stringOut)
+    if not adm_id_in_shp_2keep is None:
+        # boundaries are changing in time (Morocco case), keep only admin represented in the last shp
+        dfAU = dfAU[dfAU['adm_id'].isin(adm_id_in_shp_2keep)]
+        dfAU.to_csv(os.path.join(outputDir, 'all_model_best1_AU_error' + suffix + '.csv'))
     # Plot
     for crop in crops:
         dfAUc = dfAU[dfAU['Crop'] == crop].copy()
@@ -149,7 +153,7 @@ def AU_error(b1, config, outputDir):
                 text = ', Ml omitting: ' + ",".join(config.crop_au_exclusions[crop])
         plt.suptitle(crop + text)
         plt.tight_layout()
-        plt.savefig(os.path.join(outputDir, 'all_model_best1_AU_error_' + crop + '.png'))
+        plt.savefig(os.path.join(outputDir, 'all_model_best1_AU_error_' + crop + suffix +'.png'))
         plt.close(fig)
     return dfAU
 def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputDir):
