@@ -312,7 +312,9 @@ def national_error_hindcasting(df, dirName, config, selection_type, df_stats_sum
     # Compute rmse and rrmse
     rmseNat = d140_modelStats.rmse_nan(mResNat['Y_est'], mResNat['Y_obs'])
     rrmseNatprct = rmseNat / mResNat['Y_obs'].mean()*100
-    r2Nat = d140_modelStats.r2_nan(mResNat['Y_est'], mResNat['Y_obs'])
+    # 2025 07 01, error in passing data to r2 score, first is true, second is estimated
+    r2Nat = d140_modelStats.r2_nan(mResNat['Y_obs'], mResNat['Y_est'])
+    # r2Nat = d140_modelStats.r2_nan(mResNat['Y_est'], mResNat['Y_obs'])
     mResNat = mResNat.sort_values(by='Year')
     # make a time plot
     plt.figure(figsize=(5, 3))

@@ -122,8 +122,11 @@ class mlSettings:
     #      1. benchmarks (Null_model, PeakNDVI, Trend)
     #      2. skModels (scikit-learn models).
     # Options and feature definition do not apply to benchmarks.
-    # Benchmark model to be considered (benchmarks can be considered "special" to included Tab
+    # Benchmark model to be considered (benchmarks can be considered "special" to included Tab)
     self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend']
+    # Tab change 2025
+    # self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend', 'Tab']
+
     # Feature engineering types (all ML model will be tested using default monthly values and these ft eng settings)
     # ft settings must start with @
     self.ft_eng = ['@PeakFPARAndLast3'] # @PeakFPARAndLast3 change features groups in c100 (changes rs and does not apply to met)
@@ -282,7 +285,7 @@ def config_reducer(modelSettings, run_name):
     elif run_name == 'MA_20250512':
         want_keys = ['Lasso', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-    elif run_name == 'buttami':
+    elif run_name == 'ZA_tab_test':
         want_keys = ['Lasso']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         want_keys = ['rs_sm_reduced']

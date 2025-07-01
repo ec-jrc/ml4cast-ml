@@ -103,7 +103,9 @@ class DataMixin:
         yxData.sort_values(['adm_name', 'Crop_name', 'Year'], ascending=[True, True, True], inplace=True)
 
         # Add a trend feature (the yield estimate for a year-admin unit) (in ope this will add the trend estimation to the year to be forecasted)
-        if self.uset['algorithm'] == 'Trend' or self.uset['addYieldTrend'] == True:
+        # if self.uset['algorithm'] == 'Trend' or self.uset['addYieldTrend'] == True:
+        # Tab change 2025
+        if self.uset['algorithm'] == 'Trend' or self.uset['addYieldTrend'] == True or self.uset['algorithm'] == 'Tab':
             yxData = c1000_utils.add_yield_trend_estimate(yxData, self.uset['ny_max_trend'])
         # yxData.to_csv(os.path.join(config.models_dir, 'buttami.csv'), index=False)
 
@@ -121,7 +123,7 @@ class DataMixin:
             feature_names = ['None'] # it is the yield estimated by the trend (in X)
             X = yxData['YieldFromTrend'].to_numpy()
             X = X.reshape((-1, 1))
-        else: # for any ML model and PeakNDVI
+        else: # for any ML model and PeakNDVI and Tab
             # retain features up to the time of forecast (included) = lead time
             list2keep = ['(^|\D)M' + str(i) + '($|\D)' for i in range(0, self.uset['forecast_time'] + 1)] + ['YieldFromTrend']
             yxData = yxData.filter(regex='|'.join(list2keep))
@@ -147,47 +149,48 @@ class DataMixin:
                     else:
                         print('ft eng set' + ft_eng_set + 'not managed by d100, the execution stops')
                         sys.exit()
-
-                # get the feature group values of the selected feature set
-                _features = self.uset['feature_groups']
-                # keep only needed features
-                if self.uset['addYieldTrend'] == True:
-                    list2keep = ['^' + str(i) + 'M\d+$' for i in _features] + ['YieldFromTrend']
-                else:
-                    list2keep = ['^' + str(i) + 'M\d+$' for i in _features]
-                if '@' in self.uset['algorithm']:
-                    list2keep = list2keep + ['peakFPAR']
-                X = yxData.filter(regex='|'.join(list2keep)).to_numpy()
-                feature_names = list(yxData.filter(regex='|'.join(list2keep)).columns)
-                # now, for Ml models only, scale data if required
-                scaler = StandardScaler()  # z-score scaler
-                if self.uset['dataScaling'] == 'z_f':       # scale all features
+                        # Tab change 2025
+                if not self.uset['algorithm'] == 'Tab':
+                    # get the feature group values of the selected feature set
+                    _features = self.uset['feature_groups']
+                    # keep only needed features
+                    if self.uset['addYieldTrend'] == True:
+                        list2keep = ['^' + str(i) + 'M\d+$' for i in _features] + ['YieldFromTrend']
+                    else:
+                        list2keep = ['^' + str(i) + 'M\d+$' for i in _features]
+                    if '@' in self.uset['algorithm']:
+                        list2keep = list2keep + ['peakFPAR']
+                    X = yxData.filter(regex='|'.join(list2keep)).to_numpy()
+                    feature_names = list(yxData.filter(regex='|'.join(list2keep)).columns)
+                    # now, for Ml models only, scale data if required
+                    scaler = StandardScaler()  # z-score scaler
+                    if self.uset['dataScaling'] == 'z_f':       # scale all features
+                            X = scaler.fit_transform(X)
+                    elif self.uset['dataScaling'] == 'z_fl':    # scale all features and label as well
                         X = scaler.fit_transform(X)
-                elif self.uset['dataScaling'] == 'z_fl':    # scale all features and label as well
-                    X = scaler.fit_transform(X)
-                    y = scaler.fit_transform(y.reshape(-1, 1)).reshape(-1)  # set in back to (n,)
-                elif self.uset['dataScaling']== 'z_fl_au': # scale by AU (both scaling functions checked with xls)
-                    y = yxData['Yield'].subtract(yxData.groupby(yxData['adm_id'])['Yield'].transform(np.mean)) \
-                        .divide(yxData.groupby(yxData['adm_id'])['Yield'].transform(np.std))
-                    y = y.to_numpy()
-                    X = yxData[feature_names].subtract(
-                        yxData.groupby(yxData['adm_id'])[feature_names].transform(np.mean)) \
-                        .divide(yxData.groupby(yxData['adm_id'])[feature_names].transform(np.std))
-                    X = X.to_numpy()
-                else:
-                    print('Data scaling non implemented:  ' + self.uset['dataScaling'])
-                    exit()
+                        y = scaler.fit_transform(y.reshape(-1, 1)).reshape(-1)  # set in back to (n,)
+                    elif self.uset['dataScaling']== 'z_fl_au': # scale by AU (both scaling functions checked with xls)
+                        y = yxData['Yield'].subtract(yxData.groupby(yxData['adm_id'])['Yield'].transform(np.mean)) \
+                            .divide(yxData.groupby(yxData['adm_id'])['Yield'].transform(np.std))
+                        y = y.to_numpy()
+                        X = yxData[feature_names].subtract(
+                            yxData.groupby(yxData['adm_id'])[feature_names].transform(np.mean)) \
+                            .divide(yxData.groupby(yxData['adm_id'])[feature_names].transform(np.std))
+                        X = X.to_numpy()
+                    else:
+                        print('Data scaling non implemented:  ' + self.uset['dataScaling'])
+                        exit()
 
-                # Perform data reduction if requested (PCA)
-                # Only on NDVI, RAD, Temp (precipitation, sm are excluded in therory but it is in)
-                if self.uset['data_reduction'] == 'PCA':
-                    X, feature_names = d105_PCA_on_features.getPCA(self, feature_names, X)
+                    # Perform data reduction if requested (PCA)
+                    # Only on NDVI, RAD, Temp (precipitation, sm are excluded in therory but it is in)
+                    if self.uset['data_reduction'] == 'PCA':
+                        X, feature_names = d105_PCA_on_features.getPCA(self, feature_names, X)
                 # Perform One-Hot Encoding for AU if requested
-            if self.uset['doOHE'] == 'AU_level':
-                OHE = pd.get_dummies(adm_ids, columns=['adm_id'], prefix='OHE_AU')
-                feature_names = feature_names + OHE.columns.to_list()
-                X = np.concatenate((X, OHE), axis=1)
-            # End of pre-processing of input data -------------------------------------------
+                if self.uset['doOHE'] == 'AU_level':
+                    OHE = pd.get_dummies(adm_ids, columns=['adm_id'], prefix='OHE_AU')
+                    feature_names = feature_names + OHE.columns.to_list()
+                    X = np.concatenate((X, OHE), axis=1)
+                # End of pre-processing of input data -------------------------------------------
             # Retain selected features for the ope model
         # now prepare data for hindcasting
         # We use the year as a group (for leave one group out at a time)

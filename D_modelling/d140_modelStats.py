@@ -12,7 +12,7 @@ def mean_error_nan(y_true, y_pred):
         return np.nan
 
 
-def r2_nan(x, y):
+def r2_nan(x, y): # x is observed, y is predicted
     # scikit r2_score is not resistant to nan
     x = np.array(x)
     y = np.array(y)

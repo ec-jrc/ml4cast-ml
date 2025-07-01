@@ -11,8 +11,8 @@ runType = 'fast_tuning' #always 'fast_tuning'  when tuning   # this is fixed for
 if 'win' in sys.platform:
     tune_on_condor = False
     # AO Angola
-    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\AO\Main\Maize_(corn)_WC-Angola-harvestat.json'
-    run_name = 'AO_2025017'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\AO\Main\Maize_(corn)_WC-Angola-harvestat.json'
+    # run_name = 'AO_2025017'
     # BE Benin ASAP
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\BE\BEMaize_(corn)_WC-Benin-ASAP.json'
     # run_name = 'BE_20241226'
@@ -26,8 +26,8 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
     # run_name = 'MA_20250512'
     # MW Malawi
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
-    # run_name = 'MW_20250123'
+    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
+    run_name = 'MW_20250123'
     # MZ Mozambique ASAP
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET.json'
     # run_name = 'MZ_20250130'
@@ -82,6 +82,9 @@ if 'win' in sys.platform:
     # ZA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20241226'
+    # ZA (test for tab)
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+    # run_name = 'ZA_tab_test'
     # ZA con 2024 data
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20250410'
