@@ -17,8 +17,9 @@ import copy
 from B_preprocess import b101_load_cleaned
 from C_model_setting import c1000_utils
 from D_modelling import d105_PCA_on_features, d110_benchmark_models, d120_set_hyper, d130_get_hyper, d140_modelStats
+from A_config import a10_config
 # AVOID USE OF MATPLOTLIB GIVING ERRORS IN CONDOR
-# from E_viz import e100_eval_figs as viz
+
 
 # define a data class that it is used to preprocess the data (both in hidcasting and forecasting)
 class DataMixin:
@@ -149,8 +150,11 @@ class DataMixin:
                     else:
                         print('ft eng set' + ft_eng_set + 'not managed by d100, the execution stops')
                         sys.exit()
-                        # Tab change 2025
-                if not self.uset['algorithm'] == 'Tab':
+                # Tab change 2025
+                if self.uset['algorithm'] == 'Tab':
+                    feature_names = list(yxData.filter(regex='|'.join(list2keep)).columns)
+                    X = yxData.to_numpy()
+                else:
                     # get the feature group values of the selected feature set
                     _features = self.uset['feature_groups']
                     # keep only needed features
@@ -223,44 +227,44 @@ class YieldModeller(DataMixin, object):
         # Df to store predictions
         mRes = pd.DataFrame() #pd.DataFrame(columns=['yLoo_pred', 'yLoo_true', 'adm_id', 'Year'])
 
+        # get some info on settings (names of special models for example)
+        mlsettings = a10_config.mlSettings()
+
         # treat ML models with feature selection
         algo = self.uset['algorithm']
         if '@' in algo:
             # get the ML model name
             algo = self.uset['algorithm'].split("@")[0]
 
-        # if runType == 'tuning':
-        if ((runType == 'tuning') or (runType == 'fast_tuning')):
+        if ((runType == 'tuning') or (runType == 'fast_tuning')): # it is not ope
             # Outer loop for testing model performances, the groups are years
             outer_cv = LeaveOneGroupOut()
             gen_outer_cv = outer_cv.split(X, y, groups=groups)
             scoring_metric_on_val = []
             nIterationOuterLoop = 1
-            if ((runType == 'fast_tuning') and (not (self.uset['algorithm'] in ['Null_model', 'Trend', 'PeakNDVI']))):
+            if ((runType == 'fast_tuning') and (not(self.uset['algorithm'] in mlsettings.benchmarks))):
                 # in case it fast_tuning and it is a ML mode:
-                # hyper tuning is made on the full set (outer loop), no error stats are saved
-                # the inner loop is not executed
+                # hyper tuning is made on the full set (outer loop), no error stats are saved,
+                # and the inner loop is not executed
                 pass
             else:
+                # it is (re-tune AND ML model) or (fast tuning OR re-tune AND benchmark models)
                 for train_index, test_index in gen_outer_cv:
-                    #print('Iteration outer loop = ' + str(nIterationOuterLoop))
                     X_train, X_test, groups_train, adm_id_train = X[train_index], X[test_index], groups[train_index], adm_ids[train_index]
                     y_train, y_test, groups_test, adm_id_test = y[train_index], y[test_index], groups[test_index], adm_ids[test_index]
-                    # Not implemented: Exclude records (year - AU) with missing data in feature
-                    # train set
+                    # train set, for the test set do nothing, missing values are not an issue (the model does not have to be tuned)
                     nas = np.isnan(y_train)
                     y_train = y_train[~nas]
                     X_train = X_train[~nas, :]
                     groups_train = groups_train[~nas]
                     adm_id_train = adm_id_train[~nas]
-                    # for the test set do nothing, missing values are not an issue (the model does not have to be tuned)
-
-                    if self.uset['algorithm'] in ['Null_model', 'Trend', 'PeakNDVI']:
+                    if self.uset['algorithm'] in mlsettings.benchmarks:
+                        # fast tuning OR re-tune AND benchmark models
                         outLoopRes = d110_benchmark_models.run_LOYO(self.uset['algorithm'], X_train, X_test, y_train, y_test, adm_id_train, adm_id_test, groups_test)
                         tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'adm_id', 'Year'])
                         mRes = pd.concat([mRes, tmp])
-                        #mRes = mRes.append(pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'AU_code', 'Year']))
                     else:
+                        # re-tune AND ML model
                         # DEFINE THE INNER LOOP, ITS COMMON TO ALL THE OTHER (ML/LASSO) METHODS
                         inner_cv = LeaveOneGroupOut()
                         if self.uset['feature_selection'] == 'none':
@@ -306,9 +310,9 @@ class YieldModeller(DataMixin, object):
                     nIterationOuterLoop += 1
                     # End of outer script
 
-        #print('d100 end of outer loop')
         # Here the outer loop (activate in tuining) is concluded and I have all results
 
+        # Now move to fiiting, used for some stats (e.g. nPegged) and for building the ope_model
         # Fitting stats and summary of nPegged
         # For the fitting I apply the model to all data available
         # Fitting is also done to collect hyper for the operational model to be use for real forecasts
@@ -323,12 +327,12 @@ class YieldModeller(DataMixin, object):
         avg_scoring_metric_on_val = np.nan
         prctPegged = {'left': '', 'right': ''}
 
-        if (self.uset['algorithm']  == 'PeakNDVI'):
+        if (self.uset['algorithm'] in ['PeakNDVI', 'Tab']):
             y_true, y_pred, search = d110_benchmark_models.run_fit(self.uset['algorithm'], X, y, adm_ids)
             # search is the model to be used in prediction
             Fit_R2 = d140_modelStats.r2_nan(np.array(y_true), np.array(y_pred))
         elif not(self.uset['algorithm'] in ['Null_model', 'Trend']): #it is a ML model
-        #else: #it is a ML model
+            #else: #it is a ML model
             # regenerate an outer loop for setting hyperparameters
             outer_cv = LeaveOneGroupOut()
             nas = np.isnan(y)
@@ -373,10 +377,8 @@ class YieldModeller(DataMixin, object):
                 avg_scoring_metric_on_val = np.nan
             hyperParams, hyperParamsGrid, coefFit = d130_get_hyper.get(algo, search, self.uset['hyperGrid'],
                                        selected_features_names)
-        if ((runType == 'fast_tuning') and (not (self.uset['algorithm'] in ['Null_model', 'Trend', 'PeakNDVI']))):
+        if ((runType == 'fast_tuning') and (not (self.uset['algorithm'] in mlsettings.benchmarks))):
             avg_scoring_metric_on_val = scoring_metric_on_fit
-        #print(self.__dict__)
-        #print('d100 YieldModeller ended')
         return hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, selected_features_names, prct_selected, n_selected, avg_scoring_metric_on_val, search
 
     def validate(self, hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, runTimeH, featureNames,

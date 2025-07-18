@@ -122,10 +122,13 @@ class mlSettings:
     #      1. benchmarks (Null_model, PeakNDVI, Trend)
     #      2. skModels (scikit-learn models).
     # Options and feature definition do not apply to benchmarks.
-    # Benchmark model to be considered (benchmarks can be considered "special" to included Tab)
-    self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend']
+    # Benchmark model to be considered (benchmarks can be considered "special" model not requiring double loop, thus
+    # includind Tab)
+    # self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend']
     # Tab change 2025
-    # self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend', 'Tab']
+    self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend', 'Tab']
+    # debug
+    self.benchmarks = ['Tab']
 
     # Feature engineering types (all ML model will be tested using default monthly values and these ft eng settings)
     # ft settings must start with @
@@ -285,14 +288,14 @@ def config_reducer(modelSettings, run_name):
     elif run_name == 'MA_20250512':
         want_keys = ['Lasso', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-    elif run_name == 'ZA_tab_test':
+    elif run_name == 'ZA_tab_test2':
         want_keys = ['Lasso']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         want_keys = ['rs_sm_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
         modelSettings.doOHEs = ['AU_level']
         modelSettings.feature_selections = ['none']
-        modelSettings.addYieldTrend = [False]
+        modelSettings.addYieldTrend = [True]
         modelSettings.dataReduction = ['none']
     else: #some default
         # want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf']

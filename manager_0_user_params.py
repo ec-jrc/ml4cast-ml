@@ -16,27 +16,34 @@ if 'win' in sys.platform:
     # BE Benin ASAP
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\BE\BEMaize_(corn)_WC-Benin-ASAP.json'
     # run_name = 'BE_20241226'
+    # BE Benin viirs ASAP
+    # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\BE\BEMaize_(corn)_WC-Benin-ASAP.json'
+    # run_name = 'BEv_20250709'
     # MA multi shp
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
     # run_name = 'MA_20250331'
+    # Morocco multi shp after boundaries optimization
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
+    # run_name = 'MA_20250709'
     # DZ
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\DZ\DZMultiple_WC-Algeria-ASAP_config.json'
     # run_name = 'DZ_20250131'
     # Morocco MA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
     # run_name = 'MA_20250512'
+    # Morocco
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
+    # # run_name = 'MO_20250213'
+
     # MW Malawi
-    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
-    run_name = 'MW_20250123'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
+    # run_name = 'MW_20250123'
     # MZ Mozambique ASAP
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET.json'
     # run_name = 'MZ_20250130'
     # MZ Mozambique ASAP
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET.json'
     # run_name = 'MZ_20250527'
-    # Morocco
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
-    # # run_name = 'MO_20250213'
     # NE Niger
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\NE\Main\NEMain_Maize_(corn)_WC-Niger-HARVESTAT_config.json'
     # run_name = 'NE_20250527'
@@ -73,24 +80,40 @@ if 'win' in sys.platform:
     # TN
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
     # run_name = 'TN_20250424'
+    # TN viirs
+    # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
+    # run_name = 'TNv_20250704'
     # UA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\UA\UA_a4c_config.json'
     # run_name = 'UA20250516'
     # UA ASAP data and afi
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\UA\UA_a4c_config_ASAP_data_ASAP_AFI.json'
     # run_name = 'UA20250519a'
+    # UA viirs ASAP data and afi
+    # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\UA\UA_a4c_config_ASAP_data_ASAP_AFI.json'
+    # run_name = 'UAv202500704'
+    # UA ASAP data and afi, model tune on Modis and run on VIIRS
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\UAtest\UA_a4c_config_ASAP_data_ASAP_AFI.json'
+    # run_name = 'UA20250519a'
     # ZA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20241226'
+
     # ZA (test for tab)
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-    # run_name = 'ZA_tab_test'
+    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_tab_test.json'
+    run_name = 'ZA_tab_test2'
+
     # ZA con 2024 data
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20250410'
-    # ZM Zambia
+    # ZA viirs con 2024 data
+    # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+    # run_name = 'ZAv_20250703'
+    # # ZM Zambia
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZM\annual\Maize_(corn)_WC-Zambia-HARVESTAT.json'
     # run_name = 'ZM_20250403'
+
+
 
 
 else:

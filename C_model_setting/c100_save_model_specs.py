@@ -19,6 +19,11 @@ def save_model_specs(config, modelSettings):
     a = [config.crops, Bench_algos, modelSettings.forecastingMonths]
     combs = list(itertools.product(*a))
     for crop, algo, forecast_time in combs:
+        # Tab is run only with OHE
+        if algo == 'Tab':
+            oheTxt = 'AU_level'
+        else:
+            oheTxt = 'none'
         # Save model settings as json
         uset = {'runID': runID,
                 'crop': crop,
@@ -31,7 +36,7 @@ def save_model_specs(config, modelSettings):
                 'PCAprctVar2keep': 'none',
                 'prct_features2select_grid': 'none',
                 # 'n_features2select_grid': 'none',
-                'doOHE': 'none',
+                'doOHE': oheTxt,
                 'forecast_time': forecast_time,
                 'addYieldTrend': 'none',
                 'ny_max_trend': modelSettings.ny_max_trend,
@@ -118,17 +123,6 @@ def save_model_specs(config, modelSettings):
                 'nJobsForGridSearchCv': modelSettings.nJobsForGridSearchCv}
         myID = f'{runID:06d}'
 
-        # doRun = crop == 'Soybeans' and algo == 'GPR' and feature_set == 'rs_met_reduced' and ft_sel == 'none' and data_redct == 'none' and addYieldTrend == False
-        # doRun = doRun or (crop == 'Soybeans' and algo == 'Lasso' and feature_set == 'rs_sm_reduced' and ft_sel == 'MRMR' and data_redct == 'PCA' and addYieldTrend == True)
-        # doRun = doRun or (
-        #             crop == 'Sunflower' and algo == 'SVR_linear' and feature_set == 'rs_reduced' and ft_sel == 'MRMR' and data_redct == 'none' and addYieldTrend == False)
-        # doRun = doRun or (
-        #         crop == 'Sunflower' and algo == 'Lasso' and feature_set == 'rs' and ft_sel == 'MRMR' and data_redct == 'PCA' and addYieldTrend == False)
-        # doRun = doRun or (
-        #         crop == 'Maize_total' and algo == 'GPR' and feature_set == 'rs_reduced' and ft_sel == 'none' and data_redct == 'none' and addYieldTrend == True)
-        # doRun = doRun or (
-        #         crop == 'Maize_total' and algo == 'Lasso' and feature_set == 'rs' and ft_sel == 'none' and data_redct == 'PCA' and addYieldTrend == True)
-        # skip = not(doRun)
         if ft_sel == 'MRMR' and data_redct == 'PCA':
             skip = True
         if skip == False:
@@ -137,8 +131,3 @@ def save_model_specs(config, modelSettings):
             with open(os.path.join(config.models_spec_dir, myID + '_' + crop + '_' + algo + '.json'), 'w') as fp:
                 json.dump(uset, fp, indent=4)#json.dump(uset, fp)
             runID = runID + 1
-
-    # if not cst.is_condor:  # run locally
-    #     for x in jsonList:
-    #         condor_launcher.launcher(x)
-    # print('End')

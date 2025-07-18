@@ -45,6 +45,7 @@ if __name__ == '__main__':
     # pass the year info to standard confi to reach preprocess
     config.forecastingYear = forecastingYear
     modelSettings = a10_config.mlSettings(forecastingMonths=forecastingMonth)
+    config.forecastingMonth_ope = forecastingMonth
     runType = 'opeForecast'
     # get the month when forecasts are issued
     # forecastingMonths is month in the season (1,e, .. from the first), forecastingCalendarMonths is the calendar month

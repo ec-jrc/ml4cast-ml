@@ -1,6 +1,7 @@
 #import pandas as pd
 import numpy as np
 from sklearn import linear_model
+from tabpfn import TabPFNRegressor
 
 
 def run_LOYO(model, X_train, X_test, y_train, y_test, adm_id_train, adm_id_test, groups_test):
@@ -22,7 +23,6 @@ def run_LOYO(model, X_train, X_test, y_train, y_test, adm_id_train, adm_id_test,
             yloo_au.extend(adm_id_test[index].tolist())
             yloo_true.extend(y_test[index].tolist())
         outLoopRes = [yloo_pred, yloo_true, yloo_au, np.unique(groups_test).tolist() * len(yloo_pred)]
-
     elif model == 'Trend':
         #the prediction for the left out year is precomputed trend
         for au in adm_id_test:
@@ -44,7 +44,6 @@ def run_LOYO(model, X_train, X_test, y_train, y_test, adm_id_train, adm_id_test,
             X_test_au, y_test_au = X_test[index], y_test[index]
             # treat nan in y
             nas = np.isnan(y_train_au)
-
             try:
                 reg = linear_model.LinearRegression().fit(X_train_au[~nas].reshape(-1, 1), y_train_au[~nas])
             except:
@@ -54,6 +53,12 @@ def run_LOYO(model, X_train, X_test, y_train, y_test, adm_id_train, adm_id_test,
             yloo_true.extend(y_test_au.tolist())
             yloo_au.extend(adm_id_test[index].tolist())
             outLoopRes = [yloo_pred, yloo_true, yloo_au, np.unique(groups_test).tolist() * len(yloo_pred)]
+    # Tab change 2025
+    elif model == 'Tab':
+        reg = TabPFNRegressor()
+        reg.fit(X_train, y_train) #fit
+        y_pred = reg.predict(X_test) #predicts
+        outLoopRes = [y_pred, y_test, adm_id_test, np.unique(groups_test).tolist() * len(y_pred)]
 
     return outLoopRes
 
@@ -73,4 +78,10 @@ def run_fit(model, X, y, adm_ids):
             search_list.append(reg)
             y_pred.extend(reg.predict(X_au.reshape(-1, 1)).tolist())
             y_true.extend(y_au.tolist())
+    elif model == 'Tab':
+        reg = TabPFNRegressor()
+        reg.fit(X, y)
+        y_true = y
+        y_pred = reg.predict(X)
+        search_list = reg
     return y_true, y_pred, search_list
