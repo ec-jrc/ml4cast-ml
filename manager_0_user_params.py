@@ -101,7 +101,7 @@ if 'win' in sys.platform:
 
     # ZA (test for tab)
     config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_tab_test.json'
-    run_name = 'ZA_tab_test2'
+    run_name = 'ZA_tab_test3'
 
     # ZA con 2024 data
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'

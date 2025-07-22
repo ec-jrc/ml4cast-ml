@@ -128,7 +128,7 @@ class mlSettings:
     # Tab change 2025
     self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend', 'Tab']
     # debug
-    self.benchmarks = ['Tab']
+    # self.benchmarks = ['Tab']
 
     # Feature engineering types (all ML model will be tested using default monthly values and these ft eng settings)
     # ft settings must start with @
@@ -288,7 +288,7 @@ def config_reducer(modelSettings, run_name):
     elif run_name == 'MA_20250512':
         want_keys = ['Lasso', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-    elif run_name == 'ZA_tab_test2':
+    elif run_name == 'ZA_tab_test3':
         want_keys = ['Lasso']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         want_keys = ['rs_sm_reduced']

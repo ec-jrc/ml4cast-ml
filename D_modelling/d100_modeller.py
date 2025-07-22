@@ -153,7 +153,7 @@ class DataMixin:
                 # Tab change 2025
                 if self.uset['algorithm'] == 'Tab':
                     feature_names = list(yxData.filter(regex='|'.join(list2keep)).columns)
-                    X = yxData.to_numpy()
+                    # X = yxData.to_numpy() # don't do it here, we have to add admin name or id and avoid OHE
                 else:
                     # get the feature group values of the selected feature set
                     _features = self.uset['feature_groups']
@@ -191,9 +191,15 @@ class DataMixin:
                         X, feature_names = d105_PCA_on_features.getPCA(self, feature_names, X)
                 # Perform One-Hot Encoding for AU if requested
                 if self.uset['doOHE'] == 'AU_level':
-                    OHE = pd.get_dummies(adm_ids, columns=['adm_id'], prefix='OHE_AU')
-                    feature_names = feature_names + OHE.columns.to_list()
-                    X = np.concatenate((X, OHE), axis=1)
+                    # Tab change 2025
+                    if self.uset['algorithm'] == 'Tab':
+                        yxData['adm_id'] = adm_ids.astype('category')
+                        X = yxData.to_numpy()
+                        feature_names = feature_names + ['adm_id']
+                    else:
+                        OHE = pd.get_dummies(adm_ids, columns=['adm_id'], prefix='OHE_AU')
+                        feature_names = feature_names + OHE.columns.to_list()
+                        X = np.concatenate((X, OHE), axis=1)
                 # End of pre-processing of input data -------------------------------------------
             # Retain selected features for the ope model
         # now prepare data for hindcasting

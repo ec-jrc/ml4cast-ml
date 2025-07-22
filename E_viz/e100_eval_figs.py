@@ -127,7 +127,9 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
         tmp = tmp.sort_values('adm_name').reset_index()
         # to assign constant colors, find the name of the ML estimator
         ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), ['Trend', 'PeakNDVI', 'Null_model'])[0]
-        palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", ml_est_name: "b"}
+        # palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", ml_est_name: "b"}
+        # Tab change 2025
+        palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", "Tab": "purple", ml_est_name: "b"}
         p1 = sns.barplot(tmp, x="adm_name", y="rrmse_prct", hue="Estimator", ax=axes[0], palette=palette, order=tmp['adm_name'])
         p1.set_title('Forecast_time = ' + str(forcTime[0]))
         sns.move_legend(axes[0], "upper right", title=None, frameon=False) #bbox_to_anchor=(1, 1)

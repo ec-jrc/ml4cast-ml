@@ -1,4 +1,4 @@
-#import pandas as pd
+import pandas as pd
 import numpy as np
 from sklearn import linear_model
 from tabpfn import TabPFNRegressor
@@ -55,9 +55,31 @@ def run_LOYO(model, X_train, X_test, y_train, y_test, adm_id_train, adm_id_test,
             outLoopRes = [yloo_pred, yloo_true, yloo_au, np.unique(groups_test).tolist() * len(yloo_pred)]
     # Tab change 2025
     elif model == 'Tab':
-        reg = TabPFNRegressor()
-        reg.fit(X_train, y_train) #fit
-        y_pred = reg.predict(X_test) #predicts
+        # reg = TabPFNRegressor()
+        # reg.fit(X_train, y_train) #fit
+        # y_pred = reg.predict(X_test) #predicts
+        # print(y_pred)
+
+        Xdf_train = pd.DataFrame(X_train)
+        # test with pd and last as categorial
+        # Specify the data type of each column
+        for i in range(len(Xdf_train.columns) - 1):
+            Xdf_train.iloc[:, i] = Xdf_train.iloc[:, i].astype('float64')
+        last_column_name = Xdf_train.columns[-1]
+        Xdf_train[last_column_name] = 'label_' + Xdf_train[last_column_name].astype('str')
+        Xdf_train[last_column_name] = Xdf_train[last_column_name].astype('category')
+        reg = TabPFNRegressor(categorical_features_indices=[last_column_name])
+        reg.fit(Xdf_train, y_train)
+        Xdf_test = pd.DataFrame(X_test)
+        # test with pd and last as categorial
+        # Specify the data type of each column
+        for i in range(len(Xdf_test.columns) - 1):
+            Xdf_test.iloc[:, i] = Xdf_test.iloc[:, i].astype('float64')
+        last_column_name = Xdf_train.columns[-1]
+        Xdf_test[last_column_name] = 'label_' + Xdf_test[last_column_name].astype('str')
+        Xdf_test[last_column_name] = Xdf_test[last_column_name].astype('category')
+        y_pred = reg.predict(Xdf_test)
+        # !!! make sure to adjust run_fit as well
         outLoopRes = [y_pred, y_test, adm_id_test, np.unique(groups_test).tolist() * len(y_pred)]
 
     return outLoopRes
@@ -79,9 +101,21 @@ def run_fit(model, X, y, adm_ids):
             y_pred.extend(reg.predict(X_au.reshape(-1, 1)).tolist())
             y_true.extend(y_au.tolist())
     elif model == 'Tab':
-        reg = TabPFNRegressor()
-        reg.fit(X, y)
+        # X is a numpy array
+        # reg.fit(X, y)
+        # y_true = y
+        # y_pred = reg.predict(X)
+        Xdf = pd.DataFrame(X)
+        # test with pd and last as categorial
+        # Specify the data type of each column
+        for i in range(len(Xdf.columns) - 1):
+            Xdf.iloc[:, i] = Xdf.iloc[:, i].astype('float64')
+        last_column_name = Xdf.columns[-1]
+        Xdf[last_column_name] = 'label_' + Xdf[last_column_name].astype('str')
+        Xdf[last_column_name] = Xdf[last_column_name].astype('category')
+        reg = TabPFNRegressor(categorical_features_indices=[last_column_name])
+        reg.fit(Xdf, y)
         y_true = y
-        y_pred = reg.predict(X)
+        y_pred = reg.predict(Xdf)
         search_list = reg
     return y_true, y_pred, search_list

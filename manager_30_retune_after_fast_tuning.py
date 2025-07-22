@@ -40,7 +40,10 @@ if __name__ == '__main__':
     # copy benchmarks (names in mlsettings.benchmarks)
     mlsettings = a10_config.mlSettings(forecastingMonths=0)
     spec_files_list = []
-    for ben in mlsettings.benchmarks:
+    # Tab change 2025
+    ben2copy = list(filter(lambda x: x != "Tab", mlsettings.benchmarks))
+    # for ben in mlsettings.benchmarks:
+    for ben in ben2copy:
         spec_files_list.extend(glob.glob(os.path.join(out_fast, '*'+ben+'*')))
     for filename in spec_files_list:
         if os.path.isfile(filename):
