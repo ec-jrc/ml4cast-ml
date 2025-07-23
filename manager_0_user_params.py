@@ -78,8 +78,8 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SODeyrRiver\SODeyrRiver_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
     # run_name = 'SODeyrRiver_20250404'
     # TN
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
-    # run_name = 'TN_20250424'
+    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
+    run_name = 'TN_20250424'
     # TN viirs
     # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
     # run_name = 'TNv_20250704'
@@ -100,8 +100,8 @@ if 'win' in sys.platform:
     # run_name = 'ZA_20241226'
 
     # ZA (test for tab)
-    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_tab_test.json'
-    run_name = 'ZA_tab_test3'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_tab_test.json'
+    # run_name = 'ZA_tab_test3'
 
     # ZA con 2024 data
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'

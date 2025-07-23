@@ -138,8 +138,13 @@ def mapDfColumn2Ax(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_me
         ax.legend(handles=patches, loc='lower center', bbox_to_anchor=(0.5, -0.4), ncol=len(merged["colors"]), title=lbl, frameon=False)
 
     else:
-        merged.plot(column=df_col2map, ax=ax, legend=True, legend_kwds={'label': lbl, 'orientation': "horizontal", 'shrink': 0.8},
-                vmin=vmin, vmax=vmax, cmap=cmap) # tab20b
+        # merged.plot(column=df_col2map, ax=ax, legend=True, legend_kwds={'label': lbl, 'orientation': "horizontal", 'shrink': 0.8},
+        #         vmin=vmin, vmax=vmax, cmap=cmap) # tab20b
+        merged.plot(column=df_col2map, ax=ax, legend=True,
+                    legend_kwds={'label': lbl, 'orientation': "horizontal", 'shrink': 0.8},
+                    vmin=vmin, vmax=vmax, cmap=cmap)  # tab20b
+        # xs[0, ax_c].legend(loc='lower center', bbox_to_anchor=(0.5, -0.8), ncol=1, frameon=True, fontsize=8)
+        # ax.legend(loc='lower center', bbox_to_anchor=(0.5, -0.4), ncol=1)
 
 
     # Add Labels (only plotted regions)
