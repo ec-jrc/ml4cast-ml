@@ -29,11 +29,9 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\DZ\DZMultiple_WC-Algeria-ASAP_config.json'
     # run_name = 'DZ_20250131'
     # Morocco MA
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
-    # run_name = 'MA_20250512'
-    # Morocco
-    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MO\MOAnnual-ASAP_config.json'
-    # # run_name = 'MO_20250213'
+    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
+    run_name = 'MA_20250729'
+
 
     # MW Malawi
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
@@ -78,8 +76,8 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\SO\SODeyrRiver\SODeyrRiver_Somalia_Maize_rainfed-Somalia-HARVESTAT_config.json'
     # run_name = 'SODeyrRiver_20250404'
     # TN
-    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
-    run_name = 'TN_20250424'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
+    # run_name = 'TN_20250424'
     # TN viirs
     # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
     # run_name = 'TNv_20250704'

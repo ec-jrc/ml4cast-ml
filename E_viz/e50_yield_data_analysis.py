@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import matplotlib.pyplot as plt
 from B_preprocess import b101_load_cleaned
+from B_preprocess import b100_load
 import pymannkendall as mk
 import matplotlib.ticker as mticker
 import matplotlib.patches as mpatches
@@ -173,7 +174,6 @@ def mapDfColumn2Ax(df, df_merge_col, df_col2map, df_col_admin_names, gdf, gdf_me
 def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_column='name0', adminID_column_name_in_shp_file = 'asap1_id', prct2retain=100):
     dir2use = os.path.join(config.data_dir, 'Label_analysis' + str(prct2retain))
     if not isinstance(config.fn_reference_shape, list):
-    # if len(fn_shape_gaul1)==1:
         gdf_gaul1_id = adminID_column_name_in_shp_file
         df_gaul1_id = "adm_id|"
         gdf_gaul0_name = country_name_in_shp_file
@@ -247,7 +247,7 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
     else:
         # Multiple shapefiles to be used (e.g. Morocco)
         gdf_gaul1_id = adminID_column_name_in_shp_file
-        df_gaul1_id = adminID_column_name_in_shp_file
+        df_gaul1_id = "adm_id|"
         gdf_gaul0_name = country_name_in_shp_file
 
         units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
@@ -257,27 +257,26 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
             prod_units = units['Production'].values[0]
         else:
             prod_units = 'kt'
+        # Add reference shp file to each admin in LTstats
+        # Load LT statistics
+        LTstats = pd.read_csv(os.path.join(dir2use, config.AOI + '_LTstats_retainPRCT' + str(prct2retain) + '.csv'))
+        # open stats to have a link between adm id and ref shape
+        stat_file = os.path.join(config.data_dir, config.AOI + '_STATS.csv')
+        stats = pd.read_csv(stat_file)
+        # find unique combinations adm_id - Ref_shp
+        unique_combinations = stats[['adm_id', 'Ref_shp']].drop_duplicates()
+        # remove path in the column and keep shp name
+        unique_combinations['Ref_shp'] = unique_combinations['Ref_shp'].apply(lambda x: os.path.basename(x))
+        # add it to LTstats
+        LTstatsAll = pd.merge(LTstats, unique_combinations, left_on='adm_id|', right_on='adm_id', how='left')
 
         # Loop through all shapefiles in fn_shape_gaul1
         for shp in fn_shape_gaul1:
             # Load shapefile
             fp = shp
             gdf = gpd.read_file(fp)
-
-            # Load statistics
-            LTstats = pd.read_csv(
-                os.path.join(dir2use, config.AOI + '_LTstats_retainPRCT' + str(prct2retain) + '.csv'))
-
-            # Load regions
-            regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
-            lookup_table = regNames[['adm_id', 'Adjusted_jrc_id_in_shp']].drop_duplicates()
-
-            # Perform left join and overwrite LTstats
-            LTstats = pd.merge(LTstats, lookup_table, left_on='adm_id|', right_on='adm_id', how='left')
-            LTstats = LTstats.rename(columns={'Adjusted_jrc_id_in_shp': gdf_gaul1_id})
-
+            LTstats = LTstatsAll[LTstatsAll['Ref_shp']==os.path.basename(shp)].copy()
             uniqueCrops = LTstats['Crop_name|first'].unique()
-
             # Loop through all crops
             for c in uniqueCrops:
                 statsCrop = LTstats[LTstats['Crop_name|first'] == c]

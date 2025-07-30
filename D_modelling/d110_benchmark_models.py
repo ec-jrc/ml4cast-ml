@@ -68,9 +68,16 @@ def run_LOYO(model, X_train, X_test, y_train, y_test, adm_id_train, adm_id_test,
         last_column_name = Xdf_train.columns[-1]
         Xdf_train[last_column_name] = 'label_' + Xdf_train[last_column_name].astype('str')
         Xdf_train[last_column_name] = Xdf_train[last_column_name].astype('category')
-        reg = TabPFNRegressor()
-        # reg = TabPFNRegressor(categorical_features_indices=[last_column_name])
-        reg.fit(Xdf_train, y_train)
+        # reg = TabPFNRegressor()
+        inference_config_dict = {
+            'MAX_UNIQUE_FOR_CATEGORICAL_FEATURES': 100,  # default was 30
+            'MIN_UNIQUE_FOR_NUMERICAL_FEATURES': 4,  # default
+            'MIN_NUMBER_SAMPLES_FOR_CATEGORICAL_INFERENCE': 100  # default
+        }
+        reg = TabPFNRegressor(categorical_features_indices=[last_column_name], inference_config=inference_config_dict, ignore_pretraining_limits=True)
+        # treat nan in y
+        nas = np.isnan(y_train)
+        reg.fit(Xdf_train[~nas], y_train[~nas])
         Xdf_test = pd.DataFrame(X_test)
         # test with pd and last as categorial
         # Specify the data type of each column
@@ -114,9 +121,16 @@ def run_fit(model, X, y, adm_ids):
         last_column_name = Xdf.columns[-1]
         Xdf[last_column_name] = 'label_' + Xdf[last_column_name].astype('str')
         Xdf[last_column_name] = Xdf[last_column_name].astype('category')
-        reg = TabPFNRegressor()
-        # reg = TabPFNRegressor(categorical_features_indices=[last_column_name])
-        reg.fit(Xdf, y)
+        # reg = TabPFNRegressor()
+        inference_config_dict = {
+            'MAX_UNIQUE_FOR_CATEGORICAL_FEATURES': 100,  # default was 30
+            'MIN_UNIQUE_FOR_NUMERICAL_FEATURES': 4,  # default
+            'MIN_NUMBER_SAMPLES_FOR_CATEGORICAL_INFERENCE': 100  # default
+        }
+        reg = TabPFNRegressor(categorical_features_indices=[last_column_name], inference_config=inference_config_dict, ignore_pretraining_limits=True)
+        # treat nan in y
+        nas = np.isnan(y)
+        reg.fit(Xdf[~nas], y[~nas])
         y_true = y
         y_pred = reg.predict(Xdf)
         search_list = reg

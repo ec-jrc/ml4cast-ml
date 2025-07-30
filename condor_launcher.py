@@ -1,5 +1,6 @@
 import sys
 import os
+import shutil
 from A_config import a10_config
 from D_modelling import d090_model_wrapper
 
@@ -10,7 +11,13 @@ def launcher(fn, config_fn, run_name, runType):
     os.environ['MKL_NUM_THREADS'] = str(modelSettings.condor_param['NUM_THREADS']) #'2'
     os.environ['OPENBLAS_NUM_THREADS'] = str(modelSettings.condor_param['NUM_THREADS']) #'2'
     os.environ['OMP_NUM_THREADS'] = str(modelSettings.condor_param['NUM_THREADS']) #'2'
+    os.environ["TABPFN_MODEL_CACHE_DIR"] = "/scratch2/ML4CAST/"
+    os.environ["http_proxy"] = "http://proxy-htcondor.cidsn.jrc.it:8888;https_proxy=http://proxy-htcondor.cidsn.jrc.it:8888"
+    os.environ["https_proxy"] = "http://proxy-htcondor.cidsn.jrc.it:8888;https_proxy=http://proxy-htcondor.cidsn.jrc.it:8888"
     config = a10_config.read(config_fn, run_name, run_type=runType)
+    source_path = os.path.join(config.root_dir, "tabpfn-v2-regressor.ckpt")
+    destination_path = "/scratch2/ML4CAST/"
+    shutil.copy(source_path, destination_path)
 
     if 'win' in sys.platform:
         pass

@@ -3,6 +3,7 @@ import datetime
 import time
 import glob
 import os
+import requests
 import sys
 import json
 import threading
@@ -121,6 +122,38 @@ def monitor_condor_q(time_step_minutes, submitter, config, run_name):
         # Sleep for n minutes
     time.sleep(time_step_minutes*60)
 
+def downloadTabCheck(config):
+    # Define the URL of the file
+    url = "https://huggingface.co/Prior-Labs/TabPFN-v2-reg/resolve/main/tabpfn-v2-regressor.ckpt"
+
+    # Define the path where the file will be saved
+    save_path = os.path.join(config.root_dir, "tabpfn-v2-regressor.ckpt")
+
+    # Send a GET request to the URL
+    response = requests.get(url, stream=True)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Get the total size of the file
+        total_size = int(response.headers.get('content-length', 0))
+
+        # Initialize a progress bar
+        block_size = 1024
+        wrote = 0
+
+        # Open the file in binary write mode
+        with open(save_path, 'wb') as f:
+            # Iterate over the response content
+            for data in response.iter_content(block_size):
+                # Write the data to the file
+                f.write(data)
+                # Update the progress bar
+                wrote += len(data)
+                print(f"Downloading {url}: {wrote / total_size * 100:.2f}%")
+
+        print("Download complete!")
+    else:
+        print("Failed to download the file. Status code: ", response.status_code)
 
 if __name__ == '__main__':
     """
@@ -154,6 +187,10 @@ if __name__ == '__main__':
     ##########################################################################################
 
     config = a10_config.read(config_fn, run_name, run_type=runType)
+    # tune_on_condor = 'True'
+    if tune_on_condor:
+        # dowload the checkpoint for Tab to be later copied to Condor scratch2
+        downloadTabCheck(config)
     # forecastingMonths = config.forecastingMonths
     spec_files_list = tuner.tuneA(run_name, config_fn, tune_on_condor, runType)
     tuner.tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list)

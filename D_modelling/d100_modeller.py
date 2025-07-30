@@ -41,9 +41,9 @@ class DataMixin:
         # Merge the new DataFrame with the existing DataFrame
         merged_df = pd.merge(new_df, stats, on=['adm_id', 'Crop_ID', 'Year'], how='left')
         list2fill = ['adm_name', 'Crop_name']
-        # if multi boundaries
-        if isinstance(config.fn_reference_shape, list):
-            list2fill = ['adm_name', 'Crop_name', 'fnid', 'Ref_shp', 'Adjusted_jrc_id_in_shp']
+        # # if multi boundaries
+        # if isinstance(config.fn_reference_shape, list):
+        #     list2fill = ['adm_name', 'Crop_name', 'fnid', 'Ref_shp', 'Adjusted_jrc_id_in_shp']
         for col in list2fill:
             merged_df[col] = merged_df.groupby(['adm_id', 'Crop_ID'])[col].fillna(
                 merged_df.groupby(['adm_id', 'Crop_ID'])[col].transform('first'))
@@ -63,18 +63,18 @@ class DataMixin:
                         stats = stats[~mask]
         # if working on benchmark, exclude admins having less than n (10) obs
         else:
-            n = 10
-            if isinstance(config.fn_reference_shape, list):
-                n = 5 # there is nothing with 10 and still active
+            n = 5
+            # if isinstance(config.fn_reference_shape, list):
+            #     n = 5 # there is nothing with 10 and still active
             for crop in stats['Crop_name'].unique():
                 validPerAdmin = stats[stats['Crop_name'] == crop].groupby(['adm_id'])['Yield'].count()
                 admin_ids_to_drop = validPerAdmin.index[validPerAdmin < n].to_list()
                 stats = stats[~((stats['adm_id'].isin(admin_ids_to_drop)) & (stats['Crop_name'] == crop))]
                 # if woriking on a country with multi-polygon (e.g. Morocco), keep only data related to the last admin boundaries
-            if isinstance(config.fn_reference_shape, list):
-                df_act_adm = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_ACTIVE_ADMINS.csv'))
-                act_adm_list = df_act_adm['adm_id'].unique().tolist()
-                stats = stats[stats['adm_id'].isin(act_adm_list)]
+            # if isinstance(config.fn_reference_shape, list):
+            #     df_act_adm = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_ACTIVE_ADMINS.csv'))
+            #     act_adm_list = df_act_adm['adm_id'].unique().tolist()
+            #     stats = stats[stats['adm_id'].isin(act_adm_list)]
 
         # Raw features for ope forecast are stored in a different dir to avoid overwrite of features used for training
         if runType == 'opeForecast':
