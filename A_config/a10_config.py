@@ -288,7 +288,7 @@ def config_reducer(modelSettings, run_name):
     elif run_name == 'MA_20250512':
         want_keys = ['Lasso', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-    elif run_name == 'ZA_tab_test3':
+    elif run_name == 'ZA_TabTest4':
         want_keys = ['Lasso']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         want_keys = ['rs_sm_reduced']

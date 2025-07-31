@@ -136,8 +136,8 @@ else:
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET.json'
     # run_name = 'MZ_20250130'
     # MZ Mozambique shorter calendar and 90 % area
-    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET.json'
-    run_name = 'MZ_20250527'
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MZ/main/Maize_(corn)_WC-Mozambique-FEWSNET.json'
+    # run_name = 'MZ_20250527'
     # NG Nigeria bi correct split
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/NG/Wet_bi/NG_bi_Maize_(corn)_WC-HARVESTAT_config.json'
     # run_name = 'NGbi_20250407'
@@ -184,6 +184,9 @@ else:
     # ZA2 data updated to 2024
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer2024data/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20250410'
+    # ZA4 for Tab
+    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer2024data/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_tab_test.json'
+    run_name = 'ZA_TabTest4'
     # ZM zambia
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZM/annual/Maize_(corn)_WC-Zambia-HARVESTAT.json'
     # run_name = 'ZM_20250403'
