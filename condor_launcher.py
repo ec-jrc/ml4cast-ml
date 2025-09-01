@@ -11,13 +11,13 @@ def launcher(fn, config_fn, run_name, runType):
     os.environ['MKL_NUM_THREADS'] = str(modelSettings.condor_param['NUM_THREADS']) #'2'
     os.environ['OPENBLAS_NUM_THREADS'] = str(modelSettings.condor_param['NUM_THREADS']) #'2'
     os.environ['OMP_NUM_THREADS'] = str(modelSettings.condor_param['NUM_THREADS']) #'2'
-    os.environ["TABPFN_MODEL_CACHE_DIR"] = "/scratch2/ML4CAST/"
+    os.environ["TABPFN_MODEL_CACHE_DIR"] = "/scratch2/ml4cast/"
     os.environ["http_proxy"] = "http://proxy-htcondor.cidsn.jrc.it:8888;https_proxy=http://proxy-htcondor.cidsn.jrc.it:8888"
     os.environ["https_proxy"] = "http://proxy-htcondor.cidsn.jrc.it:8888;https_proxy=http://proxy-htcondor.cidsn.jrc.it:8888"
     config = a10_config.read(config_fn, run_name, run_type=runType)
     fn_check = "tabpfn-v2-regressor.ckpt"
     source_path = os.path.join(config.root_dir, fn_check)
-    destination_path = os.path.join("/scratch2/ML4CAST/", fn_check)
+    destination_path = os.path.join("/scratch2/ml4cast/", fn_check)
     shutil.copy(source_path, destination_path)
 
     if 'win' in sys.platform:
