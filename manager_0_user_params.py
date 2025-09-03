@@ -29,8 +29,8 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\DZ\DZMultiple_WC-Algeria-ASAP_config.json'
     # run_name = 'DZ_20250131'
     # Morocco MA
-    config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
-    run_name = 'MA_20250729'
+    # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
+    # run_name = 'MA_20250729'
 
 
     # MW Malawi
@@ -81,6 +81,9 @@ if 'win' in sys.platform:
     # TN viirs
     # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
     # run_name = 'TNv_20250704'
+    # UAsummer a4c data
+    config_fn = r'V:\foodsec\Projects\SNYF\SIDv\UAsummer\UAsummer_a4c_config.json'
+    run_name = 'UAsummer20250516'
     # UA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\UA\UA_a4c_config.json'
     # run_name = 'UA20250516'

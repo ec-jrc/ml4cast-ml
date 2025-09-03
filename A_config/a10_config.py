@@ -288,15 +288,15 @@ def config_reducer(modelSettings, run_name):
     elif run_name == 'MA_20250512':
         want_keys = ['Lasso', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-    elif run_name == 'ZA_TabTest4':
-        want_keys = ['Lasso']
-        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        want_keys = ['rs_sm_reduced']
-        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
-        modelSettings.doOHEs = ['AU_level']
-        modelSettings.feature_selections = ['none']
-        modelSettings.addYieldTrend = [True]
-        modelSettings.dataReduction = ['none']
+    # elif run_name == 'UAsummer20250516':
+    #     want_keys = ['Lasso']
+    #     modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
+    #     want_keys = ['rs_sm_reduced']
+    #     modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
+    #     modelSettings.doOHEs = ['AU_level']
+    #     modelSettings.feature_selections = ['none']
+    #     modelSettings.addYieldTrend = [True]
+    #     modelSettings.dataReduction = ['none']
     elif run_name == 'MA_20250729':
         want_keys = ['Lasso']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
@@ -308,7 +308,7 @@ def config_reducer(modelSettings, run_name):
         modelSettings.dataReduction = ['none']
     else: #some default
         # want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf']
-        # Remove GPR to slow
+        # Remove GPR to slow, and RandomForest, never selected
         want_keys = ['Lasso', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         # want_keys = ['rs_met_sm_reduced',  'rs',  'rs_reduced', 'rs_sm_reduced', 'met_sm_reduced']
