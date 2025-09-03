@@ -300,7 +300,10 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
     df_regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
     crops = b1['Crop'].unique()
     forcTimes = b1[var4time].unique()
-    fp = fn_shape_gaul1
+    if isinstance(config.fn_reference_shape, list): #It is a multi-shp like Morocco
+        fp = b1['last_shp'].iloc[0]
+    else:
+        fp = fn_shape_gaul1
     gdf = gpd.read_file(fp)
     gdf_gaul1_id = config.adminID_column_name_in_shp_file
     for c in crops:
@@ -311,17 +314,21 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
             forecastingPrct = config.forecastingPrct[config.forecastingMonths.index(t)]
             # Tab change 2025
             # fig, axs = plt.subplots(2, 2, figsize=(10, 10), constrained_layout=True)
+            # fig is scatter by admin
             fig, axs = plt.subplots(3, 2, figsize=(15, 10), constrained_layout=True)
             axs = axs.flatten()
             # Tab change 2025
             # fig2, axs2 = plt.subplots(2, 2, figsize=(10, 10), constrained_layout=True)
+            # fig2 is scatter by year
             fig2, axs2 = plt.subplots(3, 2, figsize=(15, 10), constrained_layout=True)
             axs2 = axs2.flatten()
             df_c_t = b1[(b1['Crop'] == c) & (b1[var4time] == t)].copy()
-            sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
+            # sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'ML': 3}
+            sort_dict = {'Null_model': 0, 'Trend': 1, 'PeakNDVI': 2, 'Tab': 3, 'ML': 4}
             df_c_t['pltOrder'] = df_c_t['tmp_est'].map(sort_dict)
             df_c_t = df_c_t.sort_values('pltOrder').reset_index()
             # ax holder for rrmse by AU
+            # fig3 is the map of error
             fig3, axs3 = plt.subplots(2, 3, figsize=(12, 10), constrained_layout=True)
             # reorder conveniently
             axs3 = [axs3[0, 0], axs3[0, 1], axs3[1, 0], axs3[1, 1], axs3[0, 2], axs3[1, 2]]

@@ -185,10 +185,10 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
     # compute error at AU level
 
     # Marocco has boundary changing over time, it is a special case, I want to keep errors only on the last set of boundaries
-    if config.AOI == 'MA':
+    if isinstance(config.fn_reference_shape, list):
+    # if config.AOI == 'MA':
         print('**************************************************************')
-        print('Special case with chenging bounadriies')
-        print('cosi non va prende ids multipli ')
+        print('Special case with changing bounadriies')
         print('**************************************************************')
         # open the cleaned stats file to determine which are the admin ids connected to the last shape
         s = b101_load_cleaned.LoadCleanedLabel(config)
@@ -202,9 +202,11 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
         suffix = '_last_shp'
     else:
         adm_id_in_shp_2keep = None
+        last_shp = None
         suffix = ''
 
     b1withAUerror = e100_eval_figs.AU_error(b1, config, analysisOutputDir, suffix, adm_id_in_shp_2keep=adm_id_in_shp_2keep)
+    b1withAUerror['last_shp'] = last_shp
     # in order to assign the same colors and keep a defined order I have to do have a unique label for all ML models
     b1withAUerror['tmp_est'] = b1withAUerror['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
 
