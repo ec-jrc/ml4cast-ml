@@ -8,6 +8,7 @@ import seaborn as sns
 import os
 import pathlib
 import calendar
+from A_config import a10_config
 from D_modelling import d090_model_wrapper, d140_modelStats
 from D_modelling import d140_modelStats
 from E_viz import e50_yield_data_analysis
@@ -43,6 +44,8 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
     # using area of the last five years (to occount for the fact that larger errors are more tolerable if the area is small)
     # 2024/12/19 note: the last five years has problem in Harvest data (e.g. Zambia) where some units do not have the last 5 yrs,
     # therefore I use the full time series stats
+
+    mlsettings = a10_config.mlSettings(forecastingMonths=0)
 
     os.path.join(config.data_dir, 'Label_analysis')
     df_Stats = pd.read_csv(os.path.join(os.path.join(config.data_dir, 'Label_analysis' + str(config.prct2retain)),
@@ -126,7 +129,8 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
         tmp = dfAUc[dfAUc["forecast_time"] == forcTime[0]]
         tmp = tmp.sort_values('adm_name').reset_index()
         # to assign constant colors, find the name of the ML estimator
-        ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), ['Trend', 'PeakNDVI', 'Null_model'])[0]
+        #ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), ['Trend', 'PeakNDVI', 'Null_model'])[0]
+        ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), mlsettings.benchmarks)[0]
         # palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", ml_est_name: "b"}
         # Tab change 2025
         palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", "Tab": "purple", ml_est_name: "b"}

@@ -35,7 +35,7 @@ if __name__ == '__main__':
     runIDs2rerun = F100_analyze_hindcast_output.compare_fast_outputs(config, n, metric2use=metric)
     # move the benchmark and run properly the ml to be rerun
     config = a10_config.read(config_fn, run_name, run_type='tuning')
-    out_standard= config.models_out_dir
+    out_standard = config.models_out_dir
     Path(out_standard).mkdir(parents=True, exist_ok=True)
     # copy benchmarks (names in mlsettings.benchmarks)
     mlsettings = a10_config.mlSettings(forecastingMonths=0)
