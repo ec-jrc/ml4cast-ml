@@ -50,10 +50,11 @@ def save_model_specs(config, modelSettings):
     # save files for ML
     ML_algos = list(modelSettings.hyperGrid.keys())
     # repetat the models with feature eng settings
-    for ften in modelSettings.ft_eng:
-        # DEBUG: run only ft eng models
-        # ML_algos = [x+ften for x in ML_algos]
-        ML_algos = ML_algos + [x + ften for x in ML_algos]
+    if modelSettings.ft_eng != None:
+        for ften in modelSettings.ft_eng:
+            # DEBUG: run only ft eng models
+            # ML_algos = [x+ften for x in ML_algos]
+            ML_algos = ML_algos + [x + ften for x in ML_algos]
     feature_sets = list(modelSettings.feature_groups.keys())
     a = [config.crops, ML_algos, modelSettings.forecastingMonths,
          modelSettings.doOHEs, feature_sets, modelSettings.feature_selections, modelSettings.dataReduction, modelSettings.addYieldTrend]

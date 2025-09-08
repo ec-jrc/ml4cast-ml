@@ -84,8 +84,8 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
     # run_name = 'TNv_20250704'
     # UAsummer a4c data and viirs
-    config_fn = r'V:\foodsec\Projects\SNYF\SIDv\UAsummer\UAsummer_a4c_config.json'
-    run_name = 'UAsummer20250903'
+    # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\UAsummer\UAsummer_a4c_config.json'
+    # run_name = 'UAsummer20250903'
     # UA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\UA\UA_a4c_config.json'
     # run_name = 'UA20250516'
@@ -112,12 +112,13 @@ if 'win' in sys.platform:
     # ZA viirs con 2024 data
     # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZAv_20250703'
+    # ZA viirs con 2024 data e SF
+    config_fn = r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+    # baseline forecast without future
+    run_name = 'ZAvSeas5base'
     # # ZM Zambia
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZM\annual\Maize_(corn)_WC-Zambia-HARVESTAT.json'
     # run_name = 'ZM_20250403'
-
-
-
 
 else:
     # AO Angola
@@ -190,8 +191,8 @@ else:
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer2024data/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZA_20250410'
     # ZA4 for Tab
-    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer2024data/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_tab_test.json'
-    run_name = 'ZA_TabTest4'
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer2024data/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_tab_test.json'
+    # run_name = 'ZA_TabTest4'
     # ZM zambia
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZM/annual/Maize_(corn)_WC-Zambia-HARVESTAT.json'
     # run_name = 'ZM_20250403'
