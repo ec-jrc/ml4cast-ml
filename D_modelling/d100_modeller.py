@@ -249,7 +249,7 @@ class YieldModeller(DataMixin, object):
             scoring_metric_on_val = []
             nIterationOuterLoop = 1
             if ((runType == 'fast_tuning') and (not(self.uset['algorithm'] in mlsettings.benchmarks))):
-                # in case it fast_tuning and it is a ML mode:
+                # in this case it is fast_tuning and it is a ML mode:
                 # hyper tuning is made on the full set (outer loop), no error stats are saved,
                 # and the inner loop is not executed
                 pass
@@ -378,7 +378,7 @@ class YieldModeller(DataMixin, object):
                 avg_scoring_metric_on_val = np.mean(
                     [-x for x in scoring_metric_on_val])  # rmse is negative, turn it positive
             else:
-                # pegging check was skipped, as the model was run in fit only. give a nana value
+                # pegging check was skipped, as the model was run in fit only. give a nan value
                 prctPegged = np.nan
                 avg_scoring_metric_on_val = np.nan
             hyperParams, hyperParamsGrid, coefFit = d130_get_hyper.get(algo, search, self.uset['hyperGrid'],
@@ -390,7 +390,8 @@ class YieldModeller(DataMixin, object):
     def validate(self, hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, runTimeH, featureNames,
                  selected_features_names, prct_selected, n_selected, avg_scoring_metric_on_val, config, runType, save_file=True,
                  save_figs=False):
-        if ((runType == 'fast_tuning') and (not (self.uset['algorithm'] in ['Null_model', 'Trend', 'PeakNDVI']))):
+        mlsettings = a10_config.mlSettings()
+        if ((runType == 'fast_tuning') and (not (self.uset['algorithm'] in mlsettings.benchmarks))):
             lbl = 'n.a., fast_tuning'
             error_spatial = {'Pred_R2': lbl, 'Pred_MAE': lbl, 'rel_Pred_MAE':lbl, 'Pred_ME': lbl, 'Pred_RMSE':  lbl, 'rel_Pred_RMSE': lbl}
             error_overall = {'Pred_R2': lbl, 'Pred_MAE': lbl, 'rel_Pred_MAE': lbl, 'Pred_ME': lbl, 'Pred_RMSE': lbl, 'rel_Pred_RMSE': lbl}
@@ -398,7 +399,6 @@ class YieldModeller(DataMixin, object):
             prctPegged = {'left': lbl, 'right': lbl}
             meanAUR2 = lbl
         else:
-
             error_spatial = d140_modelStats.allStats_spatial(mRes) #this must be used for LOO stats
             error_overall = d140_modelStats.allStats_overall(mRes)
             # mean of temporal R2 of each AU

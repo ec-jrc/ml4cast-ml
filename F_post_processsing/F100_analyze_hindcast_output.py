@@ -85,14 +85,12 @@ def compare_fast_outputs(config, n, metric2use='rRMSE_p'):  # RMSE_p' #'R2_p'
 
     mo = pd.read_csv(analysisOutputDir + '/' + 'all_model_output.csv')
     # get best n ML configurations by lead time, crop type and y var PLUS Tabl
-    # Tab change 2025
-    ben2discard = list(filter(lambda x: x != "Tab", mlsettings.benchmarks))
-    #moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
-    moML = mo[mo['Estimator'].isin(ben2discard) == False]
+    # Tab change 2025, removed, Tab is treated as a benchmark, always considered
+    # ben2discard = list(filter(lambda x: x != "Tab", mlsettings.benchmarks))
+    moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
+    # moML = mo[mo['Estimator'].isin(ben2discard) == False]
     bn = moML.groupby(['Crop', var4time]).apply(
         lambda x: x.sort_values([metric2use], ascending=sortAscending).head(n)).reset_index(drop=True)
-    # always add the benchmarks
-
     bn = bn.sort_values([var4time, 'Crop', metric2use], \
                         ascending=[True, True, sortAscending])
     # bn.to_csv(analysisOutputDir + '/' + 'ML_models_to_run_with_tuning.csv', index=False)

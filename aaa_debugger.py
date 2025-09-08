@@ -12,10 +12,15 @@ pd.set_option('display.max_columns', None)
 # os.environ['OMP_NUM_THREADS'] = '8'
 
 
-fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\RUN_Maize_(corn)_WC-Mozambique-FEWSNET\TUNE_MZ_20250527\Specs\000108_Maize_SVR_linear.json'
-config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET.json'
+# fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\RUN_Maize_(corn)_WC-Mozambique-FEWSNET\TUNE_MZ_20250527\Specs\000108_Maize_SVR_linear.json'
+# config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET.json'
+# runType = 'fast_tuning' #'fast_tuning'
+# run_name = 'MZ_20250527'
+
+fn = r'V:\foodsec\Projects\SNYF\SIDv\UAsummer\RUN_UA_Weather_filtered\TUNE_UAsummer20250309\Specs\000016_maize_XGBoost.json'
+config_fn = r'V:\foodsec\Projects\SNYF\SIDv\UAsummer\UAsummer_a4c_config.json'
 runType = 'fast_tuning' #'fast_tuning'
-run_name = 'MZ_20250527'
+run_name = 'UAsummer20250309'
 
 
 # fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZA_20250410\Specs\000147_Sunflower_SVR_linear.json'

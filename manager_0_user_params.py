@@ -31,7 +31,9 @@ if 'win' in sys.platform:
     # Morocco MA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MA\MAfews_config.json'
     # run_name = 'MA_20250729'
-
+    # Morocco MA viirs and new ids
+    # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\MA\MAfews_config.json'
+    # run_name = 'MA_20250904'
 
     # MW Malawi
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
@@ -81,9 +83,9 @@ if 'win' in sys.platform:
     # TN viirs
     # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
     # run_name = 'TNv_20250704'
-    # UAsummer a4c data
+    # UAsummer a4c data and viirs
     config_fn = r'V:\foodsec\Projects\SNYF\SIDv\UAsummer\UAsummer_a4c_config.json'
-    run_name = 'UAsummer20250516'
+    run_name = 'UAsummer20250903'
     # UA
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\UA\UA_a4c_config.json'
     # run_name = 'UA20250516'

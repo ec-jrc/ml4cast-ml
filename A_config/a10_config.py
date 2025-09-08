@@ -288,16 +288,16 @@ def config_reducer(modelSettings, run_name):
     elif run_name == 'MA_20250512':
         want_keys = ['Lasso', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-    # elif run_name == 'UAsummer20250516':
-    #     want_keys = ['Lasso']
-    #     modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-    #     want_keys = ['rs_sm_reduced']
-    #     modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
-    #     modelSettings.doOHEs = ['AU_level']
-    #     modelSettings.feature_selections = ['none']
-    #     modelSettings.addYieldTrend = [True]
-    #     modelSettings.dataReduction = ['none']
-    elif run_name == 'MA_20250729':
+    elif run_name == 'UAsummer20250309':
+        want_keys = ['XGBoost']
+        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
+        want_keys = ['rs_sm_reduced']
+        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
+        modelSettings.doOHEs = ['AU_level']
+        modelSettings.feature_selections = ['none']
+        modelSettings.addYieldTrend = [True]
+        modelSettings.dataReduction = ['none']
+    elif run_name == 'MA_20250904':
         want_keys = ['Lasso']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         want_keys = ['rs_sm_reduced']

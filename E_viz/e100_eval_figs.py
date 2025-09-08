@@ -329,7 +329,7 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
             df_c_t = df_c_t.sort_values('pltOrder').reset_index()
             # ax holder for rrmse by AU
             # fig3 is the map of error
-            fig3, axs3 = plt.subplots(2, 3, figsize=(12, 10), constrained_layout=True)
+            fig3, axs3 = plt.subplots(2, 3, figsize=(15, 10), constrained_layout=True)
             # reorder conveniently
             axs3 = [axs3[0, 0], axs3[0, 1], axs3[1, 0], axs3[1, 1], axs3[0, 2], axs3[1, 2]]
             minOfMins = df_c_t.rrmse_prct.min()
@@ -341,11 +341,17 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
             index = 0
             for model in df_c_t['tmp_est'].unique():
                 df_c_t_m = df_c_t[df_c_t['tmp_est'] == model]
-                axs3[index] = e50_yield_data_analysis.mapDfColumn2Ax(df_c_t_m, 'adm_id', 'rrmse_prct', 'adm_name',
+                e50_yield_data_analysis.mapDfColumn2Ax(df_c_t_m, 'adm_id', 'rrmse_prct', 'adm_name',
                                                                      gdf, gdf_gaul1_id, gdf_gaul0_column,
                                                                      country_name_in_shp_file,
                                                                      'rRMSE (%)', cmap='tab20b',
-                                                                     minmax=[minOfMins, maxOfmaxs], ax=axs3[index])
+                                                                     # minmax=[minOfMins, maxOfmaxs], ax=axs3[index])
+                                                                     ax=axs3[index])
+                # axs3[index] = e50_yield_data_analysis.mapDfColumn2Ax(df_c_t_m, 'adm_id', 'rrmse_prct', 'adm_name',
+                #                                                      gdf, gdf_gaul1_id, gdf_gaul0_column,
+                #                                                      country_name_in_shp_file,
+                #                                                      'rRMSE (%)', cmap='tab20b',
+                #                                                      minmax=[minOfMins, maxOfmaxs], ax=axs3[index])
                 axs3[index].set_title(model)
                 # get mres errors
                 runID = df_c_t_m['runID'].iloc[0]
@@ -394,7 +400,7 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
             fig2.savefig(fig_name)
             # Tab change 2025
             # now plot the best by au (ax 5 instead of 4 with Tab)
-            axs3[5] = e50_yield_data_analysis.mapDfColumn2Ax(dfBestPerAU, 'adm_id', 'Estimator', 'adm_name', gdf,
+            e50_yield_data_analysis.mapDfColumn2Ax(dfBestPerAU, 'adm_id', 'Estimator', 'adm_name', gdf,
                                                              gdf_gaul1_id, gdf_gaul0_column,
                                                              country_name_in_shp_file,
                                                              'Estimator', ax=axs3[5], cate=True)
@@ -405,6 +411,10 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
             fig3.subplots_adjust(wspace=0.01, hspace=0.01)
             for ax in axs3:
                 ax.set_anchor('NW')
+                # for child in fig3.get_children():
+                #     if hasattr(child, 'set_bbox_to_anchor'):
+                #         child.set_bbox_to_anchor((0.5, -0.2))
+
             fig_name = OutputDir + '/' + 'forecast_mInSeas' + str(t) + '_early_' + str(
                 forecast_issue_calendar_month) + '_prctSeas' + str(forecastingPrct) + '-' + c + '_AU_rrmse.png'
             fig3.savefig(fig_name)

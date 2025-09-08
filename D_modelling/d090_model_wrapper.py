@@ -40,7 +40,9 @@ def fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False):
         selected_features_names, prct_selected, n_selected, \
         avg_scoring_metric_on_val, fitted_model = hindcaster.fit(X, y, groups, feature_names, adm_ids, runType)
         #if I am retuning or tuning produce MRes for results analysis:
-        if runType == 'tuning':
+        # Tab change 2025
+        # do it for tab as well, it is not re-run in tuning
+        if runType == 'tuning' or (uset['algorithm'] == 'Tab' and runType == 'fast_tuning'):
             # write mres for future use
             fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) +
                                   '_crop_' + uset['crop'] + '_Yield_' + uset['algorithm'] +
