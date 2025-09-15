@@ -118,7 +118,7 @@ if __name__ == '__main__':
                 fit_indices = np.where(np.logical_and(groups >= config.year_start, groups <= config.year_end))[0]
                 forecast_indices = np.where(groups == forecastingYear)[0]
                 # fit
-                # Null_model and trend require special handing
+                # Benchmarks require special handing
                 if est == 'Null_model':
                     forecasts = []
                     au_codes = []
@@ -145,6 +145,13 @@ if __name__ == '__main__':
                         res = reg_list[0].predict(X[forecast_indices[ind_adm_id_in_forecast_indices]])
                         forecasts.append(res[0])
                         au_codes.append(adm_id)
+                elif est == 'Tab':
+                    # for Tab I use d110_benchmark_models.run_LOYO that fit on a sample and predict on another
+                    # d110_benchmark_models.run_LOYO(model, X_train, X_test, y_train, y_test, adm_id_train, adm_id_test, groups_test)
+                    y_pred, y_test, adm_id_test, year_test = d110_benchmark_models.run_LOYO(est, X[fit_indices, :], X[forecast_indices, :], y[fit_indices], y[forecast_indices],
+                                                   adm_ids[fit_indices], adm_ids[forecast_indices], groups[forecast_indices])
+                    au_codes = adm_id_test
+                    forecasts = y_pred
                 else:
                     hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, \
                     selected_features_names, prct_selected, n_selected, \

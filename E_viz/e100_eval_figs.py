@@ -141,11 +141,14 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
         p1.set_xticklabels(p1.get_xticklabels(),
                                   rotation=70,
                                   horizontalalignment='right')
-        if len(forcTime)>1:
+        if len(forcTime) > 1:
             tmp = dfAUc[dfAUc["forecast_time"] == forcTime[1]]
             tmp = tmp.sort_values('adm_name').reset_index()
-            ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), ['Trend', 'PeakNDVI', 'Null_model'])[0]
-            palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", ml_est_name: "b"}
+            # ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), ['Trend', 'PeakNDVI', 'Null_model'])[0]
+            ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), mlsettings.benchmarks)[0]
+            # Tab change 2025
+            palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", "Tab": "purple", ml_est_name: "b"}
+            # palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", ml_est_name: "b"}
             p2 = sns.barplot(tmp, x="adm_name", y="rrmse_prct", hue="Estimator", ax=axes[1], palette=palette, order=tmp['adm_name'])
             p2.set_title('Forecast_time = ' + str(forcTime[1]))
             sns.move_legend(axes[1], "upper right", title=None, frameon=False)  # bbox_to_anchor=(1, 1)

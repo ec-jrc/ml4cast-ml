@@ -306,7 +306,7 @@ def config_reducer(modelSettings, run_name):
         modelSettings.feature_selections = ['none']
         modelSettings.addYieldTrend = [True]
         modelSettings.dataReduction = ['none']
-    elif "Seas5" in run_name:
+    elif "ZAvSeas5ObsAsSF" in run_name:
         want_keys = ['XGBoost']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         want_keys = ['rs_met_reduced']

@@ -113,9 +113,11 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
     # run_name = 'ZAv_20250703'
     # ZA viirs con 2024 data e SF
-    config_fn = r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-    # baseline forecast without future
-    run_name = 'ZAvSeas5base'
+    # baseline forecast without future forecast
+    config_fn = r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF_ObsAsSF\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_SF_ObsAsForecast.json'
+    run_name = 'ZAvSeas5ObsAsSF'
+    # Using observed weather as SF
+
     # # ZM Zambia
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZM\annual\Maize_(corn)_WC-Zambia-HARVESTAT.json'
     # run_name = 'ZM_20250403'
@@ -132,6 +134,9 @@ else:
     # run_name = 'BE_20241226'
     # MA Morocco variable boundaries
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/MA/MAfews_config.json'
+    # Morocco MA viirs and new ids
+    config_fn = r'/eos/jeodpp/data/projects/ML4CAST/VIIRS/MA/MAfews_config.json'
+    run_name = 'MA_20250908'
     # # # run_name = 'MA_20250404'
     # # MA WITHOUT GPR MA_20250512
     # run_name = 'MA_20250512'
@@ -175,6 +180,9 @@ else:
     # TN Tunisia with exclusions
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/TN/Winter2/TNMultiple_WC-Tunisia-ASAP_config_excl.json'
     # run_name = 'TN_20250424'
+    # UA summer, a4c data
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/UAsummer/UAsummer_a4c_config.json'
+    # run_name = 'UAsummer20250903'
     # UA
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/UA/UA_a4c_config.json'
     # run_name = 'UA20250516'
@@ -193,9 +201,13 @@ else:
     # ZA4 for Tab
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZA/summer2024data/ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_tab_test.json'
     # run_name = 'ZA_TabTest4'
+    # ZA5 for SF
+    # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/VIIRS/ZA/SF//ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+    # run_name = 'ZAvSeas5base'
     # ZM zambia
     # config_fn = r'/eos/jeodpp/data/projects/ML4CAST/ZM/annual/Maize_(corn)_WC-Zambia-HARVESTAT.json'
     # run_name = 'ZM_20250403'
+
     tune_on_condor = True
     time_step_check = 60  # in minutes
 

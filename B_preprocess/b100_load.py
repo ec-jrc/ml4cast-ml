@@ -83,7 +83,7 @@ def LoadPredictors_Save_Csv(config, runType):
     df.to_csv(os.path.join(dirOut, config.AOI + '_predictors.csv'), index=False)
 
 def build_features(config, runType):
-    # created monthly features and than reashape as scikit format
+    # created monthly features and then reashape as scikit format
     # config is the config object
     pd.set_option('display.max_columns', None)
     desired_width = 320
