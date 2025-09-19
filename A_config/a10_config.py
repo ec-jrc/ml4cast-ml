@@ -28,6 +28,10 @@ class read:
     with open(full_path_config, 'r') as fp:
         jdict = json.load(fp)
     self.AOI = jdict['AOI']
+    if "UseSeasonalForecast" in jdict:
+        self.useSF = jdict['UseSeasonalForecast']
+    else:
+        self.useSF = False
     # year start and end define the period for which I have yield data and RS data (used for tuning)
     self.year_start = int(jdict['year_start'])
     self.year_end = int(jdict['year_end'])
@@ -81,12 +85,16 @@ class read:
         real_months = list(range(int(self.sosMonth), 12 + 1)) + list(range(1, int(self.eosMonth) + 1))
 
     id_months = np.array(range(1,len(real_months)+1))
+    # Now, no matter if 100 % forecast is used, store the last month in season to be used to limit use of Seasonal Forecast,
+    # if last month in season is 7, when prediction at 3, we should not use all the 7 months of SF
+    self.eosMonthInSeason = int(id_months[-1])
     prct_months = id_months/len(id_months)*100
     self.forecastingMonths = []
     self.forecastingCalendarMonths = []
     for prct in self.forecastingPrct:
         self.forecastingMonths = self.forecastingMonths + list([int(id_months[np.argmin(np.abs(prct_months-float(prct)))])])
         self.forecastingCalendarMonths =self.forecastingCalendarMonths + list([int(real_months[np.argmin(np.abs(prct_months-float(prct)))])])
+
 
 class mlSettings:
   def __init__(self, forecastingMonths=0):
@@ -306,10 +314,10 @@ def config_reducer(modelSettings, run_name):
         modelSettings.feature_selections = ['none']
         modelSettings.addYieldTrend = [True]
         modelSettings.dataReduction = ['none']
-    elif "ZAvSeas5ObsAsSF" in run_name:
+    elif "SF" in run_name: # some default for SF runs
         want_keys = ['XGBoost']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        want_keys = ['rs_met_reduced']
+        want_keys = ['rs_met_sm_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
         modelSettings.ft_eng = None
     else: #some default

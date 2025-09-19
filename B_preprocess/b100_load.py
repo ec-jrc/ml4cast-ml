@@ -100,6 +100,19 @@ def build_features(config, runType):
     # open predictors
     fn = os.path.join(dirOut, config.AOI + '_predictors.csv')
     df = pd.read_csv(fn)
+    if config.useSF == True:
+        # check SF is there
+        if df['variable_name'].str.startswith('SF').sum() < 10:
+            raise ValueError("Use of Seasonal Forecast required, but no SF in _predictors.csv")
+        # A given month MM contains Seasonal Forecast means of that month MM with date MM/01,
+        # when preparing the data (load), this has to be assigned to the previous month MM-1/01
+        # to be avaiable in tuning and forecasting
+        # shift - 1 month
+        df['Date'] = pd.to_datetime(df['Date'])
+        df.loc[df['variable_name'].str.contains('SF_'), 'Date'] = (df['Date'] + pd.DateOffset(months=-1)).dt.strftime('%Y-%m-%d')
+        # # check: df_month[(df_month['adm_id']==2223) & (df_month['Year']==2000) & ((df_month['variable_name']=='SF_t_1') | (df_month['variable_name']=='temperature'))]
+
+
     df["Datetime"] = pd.to_datetime(df.Date)
     df["Year"] = df.Datetime.dt.year
     df["Month"] = df.Datetime.dt.month
@@ -142,6 +155,8 @@ def build_features(config, runType):
 
     df_month.to_csv(os.path.join(dirOut, config.AOI + '_monthly_features.csv'), index=False)
 
+
+
     #Reshape the df to scikit format
     MonthSep = 'M'
     ivars = config.ivars
@@ -174,8 +189,9 @@ def build_features(config, runType):
                         if (v == 'temperature') or (v == 'NDVI') or (v == 'FPAR'):
                             columns.append(vs + 'min' + MonthSep + str(mm))
                             row.append(dfM_au_yy_v_mm['min'].iloc[0])
-                        columns.append(vs + 'max' + MonthSep + str(mm))
-                        row.append(dfM_au_yy_v_mm['max'].iloc[0])
+                        if not("SF_" in v):
+                            columns.append(vs + 'max' + MonthSep + str(mm))
+                            row.append(dfM_au_yy_v_mm['max'].iloc[0])
             if init == 0:
                 df = pd.DataFrame([row], columns=columns)
                 init = 1

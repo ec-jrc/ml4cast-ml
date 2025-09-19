@@ -5,7 +5,7 @@ pd.set_option('display.max_rows', 50)
 
 '''
 take extracted data, 
-add observed rain and prec as forecasts,
+add observed rain and prec (taken from monthly features) as forecasts,
 save it as fn extraction + _ObsAsForecast
 '''
 
@@ -13,7 +13,6 @@ fn_extraction = r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\Tuning_data\Maize_(corn)_W
 fn_out = os.path.splitext(fn_extraction)[0] + '_ObsAsForecast.csv'
 
 df_dek = pd.read_csv(fn_extraction)
-df_mon = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZAvSeas5base\ZAsummer_monthly_features.csv')
 # do as in standard code, replace names with region_id
 regNames = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\Tuning_data\ZAsummer_REGION_id.csv')
 # now link it with adm_id and name
@@ -25,6 +24,10 @@ df_dek.drop('adm_name_extraction', axis=1, inplace=True)
 classset_name = df_dek.classset_name.iloc[0]
 class_name = df_dek.class_name.iloc[0]
 
+# get monthly features
+# A given month MM contains means of that month MM with date MM/01,
+# when preparing the data (load), this has to be assigned to the previous month
+df_mon = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZAvSeas5base\ZAsummer_monthly_features.csv')
 df_mon = df_mon[(df_mon.variable_name == 'rainfall') | (df_mon.variable_name == 'temperature')]
 df_mon = df_mon.sort_values(by=['variable_name', 'adm_name', 'Date'])
 res = []
@@ -34,8 +37,12 @@ for name, group in df_mon.groupby(['variable_name', 'adm_name', 'Date']):
     current_date = group['Date'].iloc[0]
     next_dates = df_mon[(df_mon['adm_name'] == name[1]) & (df_mon['Date'] > current_date) & (df_mon['variable_name'] == name[0])].sort_values(by='Date').head(6)
     combined_dates = pd.concat([group, next_dates])
+    # # shift - 1 month REMOVED, THIS HAS TO BE DONE IN LOAD
+    # combined_dates['Date_datetime'] = pd.to_datetime(combined_dates['Date'])
+    # combined_dates['Date'] = (combined_dates['Date_datetime'] + pd.DateOffset(months=-1)).dt.strftime('%Y-%m-%d')
     desired_columns = combined_dates[['variable_name', 'adm_name', 'adm_id', 'Date', 'mean']]
     desired_columns = desired_columns.rename(columns={'variable_name': 'variable_name_original'})
+
     if len(desired_columns) != 7:
         print('Warning: there is no 7 months ahead for date ' + desired_columns.Date.iloc[0])
         detection = 1

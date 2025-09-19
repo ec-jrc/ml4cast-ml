@@ -126,7 +126,17 @@ class DataMixin:
             X = X.reshape((-1, 1))
         else: # for any ML model and PeakNDVI and Tab
             # retain features up to the time of forecast (included) = lead time
-            list2keep = ['(^|\D)M' + str(i) + '($|\D)' for i in range(0, self.uset['forecast_time'] + 1)] + ['YieldFromTrend']
+            ObsList2keep = ['^(?!.*SF).*M' + str(i) + '(?![0-9]).*$' for i in range(1, self.uset['forecast_time'] + 1)] + ['YieldFromTrend']
+            # I am forecasting at end of MonthInSeason self.uset['forecast_time']
+            # I have n months till end of season, n = config.eosMonthInSeason - self.uset['forecast_time']
+            # therefore I have to keep up to SFn. SFm with m>n are after eos and must be discarded
+            SF_ind2keep = range(1, config.eosMonthInSeason - self.uset['forecast_time'] + 1)
+            ForecastList2keep = ['^(?=.*SF.[' + str(i) + '])(?=.*M' + str(self.uset['forecast_time']) + '(?![0-9])).*$' for i in SF_ind2keep]
+            if config.useSF == True: #Using SF
+                list2keep = ObsList2keep + ForecastList2keep
+            else:
+                list2keep = ObsList2keep
+            # list2keep = ['(^|\D)M' + str(i) + '($|\D)' for i in range(0, self.uset['forecast_time'] + 1)] + ['YieldFromTrend']
             yxData = yxData.filter(regex='|'.join(list2keep))
             if self.uset['algorithm'] == 'PeakNDVI':
                 # the only feature is max NDVI in the period
@@ -145,7 +155,11 @@ class DataMixin:
                         yxData['peakFPAR'] = yxData.filter(regex=r'(NDmax|FPmax)').max(axis=1)
                         yxData = yxData[yxData.columns.drop(list(yxData.filter(regex='^FP')))]
                         # take only last 3 for meteo (and keep peakFPAR and YieldFromTrend - if there it is needed)
-                        months2keep = [str(x) for x in list(range(self.uset['forecast_time']+1-3, self.uset['forecast_time']+1))]+['peakFPAR']+ ['YieldFromTrend']
+                        # make the necessary adaptation if forecast month is 1 or 2
+                        if self.uset['forecast_time'] < 3:
+                            months2keep = ['M' + str(x) for x in list(range(1, self.uset['forecast_time']+1))]+['peakFPAR']+ ['YieldFromTrend']
+                        else:
+                            months2keep = ['M' + str(x) for x in list(range(self.uset['forecast_time']+1-3, self.uset['forecast_time']+1))]+['peakFPAR']+ ['YieldFromTrend']
                         yxData = yxData.filter(regex='|'.join(f'{x}' for x in months2keep)) #.dropna(how='all')
                     else:
                         print('ft eng set' + ft_eng_set + 'not managed by d100, the execution stops')
@@ -162,6 +176,8 @@ class DataMixin:
                         list2keep = ['^' + str(i) + 'M\d+$' for i in _features] + ['YieldFromTrend']
                     else:
                         list2keep = ['^' + str(i) + 'M\d+$' for i in _features]
+                    if config.useSF == True: # if forecast use is asked, keep al SF in addition to feature_group
+                        list2keep = list2keep + ['.*SF.*']
                     if '@' in self.uset['algorithm']:
                         list2keep = list2keep + ['peakFPAR']
                     X = yxData.filter(regex='|'.join(list2keep)).to_numpy()
