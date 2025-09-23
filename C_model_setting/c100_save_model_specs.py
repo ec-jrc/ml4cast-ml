@@ -21,6 +21,7 @@ def save_model_specs(config, modelSettings):
         aggregationSFs = ['monthly', 'seasonal']
     else:
         useSF = False
+        aggregationSFs = ['none']
 
     # save files for benchmark
     Bench_algos = list(modelSettings.benchmarks)
@@ -39,8 +40,8 @@ def save_model_specs(config, modelSettings):
             useSFtxt = False
             aggregationSFtxt = 'none'
             addYieldTrendtXT = 'none'
-        if (algo != 'Tab') and (aggregationSF == 'seasonal') :
-            skip = True
+        # if (algo != 'Tab') and (aggregationSF == 'seasonal') :
+        #     skip = True
         # Save model settings as json
         uset = {'runID': runID,
                 'crop': crop,
