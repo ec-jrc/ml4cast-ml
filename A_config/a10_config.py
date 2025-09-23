@@ -315,8 +315,8 @@ def config_reducer(modelSettings, run_name):
         modelSettings.addYieldTrend = [True]
         modelSettings.dataReduction = ['none']
     elif "SF" in run_name: # some default for SF runs
-        want_keys = ['XGBoost']
-        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
+        # want_keys = ['XGBoost']
+        # modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         want_keys = ['rs_met_sm_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
         modelSettings.ft_eng = None

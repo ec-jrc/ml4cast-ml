@@ -78,11 +78,11 @@ def setHyper_ft_sel(X, y, X_test, prct_features2select_grid, featureNames,
     X_test_by_feature_set = []
     # Use mrmr to sort features in descending importance
     # get features to be tested (exclude OHE and YieldFromTrend)
-    indices_OHE = [i for i, elem in enumerate(featureNames) if ('OHE' in elem) or ('Yield') in elem]
-    indices_nonOHE = [i for i, elem in enumerate(featureNames) if not ('OHE' in elem or ('Yield') in elem)]
+    indices_OHE = [i for i, elem in enumerate(featureNames) if ('OHE' in elem) or ('Yield') in elem or ('SFrSeas') in elem or ('SFtSeas') in elem]
+    indices_nonOHE = [i for i, elem in enumerate(featureNames) if not ('OHE' in elem or ('Yield') in elem or ('SFrSeas') in elem or ('SFtSeas') in elem)]
     n_features = len(indices_nonOHE)
     Z = X[:, np.array(indices_nonOHE)]
-    Z_ft_names =np.array(featureNames)[indices_nonOHE]
+    Z_ft_names = np.array(featureNames)[indices_nonOHE]
     Z_test = X_test[:, np.array(indices_nonOHE)]
     dfZ = pd.DataFrame(Z)
     dfy = pd.Series(y)

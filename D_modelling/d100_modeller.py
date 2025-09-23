@@ -128,9 +128,10 @@ class DataMixin:
             # retain features up to the time of forecast (included) = lead time
             ObsList2keep = ['^(?!.*SF).*M' + str(i) + '(?![0-9]).*$' for i in range(1, self.uset['forecast_time'] + 1)] + ['YieldFromTrend']
             # I am forecasting at end of MonthInSeason self.uset['forecast_time']
-            # I have n months till end of season, n = config.eosMonthInSeason - self.uset['forecast_time']
+            # Discard the last month (that of eos) when using SF
+            # I have n months till end of season - 1 month, n = (config.eosMonthInSeason -1) - self.uset['forecast_time']
             # therefore I have to keep up to SFn. SFm with m>n are after eos and must be discarded
-            SF_ind2keep = range(1, config.eosMonthInSeason - self.uset['forecast_time'] + 1)
+            SF_ind2keep = range(1, (config.eosMonthInSeason-1) - self.uset['forecast_time'] + 1)
             ForecastList2keep = ['^(?=.*SF.[' + str(i) + '])(?=.*M' + str(self.uset['forecast_time']) + '(?![0-9])).*$' for i in SF_ind2keep]
             if config.useSF == True: #Using SF
                 list2keep = ObsList2keep + ForecastList2keep
@@ -138,6 +139,12 @@ class DataMixin:
                 list2keep = ObsList2keep
             # list2keep = ['(^|\D)M' + str(i) + '($|\D)' for i in range(0, self.uset['forecast_time'] + 1)] + ['YieldFromTrend']
             yxData = yxData.filter(regex='|'.join(list2keep))
+            if config.useSF == True and self.uset['aggregationSF'] == 'seasonal': #sesonal aggreg requested
+                yxData['SFrSeasM1'] = yxData.filter(regex=r'^SFr\d*M1$').mean(axis=1)
+                yxData = yxData.drop(columns=yxData.filter(regex=r'^SFr\d*M1$').columns)
+                yxData['SFtSeasM1'] = yxData.filter(regex=r'^SFt\d*M1$').mean(axis=1)
+                yxData = yxData.drop(columns=yxData.filter(regex=r'^SFt\d*M1$').columns)
+
             if self.uset['algorithm'] == 'PeakNDVI':
                 # the only feature is max NDVI in the period
                 feature_names = ['FPpeak'] #['NDpeak']
@@ -202,7 +209,7 @@ class DataMixin:
                         exit()
 
                     # Perform data reduction if requested (PCA)
-                    # Only on NDVI, RAD, Temp (precipitation, sm are excluded in therory but it is in)
+                    # Only on NDVI, RAD, Temp (precipitation, sm are excluded)
                     if self.uset['data_reduction'] == 'PCA':
                         X, feature_names = d105_PCA_on_features.getPCA(self, feature_names, X)
                 # Perform One-Hot Encoding for AU if requested

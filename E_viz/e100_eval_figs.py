@@ -261,14 +261,14 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
         plt.close(fig)
 
 def summary_stats(b1, config, var4time, outputDir):
-    # compute summary stats for hindcasting
+    # compute a summary stats file for hindcasting
 
     # get overall stats (dropping AU duplicated, here I have for the same run ID results for each AU, here
     # I am interested only in overall results, that is the same for all duplicates)
     b1_overall = b1.drop_duplicates(subset='runID', keep='first').copy()
     df = pd.DataFrame(
         columns=['Crop', 'Prct_area_used', 'Prct_season_forecasts', 'Calendar_month_forecast', 'ML_omit_admins',
-                 'Benchs_better_than_ML', 'ML_estimator', 'ML_rRMSEp', 'R2_rRMSEp', 'BestByAdmin_rRMSEp'])
+                 'Benchs_better_than_ML', 'ML_estimator', 'ML_rRMSEp', 'ML_R2_overall', 'BestByAdmin_rRMSEp'])
     for t in b1[var4time].unique():
         # get forecast % forecast_issue_calendar_month
         forecastingPrct = config.forecastingPrct[config.forecastingMonths.index(t)]
@@ -290,9 +290,10 @@ def summary_stats(b1, config, var4time, outputDir):
                 Benchs_better_than_ML = str(Benchs_better_than_ML)
             else:
                 Benchs_better_than_ML = 'none'
-            row = pd.DataFrame([[crop, config.prct2retain, forecastingPrct, forecast_issue_calendar_month, txt_excl, Benchs_better_than_ML, tmp[tmp['tmp_est'] == 'ML']['Estimator'].iloc[0], tmp[tmp['tmp_est'] == 'ML']['rRMSE_p'].iloc[0],
+            row = pd.DataFrame([[crop, config.prct2retain, forecastingPrct, forecast_issue_calendar_month, txt_excl, Benchs_better_than_ML, tmp[tmp['tmp_est'] == 'ML']['Estimator'].iloc[0],
+                                tmp[tmp['tmp_est'] == 'ML']['rRMSE_p'].iloc[0],
                                 tmp[tmp['tmp_est'] == 'ML']['avg_R2_p_overall'].iloc[0], tmp[tmp['tmp_est'] == 'BestByAdmin']['rRMSE_p'].iloc[0]]],
-                               columns=['Crop', 'Prct_area_used', 'Prct_season_forecasts','Calendar_month_forecast','ML_omit_admins', 'Benchs_better_than_ML', 'ML_estimator', 'ML_rRMSEp', 'R2_rRMSEp', 'BestByAdmin_rRMSEp'])
+                               columns=['Crop', 'Prct_area_used', 'Prct_season_forecasts','Calendar_month_forecast','ML_omit_admins', 'Benchs_better_than_ML', 'ML_estimator', 'ML_rRMSEp', 'ML_R2_overall', 'BestByAdmin_rRMSEp'])
             df = pd.concat([df, row], ignore_index=True)
 
     best_times = df.loc[df.groupby('Crop')['BestByAdmin_rRMSEp'].idxmin()][['Crop', 'Prct_season_forecasts']].set_index(

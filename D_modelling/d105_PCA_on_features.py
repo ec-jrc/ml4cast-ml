@@ -4,19 +4,21 @@ from sklearn.decomposition import PCA
 
 def getPCA(self, feature_names, X):
     # Perform PCA data reduction ON SELECTED FEATURES: Only on NDVI, RAD, Temp (precipitation is excluded)
-
+    # Note: SF are escluded because the feature2PCA is taken from feature_groups
     # first: - no request of PCA on one single month should arrive here (skipped in c100)
     #        - z scaling is done already above
     # second: operate PCA on all var of group except RainSum
 
     # get list of feature type in feature group and exclude RainSum
     # Note: trend is unaffected because it is not in the feature group
-    feature2PCA = [s for s in self.uset['feature_groups'] if s != 'RainSum']  # [f(x) for x in sequence if condition]
+    # feature2PCA = [s for s in self.uset['feature_groups'] if s != 'RainSum']  # 2025 09 22
+
+
+
+    feature2PCA = [s for s in self.uset['feature_groups'] if s not in ['RainSum', 'SM']] # 2025 09 22
     # if peakFPAR is requested, there is no FPmax anymore, so remove
     if 'peakFPAR' in feature_names:
         feature2PCA.remove('FPmax')
-
-    # if 'FPmax' in feature2PCA: feature2PCA.remove('FPmax')
 
     for var2PCA in feature2PCA:
         # print(var2PCA)

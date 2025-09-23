@@ -14,16 +14,33 @@ def save_model_specs(config, modelSettings):
 
     #### Configuration setting from config
     runID = 0
+    # Use of SG
+    if config.useSF == True:
+        useSF = True
+        #condider two options: monthly values and seasonal aggergation (eos-1 month)
+        aggregationSFs = ['monthly', 'seasonal']
+    else:
+        useSF = False
+
     # save files for benchmark
     Bench_algos = list(modelSettings.benchmarks)
-    a = [config.crops, Bench_algos, modelSettings.forecastingMonths]
+    a = [config.crops, Bench_algos, modelSettings.forecastingMonths, aggregationSFs]
     combs = list(itertools.product(*a))
-    for crop, algo, forecast_time in combs:
+    for crop, algo, forecast_time, aggregationSF in combs:
+        skip = False
         # Tab is run only with OHE
         if algo == 'Tab':
             oheTxt = 'AU_level'
+            useSFtxt = useSF
+            aggregationSFtxt = aggregationSF
+            addYieldTrendtXT = True
         else:
             oheTxt = 'none'
+            useSFtxt = False
+            aggregationSFtxt = 'none'
+            addYieldTrendtXT = 'none'
+        if (algo != 'Tab') and (aggregationSF == 'seasonal') :
+            skip = True
         # Save model settings as json
         uset = {'runID': runID,
                 'crop': crop,
@@ -31,6 +48,8 @@ def save_model_specs(config, modelSettings):
                 'dataScaling': '',
                 'feature_set': 'none',
                 'feature_groups': 'none',
+                'useSF': useSFtxt,
+                'aggregationSF': aggregationSFtxt,
                 'feature_selection': 'none',
                 'data_reduction': 'none',
                 'PCAprctVar2keep': 'none',
@@ -38,14 +57,16 @@ def save_model_specs(config, modelSettings):
                 # 'n_features2select_grid': 'none',
                 'doOHE': oheTxt,
                 'forecast_time': forecast_time,
-                'addYieldTrend': 'none',
+                'addYieldTrend': addYieldTrendtXT,
                 'ny_max_trend': modelSettings.ny_max_trend,
                 'scoringMetric': modelSettings.scoringMetric,
                 'nJobsForGridSearchCv': modelSettings.nJobsForGridSearchCv}
-        myID = f'{runID:06d}'
-        with open(os.path.join(config.models_spec_dir, myID + '_' + crop + '_' + algo + '.json'), 'w') as fp:
-            json.dump(uset, fp, indent=4)
-        runID = runID + 1
+        if skip == False:
+            print(runID, crop, algo, forecast_time, oheTxt, addYieldTrendtXT, useSF, aggregationSFtxt)
+            myID = f'{runID:06d}'
+            with open(os.path.join(config.models_spec_dir, myID + '_' + crop + '_' + algo + '.json'), 'w') as fp:
+                json.dump(uset, fp, indent=4)
+            runID = runID + 1
 
     # save files for ML
     ML_algos = list(modelSettings.hyperGrid.keys())
@@ -56,14 +77,19 @@ def save_model_specs(config, modelSettings):
             # ML_algos = [x+ften for x in ML_algos]
             ML_algos = ML_algos + [x + ften for x in ML_algos]
     feature_sets = list(modelSettings.feature_groups.keys())
+
+
+    # a = [config.crops, ML_algos, modelSettings.forecastingMonths,
+    #      modelSettings.doOHEs, feature_sets, modelSettings.feature_selections, modelSettings.dataReduction, modelSettings.addYieldTrend]
     a = [config.crops, ML_algos, modelSettings.forecastingMonths,
-         modelSettings.doOHEs, feature_sets, modelSettings.feature_selections, modelSettings.dataReduction, modelSettings.addYieldTrend]
+         modelSettings.doOHEs, feature_sets, modelSettings.feature_selections, modelSettings.dataReduction,
+         modelSettings.addYieldTrend, aggregationSFs]
     combs = list(itertools.product(*a))
     # sort comb to have MRMR cases first, as they are the slowest
     combs = sorted(combs, key=lambda x: x[5])
 
     # And loop over
-    for crop, algo, forecast_time, doOHE, feature_set, ft_sel, data_redct, addYieldTrend in combs:
+    for crop, algo, forecast_time, doOHE, feature_set, ft_sel, data_redct, addYieldTrend, aggregationSF in combs:
         skip = False  # always false except when feature selection is requested but the length of the grid
         feature_group = modelSettings.feature_groups[feature_set]
         # of feature numbers results to be 1, meaning that it was 1 already so no feature selection possible
@@ -111,6 +137,8 @@ def save_model_specs(config, modelSettings):
                 'dataScaling': modelSettings.dataScaling,
                 'feature_set': feature_set,
                 'feature_groups': feature_group,
+                'useSF': useSF,
+                'aggregationSF': aggregationSF,
                 'feature_selection': ft_sel,
                 'data_reduction': data_redct,
                 'PCAprctVar2keep': modelSettings.PCAprctVar2keep,
@@ -128,7 +156,7 @@ def save_model_specs(config, modelSettings):
             skip = True
         if skip == False:
             # debug
-            print(runID, crop, algo, forecast_time, doOHE, feature_set, ft_sel, data_redct, addYieldTrend)
+            print(runID, crop, algo, forecast_time, doOHE, feature_set, ft_sel, data_redct, addYieldTrend, useSF, aggregationSF)
             with open(os.path.join(config.models_spec_dir, myID + '_' + crop + '_' + algo + '.json'), 'w') as fp:
                 json.dump(uset, fp, indent=4)#json.dump(uset, fp)
             runID = runID + 1
