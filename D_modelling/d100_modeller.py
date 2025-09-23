@@ -140,10 +140,10 @@ class DataMixin:
             # list2keep = ['(^|\D)M' + str(i) + '($|\D)' for i in range(0, self.uset['forecast_time'] + 1)] + ['YieldFromTrend']
             yxData = yxData.filter(regex='|'.join(list2keep))
             if config.useSF == True and self.uset['aggregationSF'] == 'seasonal': #sesonal aggreg requested
-                yxData['SFrSeasM1'] = yxData.filter(regex=r'^SFr\d*M1$').mean(axis=1)
-                yxData = yxData.drop(columns=yxData.filter(regex=r'^SFr\d*M1$').columns)
-                yxData['SFtSeasM1'] = yxData.filter(regex=r'^SFt\d*M1$').mean(axis=1)
-                yxData = yxData.drop(columns=yxData.filter(regex=r'^SFt\d*M1$').columns)
+                yxData['SFrSeasM1'] = yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').mean(axis=1)
+                yxData = yxData.drop(columns=yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').columns)
+                yxData['SFtSeasM1'] = yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').mean(axis=1)
+                yxData = yxData.drop(columns=yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').columns)
 
             if self.uset['algorithm'] == 'PeakNDVI':
                 # the only feature is max NDVI in the period

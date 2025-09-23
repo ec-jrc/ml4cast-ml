@@ -114,11 +114,11 @@ if 'win' in sys.platform:
     # run_name = 'ZAv_20250703'
     # ZA viirs con 2024 data e SF
     # baseline forecast without future forecast
-    config_fn = r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF_test\NO_SF_baseline\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-    run_name = 'ZAv_NO_SF_baseline'
+    # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF_test\NO_SF_baseline\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+    # run_name = 'ZAv_NO_SF_baseline'
     # Using observed weather as SF
-    # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF_test\ObsAsSF\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_SF_ObsAsForecast.json'
-    # run_name = 'ZAv_ObsAsSF'
+    config_fn = r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF_test\ObsAsSF\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_SF_ObsAsForecast.json'
+    run_name = 'ZAv_ObsAsSF'
 
     # # ZM Zambia
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZM\annual\Maize_(corn)_WC-Zambia-HARVESTAT.json'

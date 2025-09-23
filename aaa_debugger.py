@@ -17,11 +17,10 @@ pd.set_option('display.max_columns', None)
 # runType = 'fast_tuning' #'fast_tuning'
 # run_name = 'MZ_20250527'
 
-fn = r'V:\foodsec\Projects\SNYF\SIDv\UAsummer\RUN_UA_Weather_filtered\TUNE_UAsummer20250309\Specs\000016_maize_XGBoost.json'
-config_fn = r'V:\foodsec\Projects\SNYF\SIDv\UAsummer\UAsummer_a4c_config.json'
-runType = 'fast_tuning' #'fast_tuning'
-run_name = 'UAsummer20250309'
-
+config_fn = r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF_test\ObsAsSF\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_SF_ObsAsForecast.json'
+run_name = 'ZAv_ObsAsSF'
+fn = r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF_test\ObsAsSF\RUN_Maize_(corn)_WC-South_Africa-ASAP_ObsAsForecast\TUNE_ZAv_ObsAsSF\Specs\000063_Sunflower_Lasso.json'
+runType = 'fast_tuning'
 
 # fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZA_20250410\Specs\000147_Sunflower_SVR_linear.json'
 # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
