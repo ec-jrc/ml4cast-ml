@@ -8,13 +8,21 @@ take extracted data,
 add observed rain and prec (taken from monthly features) as forecasts,
 save it as fn extraction + _ObsAsForecast
 '''
+# ZA
+# fn_extraction = r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\Tuning_data\Maize_(corn)_WC-South_Africa-ASAP.csv'
+# regNames = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\Tuning_data\ZAsummer_REGION_id.csv')
+# df_mon = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZAvSeas5base\ZAsummer_monthly_features.csv')
+# TUNISIA
+fn_extraction = r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\Tuning_data\Multiple_WC-Tunisia-ASAP.csv'
+regNames = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\Tuning_data\TNWinter_REGION_id.csv')
+df_mon = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\RUN_Multiple_WC-Tunisia-ASAP\TUNE_TNv_20250704\TNWinter_monthly_features.csv')
 
-fn_extraction = r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\Tuning_data\Maize_(corn)_WC-South_Africa-ASAP.csv'
+
 fn_out = os.path.splitext(fn_extraction)[0] + '_ObsAsForecast.csv'
 
 df_dek = pd.read_csv(fn_extraction)
 # do as in standard code, replace names with region_id
-regNames = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\Tuning_data\ZAsummer_REGION_id.csv')
+
 # now link it with adm_id and name
 df_dek = pd.merge(df_dek, regNames, left_on=['adm_id'], right_on=['adm_id'])
 # remove the admin name form extraction, not needed, use the one from region file
@@ -27,7 +35,7 @@ class_name = df_dek.class_name.iloc[0]
 # get monthly features
 # A given month MM contains means of that month MM with date MM/01,
 # when preparing the data (load), this has to be assigned to the previous month
-df_mon = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZAvSeas5base\ZAsummer_monthly_features.csv')
+
 df_mon = df_mon[(df_mon.variable_name == 'rainfall') | (df_mon.variable_name == 'temperature')]
 df_mon = df_mon.sort_values(by=['variable_name', 'adm_name', 'Date'])
 res = []
@@ -65,4 +73,4 @@ df_dek.class_name = class_name
 
 df_dek.to_csv(fn_out, index=False)
 
-print('ok')
+print('Finished')

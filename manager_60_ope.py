@@ -44,7 +44,7 @@ if __name__ == '__main__':
     config = a10_config.read(config_fn, run_name)
     # pass the year info to standard confi to reach preprocess
     config.forecastingYear = forecastingYear
-    modelSettings = a10_config.mlSettings(forecastingMonths=forecastingMonth)
+    mlsettings = a10_config.mlSettings(forecastingMonths=forecastingMonth)
     config.forecastingMonth_ope = forecastingMonth
     runType = 'opeForecast'
     # get the month when forecasts are issued
@@ -78,7 +78,7 @@ if __name__ == '__main__':
         df_best_time_crop = df_best_time[df_best_time['Crop'] == crop]
         #get best (can ML or bench)
         df_best = df_best_time_crop.loc[df_best_time_crop[metric_for_model_selection] == df_best_time_crop[metric_for_model_selection].min()]
-        list2run = modelSettings.benchmarks.copy()
+        list2run = mlsettings.benchmarks.copy()
         # # temporary
         # list2run = [x for x in list2run if x != 'Tab']
         list2run.append(df_best['Estimator'].iloc[0])
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         for est in list2run:    # make forecasts with the 2 or 3 estimators left
             print(crop, est)
             df_run = df_best_time_crop.loc[df_best_time_crop['Estimator'] == est]
-            if est not in modelSettings.benchmarks:
+            if est not in mlsettings.benchmarks:
                 df_run = df_run.loc[df_run[metric_for_model_selection] == df_run[metric_for_model_selection].min()]
             # if est != 'PeakNDVI':
             #     df_run = df_run.loc[df_run[metric_for_model_selection] == df_run[metric_for_model_selection].min()]
@@ -152,7 +152,7 @@ if __name__ == '__main__':
                                                    adm_ids[fit_indices], adm_ids[forecast_indices], groups[forecast_indices])
                     au_codes = adm_id_test
                     forecasts = y_pred
-                else:
+                else: # It is ML
                     hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, \
                     selected_features_names, prct_selected, n_selected, \
                     avg_scoring_metric_on_val, fitted_model = forecaster.fit(X[fit_indices, :], y[fit_indices], groups[fit_indices], feature_names, adm_ids[fit_indices], runType)
@@ -161,6 +161,10 @@ if __name__ == '__main__':
                     # apply the fitted model to forecast data
                     forecasts = fitted_model.predict(X[forecast_indices, :][:, np.array(ind2retain)]).tolist()
                     au_codes = adm_ids[forecast_indices].tolist()
+                if mlsettings.setNegativePred2Zero == True:
+                    # mRes.loc[mRes['yLoo_pred'] < 0, 'yLoo_pred'] = 0
+                    forecasts = [x if x >= 0 else 0 for x in forecasts]
+
                 F110_process_opeForecast_output.to_csv(config, forecast_issue_calendar_month, forecaster.uset, au_codes, forecasts, runID = runID)
 
     F110_process_opeForecast_output.make_consolidated_ope(config)

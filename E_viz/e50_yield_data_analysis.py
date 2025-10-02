@@ -379,6 +379,7 @@ def trend_anlysis(config, prct2retain=100):
             xca = xc[xc['adm_name'] == a].sort_values('Year')
             y = xca['Yield'].values.reshape(-1)
             X = xca['Year'].values.reshape(-1)
+            y2 = xca['Area'].values.reshape(-1)
             # a minimum of two data is required
             n_valid = sum(~np.isnan(y))
             if n_valid >=2:
@@ -388,7 +389,14 @@ def trend_anlysis(config, prct2retain=100):
                 trend = 'n < 2, trend cannot be assessed'
                 p = np.NAN
             # axs[axs_counter].plot(X, y, label='Data') #, label=F'Theil-Sen trend line')
-            axs[axs_counter].scatter(X, y, label='Data')  # , label=F'Theil-Sen trend line')
+            axs[axs_counter].scatter(X, y)#, label='Yield')  # , label=F'Theil-Sen trend line')
+            # Create a secondary axis
+            ax2 = axs[axs_counter].twinx()
+            # Plot V on the secondary axis
+            ax2.plot(X, y2, color='red')#, label='Area')
+            ax2.set_ylabel('Area [' + area_unit + ']', color='red')
+            ax2.tick_params('y', colors='red')
+
             axs[axs_counter].set_xlim(xMinMax)
             axs[axs_counter].set_ylim(yMinMax)
             axs[axs_counter].locator_params(integer=True)
@@ -402,7 +410,7 @@ def trend_anlysis(config, prct2retain=100):
             axs[axs_counter].set_xlabel('Years')
             axs[axs_counter].set_ylabel('Yield [' + yield_unit + ']')
             axs[axs_counter].set_title(c + ', ' + a + ', ' + trend + '(p=' + str(np.round(p, 4))+ ')')
-            axs[axs_counter].legend(frameon=False, loc='upper left')
+            # axs[axs_counter].legend(frameon=False, loc='upper left')
             axs_counter = axs_counter + 1
         # save the fig
         fn_out = outDir + '/trend_analysis_' + c + '.pdf'

@@ -44,8 +44,8 @@ class read:
         self.crop_au_exclusions = jdict['crop_au_exclusions']
     else:
         self.crop_au_exclusions = {}
-
-    self.root_dir = jdict['root_dir']
+    self.root_dir = os.path.dirname(full_path_config)
+    # self.root_dir = jdict['root_dir']
     self.data_dir = os.path.join(self.root_dir, jdict['data_dir'])
     self.output_dir = os.path.join(self.root_dir, 'RUN_' + self.afi)
     self.fn_reference_shape = jdict['fn_reference_shape']
@@ -117,6 +117,8 @@ class mlSettings:
         #self.nJobsForGridSearchCv = 1
         self.nJobsForGridSearchCv = self.condor_param['nJobsForGridSearchCv']
 
+    # In prediction (not training) truncate (or not) negative estimates to 0
+    self.setNegativePred2Zero = True
     # Input data scaling. Admitted values:
     # z_f: z-score features
     # z_fl: z-score features and labels

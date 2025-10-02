@@ -289,7 +289,7 @@ class YieldModeller(DataMixin, object):
                     adm_id_train = adm_id_train[~nas]
                     if self.uset['algorithm'] in mlsettings.benchmarks:
                         # fast tuning OR re-tune AND benchmark models
-                        outLoopRes = d110_benchmark_models.run_LOYO(self.uset['algorithm'], X_train, X_test, y_train, y_test, adm_id_train, adm_id_test, groups_test)
+                        outLoopRes = d110_benchmark_models.run_LOYO(self.uset['algorithm'], X_train, X_test, y_train, y_test, adm_id_train, adm_id_test, groups_test, mlsettings.setNegativePred2Zero )
                         tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'adm_id', 'Year'])
                         mRes = pd.concat([mRes, tmp])
                     else:
@@ -316,6 +316,7 @@ class YieldModeller(DataMixin, object):
                         scoring_metric_on_val.append(search.best_score_)
                         outLoopRes = [search.predict(X_test).tolist(), y_test.tolist(), adm_id_test.tolist(),
                                       np.unique(groups_test).tolist() * len(adm_id_test.tolist())]
+
                         tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'adm_id', 'Year'])
                         mRes = pd.concat([mRes, tmp])
                         # check and store if best params are pegged to boundaries
@@ -340,7 +341,9 @@ class YieldModeller(DataMixin, object):
                     # End of outer script
 
         # Here the outer loop (activate in tuining) is concluded and I have all results
-
+        # set negative yield to zero if setNegativePred2Zero == True
+        if mlsettings.setNegativePred2Zero == True:
+            mRes.loc[mRes['yLoo_pred'] < 0, 'yLoo_pred'] = 0
         # Now move to fiiting, used for some stats (e.g. nPegged) and for building the ope_model
         # Fitting stats and summary of nPegged
         # For the fitting I apply the model to all data available
@@ -358,6 +361,10 @@ class YieldModeller(DataMixin, object):
 
         if (self.uset['algorithm'] in ['PeakNDVI', 'Tab']):
             y_true, y_pred, search = d110_benchmark_models.run_fit(self.uset['algorithm'], X, y, adm_ids)
+            # set negative yield to zero if setNegativePred2Zero == True
+            if mlsettings.setNegativePred2Zero == True:
+                # mRes.loc[mRes['yLoo_pred'] < 0, 'yLoo_pred'] = 0
+                y_pred = [x if x >= 0 else 0 for x in y_pred]
             # search is the model to be used in prediction
             Fit_R2 = d140_modelStats.r2_nan(np.array(y_true), np.array(y_pred))
         elif not(self.uset['algorithm'] in ['Null_model', 'Trend']): #it is a ML model
@@ -376,8 +383,7 @@ class YieldModeller(DataMixin, object):
                 # Tune hyperparameters
                 search.fit(X, y, groups=groups)
                 scoring_metric_on_fit = - search.best_score_
-                Fit_R2 = metrics.r2_score(y, search.predict(X))
-                # selected_features_names = featureNames
+                y_pred = search.predict(X)
             elif self.uset['feature_selection'] == 'MRMR':
                 # here feature selection (based on feature_prct_grid) is considered a hyperparam
                 selected_features_names, prct_selected, n_selected, X_2use, search = d120_set_hyper.setHyper_ft_sel(
@@ -387,7 +393,11 @@ class YieldModeller(DataMixin, object):
                     algo, self.uset['hyperGrid'], outer_cv,
                     self.uset['nJobsForGridSearchCv'], self.uset['scoringMetric'])
                 scoring_metric_on_fit = - search.best_score_
-                Fit_R2 = metrics.r2_score(y, search.predict(X_2use))  # It is X test because it is X with only the selected features
+                y_pred = search.predict(X_2use)
+            if mlsettings.setNegativePred2Zero == True:
+                # mRes.loc[mRes['yLoo_pred'] < 0, 'yLoo_pred'] = 0
+                y_pred = [x if x >= 0 else 0 for x in y_pred]
+            Fit_R2 = metrics.r2_score(y, y_pred)
             # now get hyperparams (each model has its own)
             if runType == 'tuning':
                 prctPegged = {'left': '', 'right': ''}

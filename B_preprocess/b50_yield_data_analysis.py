@@ -12,6 +12,11 @@ from matplotlib.lines import Line2D
 from B_preprocess import b100_load
 from E_viz import e50_yield_data_analysis
 
+pd.set_option('display.max_columns', None)
+desired_width=10000
+pd.set_option('display.width', desired_width)
+np.set_printoptions(linewidth=desired_width)
+pd.set_option('display.max_columns',100)
 
 def saveYieldStats(config, prct2retain=100):
     '''Compute statistics and save csv of the country stats, plot yield correlation among crops
@@ -20,13 +25,9 @@ def saveYieldStats(config, prct2retain=100):
     if prct2retain > 100:
         print('requested percentage gt 100')
         exit()
+
     outDir = os.path.join(config.data_dir, 'Label_analysis' + str(prct2retain))
     Path(outDir).mkdir(parents=True, exist_ok=True)
-    pd.set_option('display.max_columns', None)
-    desired_width=10000
-    pd.set_option('display.width', desired_width)
-    np.set_printoptions(linewidth=desired_width)
-    pd.set_option('display.max_columns',100)
 
     # quality check and outlier removal
     stat_file = os.path.join(config.data_dir, config.AOI + '_STATS.csv')
@@ -43,16 +44,6 @@ def saveYieldStats(config, prct2retain=100):
 
     # keep only from year of interest for the admin level stats
     stats = stats[stats['Year'] >= config.year_start]
-
-    # Missing data are now dropped, this below is always empty
-    # #save a file with missing data (all regions, no matter 90% production or not)
-    # tmp = stats.copy()
-    # tmp['Null'] = tmp['Yield'].isnull()
-    # tmp = tmp[tmp['Null'] == True]
-    # tmp = tmp.sort_values(by=['Crop_name','adm_id','Year'])
-    # if len(tmp.index)>0:
-    #     print('Missing records are present, inspect ' + os.path.join(config.data_dir, config.AOI + '_missing_data.csv'))
-    # tmp.to_csv(os.path.join(outDir, config.AOI + '_missing_data.csv'), index=False)
 
     # look into correlation among crops [(config.crops])
     yield_cols = [x + '_yield' for x in config.crops]
@@ -276,50 +267,8 @@ def saveYieldStats(config, prct2retain=100):
     # because there is no AFI (e.g. Somalia). I have to point it out to operator, save a file showing which,
     # and removing them from stats
 
-
-    # if isinstance(config.fn_reference_shape, list):
-        # this part is made for Marocco
-        # if os.path.isfile(os.path.join(config.data_dir, config.afi + '_original_before_new_adm_id.csv')):
-        #     # it is there, so it was run already, delete the normal one and rename this a s norml
-        #     os.remove(os.path.join(config.data_dir, config.afi + '.csv'))
-        #     os.rename(os.path.join(config.data_dir, config.afi + '_original_before_new_adm_id.csv'), os.path.join(config.data_dir, config.afi + '.csv'))
     dfASAP = pd.read_csv(os.path.join(config.data_dir, config.afi + '.csv'))
-    # if isinstance(config.fn_reference_shape, list):
-    #     regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
-    #     # We are in Marocco-like case, differnt boundaries over time.
-    #     # The "adm_id" in stats has been replaced with the jr_id in shp file and there is a 1:1 link between
-    #     # one stats admin (that can be done by multiple fnid if successor) and the shp id
-    #     # In this case the shp id "adm_id" does not match the one of stats, that reports the sh id in Adjusted_jrc_id_in_shp
-    #     # Here I change the shp id using regNames and
-    #     # I have to manage that one Adjusted_jrc_id_in_shp may be needed by multiple stats ids
-    #     # Create a lookup table with unique couples of adm_id and Adjusted_jrc_id_in_shp
-    #     dfASAP = dfASAP.rename(columns={'adm_id': 'adm_id_in_shp'})
-    #     lookup_table = regNames[['adm_id', 'Adjusted_jrc_id_in_shp']].drop_duplicates()
-    #     # Create a new DataFrame to store the replicated records
-    #     replicated_df = pd.DataFrame()
-    #     # Iterate over each unique Adjusted_jrc_id_in_shp in the df DataFrame
-    #     for jrc_id in dfASAP['adm_id_in_shp'].unique():
-    #         # Get the adm_id values that match the current jrc_id
-    #         matching_adm_ids = lookup_table.loc[lookup_table['Adjusted_jrc_id_in_shp'] == jrc_id, 'adm_id']
-    #         # If there are matching adm_id values, replicate the records
-    #         if not matching_adm_ids.empty:
-    #             # Get the records in df that match the current jrc_id
-    #             matching_records = dfASAP.loc[dfASAP['adm_id_in_shp'] == jrc_id]
-    #             # Replicate the records for each matching adm_id
-    #             for adm_id in matching_adm_ids:
-    #                 # Create a new DataFrame with the replicated records
-    #                 new_records = matching_records.copy()
-    #                 new_records['adm_id'] =adm_id
-    #                 # Append the new records to the replicated DataFrame
-    #                 replicated_df = pd.concat([replicated_df, new_records])
 
-        # dfASAP = replicated_df
-        # shutil.copyfile(os.path.join(config.data_dir, config.afi + '.csv'), os.path.join(config.data_dir, config.afi + '_original_before_new_adm_id.csv'))
-        # dfASAP['adm_id'] = dfASAP['adm_id'].astype(str)
-        # if os.path.isfile(os.path.join(config.data_dir, config.afi + '.csv')):
-        #     # it is there, so it was run already, delete the normal one and rename this a s norml
-        #     os.remove(os.path.join(config.data_dir, config.afi + '.csv'))
-        # dfASAP.to_csv(os.path.join(config.data_dir, config.afi + '.csv'), index=False) #, mode='w') #, header=True)
 
     A = set(dfASAP['adm_id'].unique())  # ASAP extraction admin Ids
     B = set(stats_prct2retain['adm_id'].unique())
