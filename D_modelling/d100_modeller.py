@@ -339,12 +339,12 @@ class YieldModeller(DataMixin, object):
 
                     nIterationOuterLoop += 1
                     # End of outer script
-
+                # set negative yield to zero if setNegativePred2Zero == True
+                if mlsettings.setNegativePred2Zero == True:
+                    mRes.loc[mRes['yLoo_pred'] < 0, 'yLoo_pred'] = 0
         # Here the outer loop (activate in tuining) is concluded and I have all results
-        # set negative yield to zero if setNegativePred2Zero == True
-        if mlsettings.setNegativePred2Zero == True:
-            mRes.loc[mRes['yLoo_pred'] < 0, 'yLoo_pred'] = 0
-        # Now move to fiiting, used for some stats (e.g. nPegged) and for building the ope_model
+
+        # Now move to fitting, used for some stats (e.g. nPegged) and for building the ope_model
         # Fitting stats and summary of nPegged
         # For the fitting I apply the model to all data available
         # Fitting is also done to collect hyper for the operational model to be use for real forecasts
@@ -361,12 +361,12 @@ class YieldModeller(DataMixin, object):
 
         if (self.uset['algorithm'] in ['PeakNDVI', 'Tab']):
             y_true, y_pred, search = d110_benchmark_models.run_fit(self.uset['algorithm'], X, y, adm_ids)
-            # set negative yield to zero if setNegativePred2Zero == True
-            if mlsettings.setNegativePred2Zero == True:
-                # mRes.loc[mRes['yLoo_pred'] < 0, 'yLoo_pred'] = 0
-                y_pred = [x if x >= 0 else 0 for x in y_pred]
-            # search is the model to be used in prediction
-            Fit_R2 = d140_modelStats.r2_nan(np.array(y_true), np.array(y_pred))
+            # # set negative yield to zero if setNegativePred2Zero == True
+            # if mlsettings.setNegativePred2Zero == True:
+            #     # mRes.loc[mRes['yLoo_pred'] < 0, 'yLoo_pred'] = 0
+            #     y_pred = [x if x >= 0 else 0 for x in y_pred]
+            # # search is the model to be used in prediction
+            # Fit_R2 = d140_modelStats.r2_nan(np.array(y_true), np.array(y_pred))
         elif not(self.uset['algorithm'] in ['Null_model', 'Trend']): #it is a ML model
             #else: #it is a ML model
             # regenerate an outer loop for setting hyperparameters
@@ -394,10 +394,7 @@ class YieldModeller(DataMixin, object):
                     self.uset['nJobsForGridSearchCv'], self.uset['scoringMetric'])
                 scoring_metric_on_fit = - search.best_score_
                 y_pred = search.predict(X_2use)
-            if mlsettings.setNegativePred2Zero == True:
-                # mRes.loc[mRes['yLoo_pred'] < 0, 'yLoo_pred'] = 0
-                y_pred = [x if x >= 0 else 0 for x in y_pred]
-            Fit_R2 = metrics.r2_score(y, y_pred)
+
             # now get hyperparams (each model has its own)
             if runType == 'tuning':
                 prctPegged = {'left': '', 'right': ''}
@@ -416,8 +413,13 @@ class YieldModeller(DataMixin, object):
                 avg_scoring_metric_on_val = np.nan
             hyperParams, hyperParamsGrid, coefFit = d130_get_hyper.get(algo, search, self.uset['hyperGrid'],
                                        selected_features_names)
+        if mlsettings.setNegativePred2Zero == True:
+            # mRes.loc[mRes['yLoo_pred'] < 0, 'yLoo_pred'] = 0
+            y_pred = [x if x >= 0 else 0 for x in y_pred]
+        Fit_R2 = metrics.r2_score(y, y_pred)
         if ((runType == 'fast_tuning') and (not (self.uset['algorithm'] in mlsettings.benchmarks))):
             avg_scoring_metric_on_val = scoring_metric_on_fit
+
         return hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, selected_features_names, prct_selected, n_selected, avg_scoring_metric_on_val, search
 
     def validate(self, hyperParamsGrid, hyperParams, Fit_R2, coefFit, mRes, prctPegged, runTimeH, featureNames,
