@@ -373,6 +373,7 @@ class YieldModeller(DataMixin, object):
             outer_cv = LeaveOneGroupOut()
             nas = np.isnan(y)
             y = y[~nas]
+            y_true = y
             X = X[~nas, :]
             groups = groups[~nas]
             if self.uset['feature_selection'] == 'none':
@@ -384,6 +385,7 @@ class YieldModeller(DataMixin, object):
                 search.fit(X, y, groups=groups)
                 scoring_metric_on_fit = - search.best_score_
                 y_pred = search.predict(X)
+                y_true = y
             elif self.uset['feature_selection'] == 'MRMR':
                 # here feature selection (based on feature_prct_grid) is considered a hyperparam
                 selected_features_names, prct_selected, n_selected, X_2use, search = d120_set_hyper.setHyper_ft_sel(
@@ -394,6 +396,7 @@ class YieldModeller(DataMixin, object):
                     self.uset['nJobsForGridSearchCv'], self.uset['scoringMetric'])
                 scoring_metric_on_fit = - search.best_score_
                 y_pred = search.predict(X_2use)
+                y_true = y
 
             # now get hyperparams (each model has its own)
             if runType == 'tuning':
@@ -413,10 +416,13 @@ class YieldModeller(DataMixin, object):
                 avg_scoring_metric_on_val = np.nan
             hyperParams, hyperParamsGrid, coefFit = d130_get_hyper.get(algo, search, self.uset['hyperGrid'],
                                        selected_features_names)
-        if mlsettings.setNegativePred2Zero == True:
+        if mlsettings.setNegativePred2Zero == True and self.uset['algorithm'] != 'Null_model': #R2 is not needed for null model, and y_pred not computed
             # mRes.loc[mRes['yLoo_pred'] < 0, 'yLoo_pred'] = 0
             y_pred = [x if x >= 0 else 0 for x in y_pred]
-        Fit_R2 = metrics.r2_score(y, y_pred)
+            y_true = np.array(y_true)
+            y_pred = np.array(y_pred)
+            nas = np.isnan(y_true)
+            Fit_R2 = metrics.r2_score(y_true[~nas], y_pred[~nas])
         if ((runType == 'fast_tuning') and (not (self.uset['algorithm'] in mlsettings.benchmarks))):
             avg_scoring_metric_on_val = scoring_metric_on_fit
 
