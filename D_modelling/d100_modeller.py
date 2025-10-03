@@ -61,7 +61,7 @@ class DataMixin:
                     for value_au in value_au_list:
                         mask = (stats['Crop_name'] == key_crop) & (stats['adm_name'] == value_au)
                         stats = stats[~mask]
-        # if working on benchmark, exclude admins having less than n (10) obs
+        # if working on benchmark (excluding Tab), exclude admins having less than n (5) obs
         else:
             n = 5
             # if isinstance(config.fn_reference_shape, list):

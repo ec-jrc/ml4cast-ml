@@ -9,18 +9,23 @@ time_step_check = 60
 metric = 'RMSE_val'
 # ml models to rerun after fust tuning (obsrvation show that the best model found by standard tuning is within the first 10 found by fast tuning)
 n = 20
-
 if 'win' in sys.platform:
     tune_on_condor = False
     baseDir = os.path.normpath(r'V:\foodsec\Projects\SNYF\SIDv')
 else:
     tune_on_condor = True
     baseDir = os.path.normpath('/eos/jeodpp/data/projects/ML4CAST/VIIRS')
-
+############################################################################################
+# TN NoSF
+path_fromBaseDir = r'\TN\SF_test\NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json'
+run_name = 'TNv_NoSF'
 # TN ObsAsSF
-path_fromBaseDir = r'\TN\SF_test\ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json'
-run_name = 'TNv_ObsAsForecast'
+# path_fromBaseDir = r'\TN\SF_test\ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json'
+# run_name = 'TNv_ObsAsForecast'
 
-
-config_fn = os.path.join(baseDir, os.path.normpath(path_fromBaseDir).strip('\\'))
-# print(config_fn)
+############################################################################################
+if 'win' in sys.platform:
+    config_fn = os.path.join(baseDir, os.path.normpath(path_fromBaseDir).strip('\\'))
+else:
+    path_fromBaseDir = path_fromBaseDir.replace('\\', '/').lstrip('/')
+    config_fn = os.path.join(baseDir, os.path.normpath(path_fromBaseDir).strip('\\'))

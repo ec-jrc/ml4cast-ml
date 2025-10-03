@@ -26,6 +26,8 @@ def add_yield_trend_estimate(yxDatac, ny):
         # count valid in each 3 years period, 4 quartiles
         # we may have less than 12 years, find quartiles
         # Calculate the quartiles
+        if len(x) <= 4:
+            return 'no'
         Q1 = np.percentile(x, 25)
         Q2 = np.percentile(x, 50)
         Q3 = np.percentile(x, 75)
@@ -140,7 +142,10 @@ def add_yield_trend_estimate(yxDatac, ny):
                 # trend estimated using larger time series (left or right)
                 # a = trend2(df.iloc[0], ny, minYearFeats, df['Year'].tolist())
                 # df.loc[:, 'YieldFromTrend'] = df.apply(trend2, args=(ny, minYearFeats, df['Year'].astype(str).tolist()), axis=1)
+                #try:
                 df.loc[:, 'YieldFromTrend'] = df.apply(trend2, args=(ny, minYearFeats, df['Year'].tolist()), axis=1)
+                #except:
+                #    print('error')
             # add the trend to yxDatac
             yxDatac.loc[(yxDatac['Crop_ID'] == c) & (yxDatac['adm_id'] == r), 'YieldFromTrend'] = df['YieldFromTrend']
     return yxDatac
