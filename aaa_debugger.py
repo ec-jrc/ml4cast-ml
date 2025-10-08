@@ -12,14 +12,16 @@ pd.set_option('display.max_columns', None)
 # os.environ['OMP_NUM_THREADS'] = '8'
 
 
-# fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\RUN_Maize_(corn)_WC-Mozambique-FEWSNET\TUNE_MZ_20250527\Specs\000108_Maize_SVR_linear.json'
+# fn
+#
+# = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\RUN_Maize_(corn)_WC-Mozambique-FEWSNET\TUNE_MZ_20250527\Specs\000108_Maize_SVR_linear.json'
 # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\MZ\main\Maize_(corn)_WC-Mozambique-FEWSNET.json'
 # runType = 'fast_tuning' #'fast_tuning'
 # run_name = 'MZ_20250527'
 
 config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF_test\NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json'
 run_name = 'TNv_NoSF'
-fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF_test\NO_SF_baseline\RUN_Multiple_WC-Tunisia-ASAP\TUNE_TNv_NoSF\Specs\000003_Ble_tendre_PeakNDVI.json'
+fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF_test\NO_SF_baseline\RUN_Multiple_WC-Tunisia-ASAP\TUNE_TNv_NoSF\Specs\000006_Ble_tendre_Trend.json'
 runType = 'fast_tuning'
 
 # fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZA_20250410\Specs\000147_Sunflower_SVR_linear.json'

@@ -367,6 +367,9 @@ class YieldModeller(DataMixin, object):
             #     y_pred = [x if x >= 0 else 0 for x in y_pred]
             # # search is the model to be used in prediction
             # Fit_R2 = d140_modelStats.r2_nan(np.array(y_true), np.array(y_pred))
+        elif self.uset['algorithm'] == 'Trend':
+            y_pred = mRes['yLoo_pred'].tolist()
+            y_true = mRes['yLoo_true'].tolist()
         elif not(self.uset['algorithm'] in ['Null_model', 'Trend']): #it is a ML model
             #else: #it is a ML model
             # regenerate an outer loop for setting hyperparameters
