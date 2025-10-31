@@ -3,8 +3,7 @@ import sys
 from pathlib import Path
 import pandas as pd
 import numpy as np
-import shutil
-import math
+import re
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -182,7 +181,35 @@ def compute_stats(stats , prct2retain, outDir, config, period= 'LTA'):
     plt.close()
     return y
 
-def saveYieldStats(config, prct2retain=100):
+def find_last_version_csv(base_name, directory):
+    # Initialize the list of matching files
+    matching_files = []
+    v_matching_files = []
+    # Iterate over all files in the directory
+    for filename in os.listdir(directory):
+        # Check if the file contains the base name
+        if base_name in filename:
+            # Check if the file matches the pattern base_name+v followed by a number
+            match = re.search(rf"{base_name}_v(\d+)", filename)
+            matching_files.append(filename)
+            if match:
+                # Add the file to the list of matching files along with the number
+                v_matching_files.append((filename, int(match.group(1))))
+    # Check if there are any matching files
+    if not matching_files:
+        print("No files found containing the base name.")
+        return
+    # If there's only one matching file, print it
+    if len(matching_files) == 1:
+        return matching_files[0]
+    # Find the file with the largest number
+    largest_file = max(v_matching_files, key=lambda x: x[1])
+    return largest_file[0]
+
+
+
+
+def saveYieldStats(config, period = 'Last5yrs', prct2retain=100):
     '''Compute statistics and save csv of the country stats, plot yield correlation among crops
        - keep only from year of interest for the admin level stats'''
     # prct2retain is the percentage to retain
@@ -191,9 +218,13 @@ def saveYieldStats(config, prct2retain=100):
         exit()
     outDir = os.path.join(config.data_dir, 'Label_analysis' + str(prct2retain))
     Path(outDir).mkdir(parents=True, exist_ok=True)
+    # 2025 10 30 get last version
+    fn = find_last_version_csv(config.AOI + '_STATS', config.data_dir)
+    stat_file = os.path.join(config.data_dir, config.AOI + '_STATS.csv') # name used in writing
+    stat_fileLAST_VERION = os.path.join(config.data_dir, fn)  # name used in writing
+
     # quality check and outlier removal
-    stat_file = os.path.join(config.data_dir, config.AOI + '_STATS.csv')
-    stats = b100_load.LoadLabel(stat_file, config.year_start, config.year_end, make_charts=True, perc_threshold=-1, crops_names=config.crops)
+    stats = b100_load.LoadLabel(stat_fileLAST_VERION, config.year_start, config.year_end, make_charts=True, perc_threshold=-1, crops_names=config.crops)
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
     area_unit = units['Area'].values[0]
     yield_unit = units['Yield'].values[0]
@@ -207,9 +238,18 @@ def saveYieldStats(config, prct2retain=100):
 
     # look into correlation among crops [(config.crops])
     make_fig_crop_corr(config, stats, outDir, '_all_admin_from_' + str(config.year_start))
+    if period == 'Last5yrs':
+        y = compute_stats(stats, prct2retain, outDir, config, period='Last5yrs')
+        not_used = compute_stats(stats, prct2retain, outDir, config, period='LT')
+    elif period == 'Last5yrs':
+        not_used = compute_stats(stats, prct2retain, outDir, config, period='Last5yrs')
+        y = compute_stats(stats, prct2retain, outDir, config, period='LT')
+    else:
+        print("Warning: b50 compute_stats called with unkown period")
+        os.exit(1)
     # compute multiannual stats (on full ts starting from config.year_end, or last 5 available years by region)
-    y = compute_stats(stats, prct2retain, outDir, config, period='LT')
-    not_used = compute_stats(stats, prct2retain, outDir, config, period='Last5yrs')
+
+
 
     crops = stats['Crop_name'].unique()
     # save a cleaned stat file with the prct2retain to be retained
