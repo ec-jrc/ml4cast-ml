@@ -96,7 +96,7 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
         dfAU = pd.concat([dfAU, rRMSE_pByAdmin])
     dfAU.to_csv(os.path.join(outputDir, 'all_model_best1_AU_error.csv'))
     crops = dfAU['Crop'].unique()
-    # exclude country based on rRMSEp threshold on the first forecast
+    # exclude admins based on rRMSEp threshold on the first forecast
     if True:
         rrmse_prct_threshold = 50
         first_forecast_time = dfAU['forecast_time'].min()
@@ -125,37 +125,42 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
     for crop in crops:
         dfAUc = dfAU[dfAU['Crop'] == crop].copy()
         forcTime = dfAUc["forecast_time"].unique()
-        fig, axes = plt.subplots(2, 1, figsize=(14,10))
-        tmp = dfAUc[dfAUc["forecast_time"] == forcTime[0]]
-        tmp = tmp.sort_values('adm_name').reset_index()
-        # to assign constant colors, find the name of the ML estimator
-        #ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), ['Trend', 'PeakNDVI', 'Null_model'])[0]
-        ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), mlsettings.benchmarks)[0]
-        # palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", ml_est_name: "b"}
-        # Tab change 2025
-        palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", "Tab": "purple", ml_est_name: "b"}
-        p1 = sns.barplot(tmp, x="adm_name", y="rrmse_prct", hue="Estimator", ax=axes[0], palette=palette, order=tmp['adm_name'])
-        p1.set_title('Forecast_time = ' + str(forcTime[0]))
-        sns.move_legend(axes[0], "upper right", title=None, frameon=False) #bbox_to_anchor=(1, 1)
-        # plt.xticks(rotation=70)
-        p1.set_xticklabels(p1.get_xticklabels(),
-                                  rotation=70,
-                                  horizontalalignment='right')
-        if len(forcTime) > 1:
-            tmp = dfAUc[dfAUc["forecast_time"] == forcTime[1]]
+
+        fig, axes = plt.subplots(len(forcTime), 1, figsize=(8*len(forcTime),10))
+        ax_c = 0
+        for ftime in forcTime:
+            tmp = dfAUc[dfAUc["forecast_time"] == ftime]
             tmp = tmp.sort_values('adm_name').reset_index()
-            # ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), ['Trend', 'PeakNDVI', 'Null_model'])[0]
+            # to assign constant colors, find the name of the ML estimator
+            #ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), ['Trend', 'PeakNDVI', 'Null_model'])[0]
             ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), mlsettings.benchmarks)[0]
+            # palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", ml_est_name: "b"}
             # Tab change 2025
             palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", "Tab": "purple", ml_est_name: "b"}
-            # palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", ml_est_name: "b"}
-            p2 = sns.barplot(tmp, x="adm_name", y="rrmse_prct", hue="Estimator", ax=axes[1], palette=palette, order=tmp['adm_name'])
-            p2.set_title('Forecast_time = ' + str(forcTime[1]))
-            sns.move_legend(axes[1], "upper right", title=None, frameon=False)  # bbox_to_anchor=(1, 1)
+            p1 = sns.barplot(tmp, x="adm_name", y="rrmse_prct", hue="Estimator", ax=axes[ax_c], palette=palette, order=tmp['adm_name'])
+            p1.set_title('Forecast_time = ' + str(ftime))
+            sns.move_legend(axes[ax_c], "upper right", title=None, frameon=False) #bbox_to_anchor=(1, 1)
             # plt.xticks(rotation=70)
-            p2.set_xticklabels(p1.get_xticklabels(),
-                               rotation=70,
-                               horizontalalignment='right')
+            p1.set_xticklabels(p1.get_xticklabels(),
+                                      rotation=70,
+                                      horizontalalignment='right')
+            ax_c = ax_c + 1
+            # if len(forcTime) > 1:
+            #     tmp = dfAUc[dfAUc["forecast_time"] == forcTime[1]]
+            #     tmp = tmp.sort_values('adm_name').reset_index()
+            #     # ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), ['Trend', 'PeakNDVI', 'Null_model'])[0]
+            #     ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), mlsettings.benchmarks)[0]
+            #     # Tab change 2025
+            #     palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", "Tab": "purple", ml_est_name: "b"}
+            #     # palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", ml_est_name: "b"}
+            #     p2 = sns.barplot(tmp, x="adm_name", y="rrmse_prct", hue="Estimator", ax=axes[1], palette=palette, order=tmp['adm_name'])
+            #     p2.set_title('Forecast_time = ' + str(forcTime[1]))
+            #     sns.move_legend(axes[1], "upper right", title=None, frameon=False)  # bbox_to_anchor=(1, 1)
+            #     # plt.xticks(rotation=70)
+            #     p2.set_xticklabels(p1.get_xticklabels(),
+            #                        rotation=70,
+            #                        horizontalalignment='right')
+
         text = ''
         if bool(config.crop_au_exclusions):
             if crop in config.crop_au_exclusions.keys():

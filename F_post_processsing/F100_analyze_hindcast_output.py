@@ -96,18 +96,7 @@ def compare_fast_outputs(config, n, metric2use='rRMSE_p'):  # RMSE_p' #'R2_p'
     # bn.to_csv(analysisOutputDir + '/' + 'ML_models_to_run_with_tuning.csv', index=False)
     return bn['runID'].tolist()
 
-
-def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_column='name0',
-                    metric2use='rRMSE_p'):  # RMSE_p' #'R2_p'
-    # get some vars from mlSettings class
-    mlsettings = a10_config.mlSettings(forecastingMonths=0)
-    # includeTrendModel = True   #for Algeria run ther is no trend model
-    # addCECmodel = False #only for South Africa
-
-    analysisOutputDir = os.path.join(config.models_out_dir, 'Analysis')
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.width', 400)  # width is = 400
-
+def extract_best_1_and_4(mo, metric2use, var4time, config, mlsettings):
     if metric2use == 'R2_p':
         sortAscending = False
     elif metric2use == 'RMSE_p':
@@ -119,10 +108,6 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
     else:
         print('The metric is not coded, compare_outputs cannot be executed')
         sys.exit()
-    var4time = 'forecast_time'
-
-    mo = pd.read_csv(analysisOutputDir + '/' + 'all_model_output.csv')
-
     # Until 2025 02 18, RMSE_p and rRMSE_p where computed using d140_modelStats.allStats_spatial
     # that take the time average of the RMSE by year with the result that if a year has only few data and
     # it is very good or bad, it will have a lot of weight. We decided then to go always for an overall rmse
@@ -166,7 +151,7 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
     b4 = pd.concat([b4, tmp])
     b4 = b4.sort_values([var4time, 'Crop', metric2use], \
                         ascending=[True, True, sortAscending])
-    b4.to_csv(analysisOutputDir + '/' + 'all_model_best4.csv', index=False)
+
 
     # and absolute ML best (plus benchmarks)
     moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
@@ -177,7 +162,92 @@ def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_
         .apply(lambda x: x.loc[x['Estimator'].isin(mlsettings.benchmarks)]).reset_index(drop=True)
     tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'Crop'])
     b1 = pd.concat([b1ML, tmp])
+    return b1, b4
+
+
+def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_column='name0',
+                    metric2use='rRMSE_p'):  # RMSE_p' #'R2_p'
+    # get some vars from mlSettings class
+    mlsettings = a10_config.mlSettings(forecastingMonths=0)
+    # includeTrendModel = True   #for Algeria run ther is no trend model
+    # addCECmodel = False #only for South Africa
+
+    analysisOutputDir = os.path.join(config.models_out_dir, 'Analysis')
+    mo = pd.read_csv(analysisOutputDir + '/' + 'all_model_output.csv')
+    var4time = 'forecast_time'
+    b1, b4 = extract_best_1_and_4(mo, metric2use, var4time, config, mlsettings)
+    b4.to_csv(analysisOutputDir + '/' + 'all_model_best4.csv', index=False)
     b1.to_csv(analysisOutputDir + '/' + 'all_model_best1.csv', index=False)
+    # print()
+    # 2025 10 28 all this below has been transfert to funcyion extract_best_1_and_4 for reuse
+    # if metric2use == 'R2_p':
+    #     sortAscending = False
+    # elif metric2use == 'RMSE_p':
+    #     sortAscending = True
+    # elif metric2use == 'RMSE_val':
+    #     sortAscending = True
+    # elif metric2use == 'rRMSE_p':
+    #     sortAscending = True
+    # else:
+    #     print('The metric is not coded, compare_outputs cannot be executed')
+    #     sys.exit()
+    #
+    # # Until 2025 02 18, RMSE_p and rRMSE_p where computed using d140_modelStats.allStats_spatial
+    # # that take the time average of the RMSE by year with the result that if a year has only few data and
+    # # it is very good or bad, it will have a lot of weight. We decided then to go always for an overall rmse
+    # # Here I recompute it; it will not be needed in the new runs
+    # if not('RMSE_p_spatial' in mo.columns):
+    #     # it is not there, so the current 'RMSE_p', 'rRMSE_p' are spatial
+    #     # I have to rename them, and compute the overall
+    #     mo = mo.rename(columns={'RMSE_p': 'RMSE_p_spatial', 'rRMSE_p': 'rRMSE_p_spatial'})
+    #     mo['RMSE_p'] = None
+    #     mo['rRMSE_p'] = None
+    #     for index, row in mo.iterrows():
+    #         runID = row['runID']            # get run_id
+    #         myID = f'{runID:06d}'
+    #         fn_mRes_out = os.path.join(config.models_out_dir, 'ID_' + str(myID) + '_crop_' + row['Crop'] + '_Yield_' + row['Estimator'] + '_mres.csv')
+    #         if os.path.exists(fn_mRes_out):
+    #             mRes = pd.read_csv(fn_mRes_out)
+    #         else:
+    #             fn_spec = os.path.join(config.models_spec_dir, str(myID) + '_' + row['Crop'] + '_' + row['Estimator'] + '.json')
+    #             mRes = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
+    #         res = d140_modelStats.allStats_overall(mRes)
+    #         mo.at[index, 'RMSE_p'] = res['Pred_RMSE']
+    #         mo.at[index, 'rRMSE_p'] = res['rel_Pred_RMSE']
+    #
+    #
+    # # Work on run outputs (avg performances)
+    # # add the calendar month at which thh forcast can be done
+    # di = dict(zip(config.forecastingMonths, config.forecastingCalendarMonths))
+    # mo['forecast_issue_calendar_month'] = mo['forecast_time'].replace(di)
+    # mo['forecast_issue_calendar_month'] = mo['forecast_issue_calendar_month'].astype(
+    #     int) + 1  # add one month as forecast are made beginiing of the month after
+    # mo.loc[mo['forecast_issue_calendar_month'] > 12, ['forecast_issue_calendar_month']] = mo[
+    #                                                                                           'forecast_issue_calendar_month'] - 12
+    # # get best 4 ML configurations by lead time, crop type and y var PLUS benchmarks
+    # moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
+    # b4 = moML.groupby(['Crop', var4time]).apply(
+    #     lambda x: x.sort_values([metric2use], ascending=sortAscending).head(4)).reset_index(drop=True)
+    # # always add the benchmarks
+    # tmp = mo.groupby(['Crop', var4time]) \
+    #     .apply(lambda x: x.loc[x['Estimator'].isin(mlsettings.benchmarks)]).reset_index(drop=True)
+    # tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'Crop'])
+    # b4 = pd.concat([b4, tmp])
+    # b4 = b4.sort_values([var4time, 'Crop', metric2use], \
+    #                     ascending=[True, True, sortAscending])
+    # b4.to_csv(analysisOutputDir + '/' + 'all_model_best4.csv', index=False)
+    #
+    # # and absolute ML best (plus benchmarks)
+    # moML = mo[mo['Estimator'].isin(mlsettings.benchmarks) == False]
+    # b1ML = moML.groupby(['Crop', var4time]).apply(
+    #     lambda x: x.sort_values([metric2use], ascending=sortAscending).head(1)).reset_index(drop=True)
+    # # always add the benchmarks
+    # tmp = mo.groupby(['Crop', var4time]) \
+    #     .apply(lambda x: x.loc[x['Estimator'].isin(mlsettings.benchmarks)]).reset_index(drop=True)
+    # tmp = tmp.drop_duplicates(subset=[var4time, 'Estimator', 'Crop'])
+    # b1 = pd.concat([b1ML, tmp])
+
+
 
     # Work at tha AU level
     # compute error at AU level

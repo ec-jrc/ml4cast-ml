@@ -4,7 +4,7 @@ from sklearn import linear_model
 from tabpfn import TabPFNRegressor
 
 
-def run_LOYO(model, X_train, X_test, y_train, y_test, adm_id_train, adm_id_test, groups_test, setNegativePred2Zero):
+def run_LOYO(model, X_train, X_test, y_train, y_test, adm_id_train, adm_id_test, groups_test):
     # run benchmarks with no INNER LOOP
     yloo_pred = []
     yloo_true = []

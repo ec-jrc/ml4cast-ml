@@ -21,7 +21,7 @@ path_fromBaseDir = r'\TN\SF_test\NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_confi
 run_name = 'TNv_NoSF'
 # TN ObsAsSF
 # path_fromBaseDir = r'\TN\SF_test\ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json'
-# run_name = 'TNv_ObsAsForecast'
+# run_name = 'TNv_ObsAsSF'
 
 ############################################################################################
 if 'win' in sys.platform:

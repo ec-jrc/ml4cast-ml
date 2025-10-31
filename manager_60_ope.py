@@ -52,7 +52,7 @@ if __name__ == '__main__':
     di = dict(zip(config.forecastingMonths, config.forecastingCalendarMonths))
     # the forecast is issue early in the month after the last month used
     forecast_issue_calendar_month = di[forecastingMonth] + 1
-    if forecast_issue_calendar_month > 12 :
+    if forecast_issue_calendar_month > 12:
         forecast_issue_calendar_month = forecast_issue_calendar_month - 12
     forecast_issue_calendar_month = calendar.month_abbr[forecast_issue_calendar_month]
     # make necessary directories

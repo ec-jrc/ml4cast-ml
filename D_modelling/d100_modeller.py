@@ -289,7 +289,7 @@ class YieldModeller(DataMixin, object):
                     adm_id_train = adm_id_train[~nas]
                     if self.uset['algorithm'] in mlsettings.benchmarks:
                         # fast tuning OR re-tune AND benchmark models
-                        outLoopRes = d110_benchmark_models.run_LOYO(self.uset['algorithm'], X_train, X_test, y_train, y_test, adm_id_train, adm_id_test, groups_test, mlsettings.setNegativePred2Zero )
+                        outLoopRes = d110_benchmark_models.run_LOYO(self.uset['algorithm'], X_train, X_test, y_train, y_test, adm_id_train, adm_id_test, groups_test)
                         tmp = pd.DataFrame(np.array(outLoopRes).T.tolist(), columns=['yLoo_pred', 'yLoo_true', 'adm_id', 'Year'])
                         mRes = pd.concat([mRes, tmp])
                     else:
