@@ -13,9 +13,9 @@ save it as fn extraction + _ObsAsForecast
 # regNames = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\Tuning_data\ZAsummer_REGION_id.csv')
 # df_mon = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\ZA\SF\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZAvSeas5base\ZAsummer_monthly_features.csv')
 # TUNISIA
-fn_extraction = r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\Tuning_data\Multiple_WC-Tunisia-ASAP.csv'
-regNames = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\Tuning_data\TNWinter_REGION_id.csv')
-df_mon = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\RUN_Multiple_WC-Tunisia-ASAP\TUNE_TNv_20250704\TNWinter_monthly_features.csv')
+fn_extraction = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF\NO_SF_baseline\Tuning_data\Multiple_WC-Tunisia-ASAP.csv'
+regNames = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\TN\SF\NO_SF_baseline\Tuning_data\TNWinter_REGION_id.csv')
+df_mon = pd.read_csv(r'V:\foodsec\Projects\SNYF\SIDv\TN\SF\NO_SF_baseline\RUN_Multiple_WC-Tunisia-ASAP\TUNE_TNv_NoSF\TNWinter_monthly_features.csv')
 
 
 fn_out = os.path.splitext(fn_extraction)[0] + '_ObsAsForecast.csv'
@@ -25,7 +25,7 @@ df_dek = pd.read_csv(fn_extraction)
 
 # now link it with adm_id and name
 df_dek = pd.merge(df_dek, regNames, left_on=['adm_id'], right_on=['adm_id'])
-# remove the admin name form extraction, not needed, use the one from region file
+# remove the admin name from extraction, not needed, use the one from region file
 df_dek = df_dek.rename(columns={'adm_name_x': 'adm_name_extraction', 'adm_name_y': 'adm_name'})
 df_dek.drop('adm_name_extraction', axis=1, inplace=True)
 # get value of columns I will need to fill

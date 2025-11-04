@@ -82,11 +82,11 @@ if 'win' in sys.platform:
     # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'
     # run_name = 'TN_20250424'
     # TN SF BASE
-    # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF_test\NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json'
-    # run_name = 'TNv_NO_SF_baseline'
+    config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF_test\NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json'
+    run_name = 'TNv_NO_SF_baseline'
     # TN ObsAsSF
-    config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF_test\ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json'
-    run_name = 'TNv_ObsAsForecast'
+    # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF_test\ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json'
+    # run_name = 'TNv_ObsAsForecast'
 
     # TN viirs
     # config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\Winter2\TNMultiple_WC-Tunisia-ASAP_config_excl.json'

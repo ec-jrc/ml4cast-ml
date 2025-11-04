@@ -9,15 +9,16 @@ Compare two results (e.g. without SF vs with SF)
 """
 
 # configuration files and run names
-cf1 = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF_test\NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json'
+baseDir = r'V:\foodsec\Projects\SNYF\SIDv\TN\_SF_test'
+cf1 = os.path.join(baseDir, 'NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json')
 rn1 = 'TNv_NoSF'
 short_name1 = 'noSF'
-cf2 = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF_test\ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json'
+cf2 = os.path.join(baseDir, 'ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json')
 rn2 = 'TNv_ObsAsSF'
 short_name2 = 'ObsAsSF'
 ########################################################
 
-dir_out = os.path.join(r'V:\foodsec\Projects\SNYF\SIDv\TN\SF_test', 'comp_' + rn1 + '_vs_' + rn2)
+dir_out = os.path.join(baseDir, 'comp_' + rn1 + '_vs_' + rn2)
 os.makedirs(dir_out, exist_ok=True)
 mlsettings = a10_config.mlSettings(forecastingMonths=0)
 # to gather: list of times, list of crops; a df with:
@@ -49,18 +50,30 @@ for crop in list_crop:
     df2plot['Estimator'] = df2plot['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
     p = sns.barplot(df2plot, x="forecast_time", y="rRMSE_p", hue="Estimator", ax=axs[0])
     plt.ylim(0, ymax)
-    # axs[0].set(ylim=(0, ymax))
     p.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    axs[0].set_title(short_name1)
+
     df2plot = df[(df['run_short_name'] == short_name2) & (df['Crop'] == crop)]
     df2plot['Estimator'] = df2plot['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
     p = sns.barplot(df2plot, x="forecast_time", y="rRMSE_p", hue="Estimator", ax=axs[1])
     plt.ylim(0, ymax)
-    # axs[1].set(ylim=(0, ymax))
     p.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    axs[1].set_title(short_name2)
     fig_name = os.path.join(dir_out, crop +'.png')
     plt.tight_layout()
     plt.savefig(fig_name)
     plt.close()
+
+# same but reshaped in one graph
+# check that  ["Null_model", "Trend", "PeakNDVI"] have same "rRMSE_p" at each 'forecast_time', no matter 'run_short_name'
+for crop in list_crop:
+    for t in df.forecast_time.unique():
+        for est in ["Null_model", "Trend", "PeakNDVI"]:
+            tmp = df[(df['Crop'] == crop) & (df['forecast_time'] == t) & (df['Estimator'] == est)]
+            if tmp["rRMSE_p"].nunique() != 1:
+                print(crop, t, est)
+                print("Not all rRMSE_p values are equal")
+
 print()
 
 
