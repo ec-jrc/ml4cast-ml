@@ -206,7 +206,7 @@ def build_features(config, runType):
 
 
 
-def LoadLabel_check_quality_and_clean(stat_file, start_year, end_year, make_charts=False, perc_threshold=-1, crops_names=None):
+def LoadLabel_check_quality_and_clean(stat_file, stat_file_for_writing, start_year, end_year, make_charts=False, perc_threshold=-1, crops_names=None):
     '''
     This function is loading stats (without excluding admin with missing values)
     and making quality checks. It saves a cleaned version of the stats
@@ -250,6 +250,8 @@ def LoadLabel_check_quality_and_clean(stat_file, start_year, end_year, make_char
 
     for unit, unit_name in zip(units, units_names):
         data_unit = df[df['adm_id'] == unit]
+        # if "Inezgane" in unit_name:
+        #     print()
 
         for crop_name in crops_names:
             data_crop = data_unit[data_unit['Crop_name'] == crop_name]
@@ -326,7 +328,8 @@ def LoadLabel_check_quality_and_clean(stat_file, start_year, end_year, make_char
                 # Generate plots if requested
                 if make_charts:
                     graph_df = data_crop[['Year', 'Yield']].sort_values(by='Year')
-                    plt.plot(graph_df['Year'], graph_df['Yield'], label='Yield', linewidth=1.5, color='#1f77b4')
+                    graph_df = graph_df.dropna(subset=['Yield'])
+                    plt.plot(graph_df['Year'], graph_df['Yield'], label='Yield', linewidth=1.5, color='#1f77b4', marker='o')
 
                     # Plot trend line only if a trend was detected
                     if trend_detected and len(data_year['Year'].unique()) > 1 and data_year['Yield'].var() > 0:
@@ -412,7 +415,7 @@ def LoadLabel_check_quality_and_clean(stat_file, start_year, end_year, make_char
     df.loc[mask_low_yield, 'LowYield'] = 'Removed'
 
     # Save the flagged file before cleaning
-    flagged_file = stat_file.replace('.csv', '_flagged.csv')
+    flagged_file = stat_file_for_writing.replace('.csv', '_flagged.csv')
     df.to_csv(flagged_file, index=False)
 
     # CLEANING SECTION: Drop rows based on flags and null values
@@ -427,11 +430,11 @@ def LoadLabel_check_quality_and_clean(stat_file, start_year, end_year, make_char
     cleaned_df = cleaned_df.drop(columns=['Outlier', 'Duplicate', 'LowYield'])
 
     # Save the cleaned CSV
-    cleaned_file = stat_file.replace('.csv', '_cleaned.csv')
+    cleaned_file = stat_file_for_writing.replace('.csv', '_cleaned.csv')
     cleaned_df.to_csv(cleaned_file, index=False)
 
     # Save the summary file
-    summary_file = stat_file.replace('.csv', '_summary.csv')
+    summary_file = stat_file_for_writing.replace('.csv', '_summary.csv')
     summary.to_csv(summary_file, index=False)
 
     # here return the cleaned stats

@@ -90,7 +90,7 @@ if False:
     plt.close()
 
 # # P wet
-if True:
+if False:
     print('p normal')
     # # Define the colors for minimum, central, and maximum values
     min_color = '#7DF9FF'

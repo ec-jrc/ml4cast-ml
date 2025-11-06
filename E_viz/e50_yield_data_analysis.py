@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import matplotlib.pyplot as plt
 from B_preprocess import b101_load_cleaned
+from B_preprocess import b50_yield_data_analysis
 from B_preprocess import b100_load
 import pymannkendall as mk
 import matplotlib.ticker as mticker
@@ -261,8 +262,10 @@ def mapYieldStats(config, fn_shape_gaul1, country_name_in_shp_file,  gdf_gaul0_c
         # Load LT statistics
         LTstats = pd.read_csv(os.path.join(dir2use, config.AOI + '_LTstats_retainPRCT' + str(prct2retain) + '.csv'))
         # open stats to have a link between adm id and ref shape
-        stat_file = os.path.join(config.data_dir, config.AOI + '_STATS.csv')
-        stats = pd.read_csv(stat_file)
+        # stat_file = os.path.join(config.data_dir, config.AOI + '_STATS.csv')
+        fn = b50_yield_data_analysis.find_last_version_csv(config.AOI + '_STATS', config.data_dir)
+        # stats = pd.read_csv(stat_file)
+        stats = pd.read_csv(os.path.join(config.data_dir, fn))
         # find unique combinations adm_id - Ref_shp
         unique_combinations = stats[['adm_id', 'Ref_shp']].drop_duplicates()
         # remove path in the column and keep shp name
