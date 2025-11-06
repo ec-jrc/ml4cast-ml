@@ -211,7 +211,10 @@ def LoadLabel_check_quality_and_clean(stat_file, start_year, end_year, make_char
     This function is loading stats (without excluding admin with missing values)
     and making quality checks. It saves a cleaned version of the stats
     crops_names: pass a list of crops if tou don't want all the crops in stats to be cleaned (e.g. Harvest data have minor crops that are not of interest
+
+    ???? Mic: what is this below? Obsolete?
     perc_threshold: z-score >zScoreTreshold or <-zScoreTreshold will be flagged if the abd difference with respect to mean is >  perc_threshold, set to -1 (default) to omit this check
+    ????
     '''
     zScoreTreshold = 3 # theshold for finding ouliers
     df = pd.read_csv(stat_file)
