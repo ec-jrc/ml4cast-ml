@@ -3,6 +3,7 @@ from A_config import a10_config
 import os
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 from F_post_processsing import F100_analyze_hindcast_output
 """
 Compare two results (e.g. without SF vs with SF) 
@@ -74,6 +75,79 @@ for crop in list_crop:
                 print(crop, t, est)
                 print("Not all rRMSE_p values are equal")
 
+
+for crop in list_crop:
+    df2 = df.head(0)
+    for t in df.forecast_time.unique():
+        tmp = df[(df['Crop'] == crop) & (df['forecast_time'] == t)]
+        print()
+        # keep only one bennchmark
+        for est in ["Null_model", "Trend", "PeakNDVI"]:
+            tmp = pd.concat([
+                tmp[tmp['Estimator'] == est].drop_duplicates('Estimator', keep='first'),
+                tmp[tmp['Estimator'] != est]
+            ]).sort_index().reset_index(drop=True)
+        df2 = pd.concat([df2, tmp])
+    df2['Estimator_plot'] = df2['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
+    df2.loc[df2['Estimator_plot'] == 'ML', 'Estimator_plot'] = (
+        'ML_' + df2.loc[df2['Estimator_plot'] == 'ML', 'run_short_name']
+    )
+    df2.loc[df2['Estimator_plot'] == 'Tab', 'Estimator_plot'] = (
+            'Tab_' + df2.loc[df2['Estimator_plot'] == 'Tab', 'run_short_name']
+    )
+
+    plt.figure(figsize=(8, 5))
+    x_order = df2.forecast_time.unique().tolist()
+    hue_order = ["Null_model", "Trend", "PeakNDVI", "ML_noSF", "Tab_noSF", "ML_ObsAsSF", "Tab_ObsAsSF"]
+    colors =    ["#969696",  "#009600", "#FF0000",  "#0000FF", "#660066",  "#0000FF",    "#660066"]
+    hatches =   ["",         "",         "",       "",          "",        "///",  "///"]
+    palette = dict(zip(hue_order, colors))
+    hatch_dict = dict(zip(hue_order, hatches))
+
+    ax = sns.barplot(df2, x="forecast_time", y="rRMSE_p", hue="Estimator_plot", order=x_order, hue_order=hue_order, palette=palette,)
+
+    n_hues = len(hue_order)
+    n_times = len(x_order)
+    for i, patch in enumerate(ax.patches[0:21]):
+        # Which hue does this patch belong to?
+        # print(i, n_times, i % n_times, i//n_times)
+        #hue = hue_order[i % n_hues]  # repeat the hue order for each x‑category
+        hue = hue_order[i // n_times]  # repeat the hue order for each x‑category
+        hatch = hatch_dict.get(hue, "")  # default to '' if not found
+        # hatch = '///'
+        patch.set_hatch(hatch)
+
+        # (optional) make the hatch more visible by setting edge colour
+        patch.set_edgecolor('white')
+        patch.set_linewidth(0.8)
+    # create legend with hatches
+    legend_handles = []
+    for est in hue_order:
+        handle = Patch(
+            facecolor=palette[est],  # same colour as the bars
+            edgecolor='white',
+            hatch=hatch_dict.get(est, ""),  # same hatch as the bars
+            label=est,  # text that will appear in the legend
+            linewidth=0.8
+        )
+        legend_handles.append(handle)
+
+    # Add the legend to the axis
+    ax.legend(
+        handles=legend_handles,
+        title="Estimator",
+        loc="upper left",
+        bbox_to_anchor=(1.02, 1),  # puts it just outside the plot
+        borderaxespad=0.0
+    )
+
+    # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    ax.set_ylabel("rRMSEp (%)", fontsize=12)
+    ax.set_xlabel("Forecast time (month in season)", fontsize=12)
+    fig_name = os.path.join(dir_out, crop + '_one_graph.png')
+    plt.tight_layout()
+    plt.savefig(fig_name)
+    plt.close()
 print()
 
 

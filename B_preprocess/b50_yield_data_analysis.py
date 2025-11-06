@@ -188,7 +188,9 @@ def find_last_version_csv(base_name, directory):
     # Iterate over all files in the directory
     for filename in os.listdir(directory):
         # Check if the file contains the base name
-        if base_name in filename:
+        pattern = f"^{re.escape(base_name)}_v.*$"
+        if filename == base_name + '.csv' or bool(re.match(pattern, filename)):
+        # if base_name in filename:
             # Check if the file matches the pattern base_name+v followed by a number
             match = re.search(rf"{base_name}_v(\d+)", filename)
             matching_files.append(filename)
@@ -220,11 +222,11 @@ def saveYieldStats(config, period = 'Last5yrs', prct2retain=100):
     Path(outDir).mkdir(parents=True, exist_ok=True)
     # 2025 10 30 get last version
     fn = find_last_version_csv(config.AOI + '_STATS', config.data_dir)
-    stat_file = os.path.join(config.data_dir, config.AOI + '_STATS.csv') # name used in writing
-    stat_fileLAST_VERION = os.path.join(config.data_dir, fn)  # name used in writing
+    stat_file_for_writing = os.path.join(config.data_dir, config.AOI + '_STATS.csv') # name used in writing
+    stat_fileLAST_VERSION = os.path.join(config.data_dir, fn)  # name used in reading
 
     # quality check and outlier removal
-    stats = b100_load.LoadLabel(stat_fileLAST_VERION, config.year_start, config.year_end, make_charts=True, perc_threshold=-1, crops_names=config.crops)
+    stats = b100_load.LoadLabel(stat_fileLAST_VERSION, config.year_start, config.year_end, make_charts=True, perc_threshold=-1, crops_names=config.crops)
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
     area_unit = units['Area'].values[0]
     yield_unit = units['Yield'].values[0]
@@ -258,7 +260,7 @@ def saveYieldStats(config, period = 'Last5yrs', prct2retain=100):
         adm_id_2retain_for_crop = y[y['Crop_name|first'] == c]['adm_id|'].unique()
         tmp = stats[(stats['Crop_name'] == c) & (stats['adm_id'].isin(adm_id_2retain_for_crop))]
         stats_prct2retain = pd.concat([stats_prct2retain, tmp])
-    cleaned_prct2retain_file = stat_file.replace('.csv', '_cleaned' + str(prct2retain) + '.csv')
+    cleaned_prct2retain_file = stat_file_for_writing.replace('.csv', '_cleaned' + str(prct2retain) + '.csv')
     # It may happen that some admin level for which I have yield, do not have ASAP data extracted
     # because there is no AFI (e.g. Somalia). I have to point it out to operator, save a file showing which,
     # and removing them from stats
@@ -293,7 +295,8 @@ def saveYieldStats(config, period = 'Last5yrs', prct2retain=100):
             # print a file
             df_out = pd.DataFrame({"Dropped_admin_with_no_ASAP_data": in_B_not_A_list, "Dropped_admin_name": name_list,
                                    "crops": crops_list_of_list})
-            dropped_adm_file = stat_file.replace('.csv', '_adm_dropped' + str(prct2retain) + '.csv')
+            dropped_adm_file = stat_file_for_writing.replace('.csv', '_adm_dropped' + str(prct2retain) + '.csv')
+            dropped_adm_file = dropped_adm_file.replace('STATS', 'statisticsfile')
             df_out.to_csv(dropped_adm_file, index=False)
             stats_prct2retain = stats_prct2retain[~stats_prct2retain["adm_id"].isin(in_B_not_A_list)]
             # remove unmatched records from stats

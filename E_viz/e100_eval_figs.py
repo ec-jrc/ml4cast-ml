@@ -137,8 +137,11 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
             # palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", ml_est_name: "b"}
             # Tab change 2025
             palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", "Tab": "purple", ml_est_name: "b"}
-            p1 = sns.barplot(tmp, x="adm_name", y="rrmse_prct", hue="Estimator", ax=axes[ax_c], palette=palette, order=tmp['adm_name'])
+            # limit string of adm name
+            tmp["adm_name_short"] = tmp["adm_name"].astype(str).str[:15]
+            p1 = sns.barplot(tmp, x="adm_name_short", y="rrmse_prct", hue="Estimator", ax=axes[ax_c], palette=palette, order=tmp['adm_name_short'])
             p1.set_title('Forecast_time = ' + str(ftime))
+            axes[ax_c].set_ylim(0, 100)
             sns.move_legend(axes[ax_c], "upper right", title=None, frameon=False) #bbox_to_anchor=(1, 1)
             # plt.xticks(rotation=70)
             p1.set_xticklabels(p1.get_xticklabels(),

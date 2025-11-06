@@ -222,6 +222,16 @@ def LoadLabel(stat_file, start_year, end_year, make_charts=False, perc_threshold
 
     units_names = pd.unique(df['adm_name'])
     # crops_names = pd.unique(df['Crop_name'])
+    if len(units) != len(units_names):
+        print('!!!!! b100 LoadLabel: the number of admin id is not equal the number of admin names')
+        print('N unit ids: ' + str(len(units)))
+        print('N admin names: ' + str(len(units_names)))
+        print('Print adm ids that have multiple names')
+        for id in units:
+            names = df[df['adm_id'] == id]['adm_name'].unique()
+            if len(names) > 1:
+                print(id, names)
+        print('This may be due to multiple yield data units assigned to the same shp polygon (e.g. Morocco)')
 
     # Initialize columns for 'Outlier', 'Duplicate', and 'LowYield' with dtype 'object'
     df['Outlier'] = pd.Series(dtype='object')

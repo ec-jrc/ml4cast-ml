@@ -17,11 +17,14 @@ else:
     baseDir = os.path.normpath('/eos/jeodpp/data/projects/ML4CAST/VIIRS')
 ############################################################################################
 # TN NoSF
-path_fromBaseDir = r'\TN\SF\NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json'
-run_name = 'TNv_NoSF'
+# path_fromBaseDir = r'\TN\SF\NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json'
+# run_name = 'TNv_NoSF'
 # TN ObsAsSF
 # path_fromBaseDir = r'\TN\SF\ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json'
 # run_name = 'TNv_ObsAsSF'
+# Morocco
+path_fromBaseDir = r'V:\foodsec\Projects\SNYF\SIDv\MA\MAfews_config.json'
+run_name = 'MA_test'
 
 ############################################################################################
 if 'win' in sys.platform:
