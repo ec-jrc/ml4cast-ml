@@ -226,7 +226,7 @@ def saveYieldStats(config, period = 'Last5yrs', prct2retain=100):
     stat_fileLAST_VERSION = os.path.join(config.data_dir, fn)  # name used in reading
 
     # quality check and outlier removal
-    stats = b100_load.LoadLabel(stat_fileLAST_VERSION, config.year_start, config.year_end, make_charts=True, perc_threshold=-1, crops_names=config.crops)
+    stats = b100_load.LoadLabel_check_quality_and_clean(stat_fileLAST_VERSION, config.year_start, config.year_end, make_charts=True, perc_threshold=-1, crops_names=config.crops)
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
     area_unit = units['Area'].values[0]
     yield_unit = units['Yield'].values[0]
