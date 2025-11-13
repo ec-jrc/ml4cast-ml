@@ -22,9 +22,13 @@ else:
 # TN ObsAsSF
 # path_fromBaseDir = r'\TN\SF\ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json'
 # run_name = 'TNv_ObsAsSF'
+# TN SfAsSF
+path_fromBaseDir = r'TN\SF\SF\TNMultiple_WC-Tunisia-ASAP_config_SfAsForecast.json'
+run_name = 'TNv_SfAsSF'
+
 # Morocco
-path_fromBaseDir = r'V:\foodsec\Projects\SNYF\SIDv\MA\MAfews_config.json'
-run_name = 'MA_test'
+# path_fromBaseDir = r'V:\foodsec\Projects\SNYF\SIDv\MA\MAfews_config.json'
+# run_name = 'MA_test'
 
 ############################################################################################
 if 'win' in sys.platform:

@@ -10,7 +10,7 @@ Compare two results (e.g. without SF vs with SF)
 """
 
 # configuration files and run names
-baseDir = r'V:\foodsec\Projects\SNYF\SIDv\TN\_SF_test'
+baseDir = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF'
 cf1 = os.path.join(baseDir, 'NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json')
 rn1 = 'TNv_NoSF'
 short_name1 = 'noSF'

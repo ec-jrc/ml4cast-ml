@@ -106,7 +106,7 @@ def build_features(config, runType):
             raise ValueError("Use of Seasonal Forecast required, but no SF in _predictors.csv")
         # A given month MM contains Seasonal Forecast means of that month MM with date MM/01,
         # when preparing the data (load), this has to be assigned to the previous month MM-1/01
-        # to be avaiable in tuning and forecasting
+        # to be avaialble in tuning and forecasting in month MM
         # shift - 1 month
         df['Date'] = pd.to_datetime(df['Date'])
         df.loc[df['variable_name'].str.contains('SF_'), 'Date'] = (df['Date'] + pd.DateOffset(months=-1)).dt.strftime('%Y-%m-%d')

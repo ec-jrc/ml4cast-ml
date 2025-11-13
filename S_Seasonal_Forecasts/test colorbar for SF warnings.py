@@ -3,6 +3,24 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
 
+"""
+For info, these are the probability counts by categories we use for styling
+ 
+ 
+
+cls	dry	normal	wet
+0.4	169,180	50,329	163,768
+0.5	99,752	6,733	106,723
+0.6	22,184	366	35,627
+0.7	4,743	24	13,077
+0.8	900	3	4,517
+0.9	166	0	1,173
+1	6	0	139
+
+NULL
+	480,599	720,075	452,506
+"""
+
 #SKILL
 if False:
     print('skills')
