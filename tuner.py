@@ -191,12 +191,13 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
             with open(condSubPath1, 'w') as out:
                 out.write(content)
             # Make the dirs for condor output on /mnt/jeoproc/log/ml4castproc/, clean content
-            Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'out')).mkdir(parents=True, exist_ok=True)
-            Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'err')).mkdir(parents=True, exist_ok=True)
-            Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'log')).mkdir(parents=True, exist_ok=True)
-            remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'out'))
-            remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'err'))
-            remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'log'))
+            base_log_dir_name = config.AOI + '_' + run_name + '_' + runType
+            Path(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'out')).mkdir(parents=True, exist_ok=True)
+            Path(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'err')).mkdir(parents=True, exist_ok=True)
+            Path(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'log')).mkdir(parents=True, exist_ok=True)
+            remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'out'))
+            remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'err'))
+            remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'log'))
             # Launch condor (sudo -u ml4castproc condor_submit condor.submit)
             run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath1]
             p = subprocess.run(run_cmd, shell=False, input='\n', capture_output=True, text=True)
