@@ -22,8 +22,8 @@ pd.set_option('display.max_columns', None)
 
 config_fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF\SF\TNMultiple_WC-Tunisia-ASAP_config_SfAsForecast.json'
 run_name = 'TNv_SfAsSF'
-fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF\SF\RUN_Multiple_WC-Tunisia-ASAP_SfAsForecast\TUNE_TNv_SfAsSF\Specs\000088_Ble_tendre_Lasso.json'
-runType = 'fast_tuning'
+fn = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF\SF\RUN_Multiple_WC-Tunisia-ASAP_SfAsForecast\TUNE_TNv_SfAsSF\Specs\000182_Ble_tendre_SVR_rbf.json'
+runType = 'tuning'
 
 # fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZA_20250410\Specs\000147_Sunflower_SVR_linear.json'
 # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'

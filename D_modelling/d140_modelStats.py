@@ -133,11 +133,6 @@ def allStats_spatial(mRes):
     nas = np.isnan(y_true)
     avg_y_true = np.mean(y_true[~nas])
     res = {
-        #'Pred_R2': metrics.r2_score(mRes['yLoo_true'], mRes['yLoo_pred']),
-        #'Pred_MAE': metrics.mean_absolute_error(mRes['yLoo_true'], mRes['yLoo_pred']),
-        #'Pred_ME': mean_error_nan(mRes['yLoo_true'], mRes['yLoo_pred']),
-        #'Pred_RMSE': np.sqrt(metrics.mean_squared_error(mRes['yLoo_true'], mRes['yLoo_pred'])),
-
         'Pred_R2': mRes.groupby('Year').apply(lambda x: r2_nan(x['yLoo_true'], x['yLoo_pred'])).reset_index(drop=True).mean(),
         'Pred_MAE': mRes.groupby('Year').apply(lambda x: mean_absolute_error_nan(x['yLoo_pred'], x['yLoo_true'])).reset_index(drop=True).mean(),
         'rel_Pred_MAE': mRes.groupby('Year').apply(lambda x: mean_absolute_error_nan(x['yLoo_pred'], x['yLoo_true'])).reset_index(drop=True).mean() / avg_y_true * 100.0,

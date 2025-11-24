@@ -363,11 +363,6 @@ def scatter_plots_and_maps(b1, config, mlsettings, var4time, OutputDir, fn_shape
                                                                      'rRMSE (%)', cmap='tab20b',
                                                                      # minmax=[minOfMins, maxOfmaxs], ax=axs3[index])
                                                                      ax=axs3[index])
-                # axs3[index] = e50_yield_data_analysis.mapDfColumn2Ax(df_c_t_m, 'adm_id', 'rrmse_prct', 'adm_name',
-                #                                                      gdf, gdf_gaul1_id, gdf_gaul0_column,
-                #                                                      country_name_in_shp_file,
-                #                                                      'rRMSE (%)', cmap='tab20b',
-                #                                                      minmax=[minOfMins, maxOfmaxs], ax=axs3[index])
                 axs3[index].set_title(model)
                 # get mres errors
                 runID = df_c_t_m['runID'].iloc[0]
