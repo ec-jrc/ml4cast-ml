@@ -200,7 +200,6 @@ def build_features(config, runType):
                 df = pd.concat([df, df2])
     df.to_csv(os.path.join(dirOut, config.AOI + '_features4scikit.csv'), index=False)
 
-    # df.to_pickle(dirOut + '/' + project['AOI'] + '_pheno_features4scikit.pkl')
 
 
 

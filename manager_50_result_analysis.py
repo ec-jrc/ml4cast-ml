@@ -1,6 +1,9 @@
 from F_post_processsing import F100_analyze_hindcast_output
 from A_config import a10_config
 import manager_0_user_params as upar
+import os
+import json
+import pandas as pd
 
 
 if __name__ == '__main__':
@@ -17,6 +20,9 @@ if __name__ == '__main__':
     # Make the analysis and plot
     F100_analyze_hindcast_output.compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file,
                                                  gdf_gaul0_column=config.gaul0_column_name_in_shp_file, metric2use=metric)
-
+    # for NASA intercomp, save file with dat of model tuning (in a way)
+    analysisOutputDir = os.path.join(config.models_out_dir, 'Analysis')
+    with open(os.path.join(analysisOutputDir, 'date_model_tune.json'), 'w') as fp:
+        json.dump({'date_run': str(pd.Timestamp.now().strftime("%Y-%m-%d"))}, fp, indent=4)
 
 

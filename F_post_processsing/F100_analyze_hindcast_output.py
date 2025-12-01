@@ -167,6 +167,8 @@ def extract_best_1_and_4(mo, metric2use, var4time, config, mlsettings):
 
 def compare_outputs(config, fn_shape_gaul1, country_name_in_shp_file, gdf_gaul0_column='name0',
                     metric2use='rRMSE_p'):  # RMSE_p' #'R2_p'
+
+
     # get some vars from mlSettings class
     mlsettings = a10_config.mlSettings(forecastingMonths=0)
     # includeTrendModel = True   #for Algeria run ther is no trend model

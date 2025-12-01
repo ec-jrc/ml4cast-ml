@@ -6,9 +6,11 @@ import re
 from B_preprocess import b101_load_cleaned
 from E_viz import e110_ope_figs
 from F_post_processsing import F100_analyze_hindcast_output
+from B_preprocess import b50_yield_data_analysis
 import datetime
 import glob
 from pathlib import Path
+import json
 
 
 
@@ -213,6 +215,42 @@ def combine_models(fns):
 
     return df_best, df_conservative_estimates
 
+def NASA_format(df_in, config):
+    pd.set_option('display.max_columns', None)
+    df = df_in.copy()
+    dir_NASA = os.path.join(config.ope_run_out_dir, "best_accuracy", "NasaHarvest_format")
+    Path(dir_NASA).mkdir(parents=True, exist_ok=True)
+    df.rename(columns={'adm_id': 'source_id'}, inplace=True)  # rename adm_id
+    fn = b50_yield_data_analysis.find_last_version_csv(config.AOI + '_STATS', config.data_dir)
+    df.insert(loc=1, column='source_name_version', value=fn)
+    df.insert(loc=2, column='admin_0', value=config.country_name_in_shp_file)
+    df.rename(columns={'Region_name': 'admin_1'}, inplace=True)
+    df.insert(loc=4, column='admin_2', value="")
+    df.insert(loc=5, column='admin_3', value="")
+    df.insert(loc=6, column='planted_year', value=config.harvest_year+config.plantingYearDelta)
+    df.insert(loc=7, column='approx_planted_month', value=config.sosMonth)
+    df.insert(loc=8, column='harvest_year', value=config.harvest_year)
+    df.insert(loc=9, column='approx_harvest_month', value=config.eosMonth)
+    df.rename(columns={'Crop_name': 'crop'}, inplace=True)
+    df.insert(loc=11, column='crop_season', value="n.a.")
+    df.insert(loc=12, column='forecast_issue_date (yyyy-mm-dd)', value=pd.Timestamp.now().strftime("%Y-%m-%d"))
+    analysisOutputDir = os.path.join(config.models_out_dir, 'Analysis')
+    with open(os.path.join(analysisOutputDir, 'date_model_tune.json'), 'r') as fp:
+        date_run = json.load(fp)
+    df.insert(loc=13, column='date_model_run (yyyy-mm-dd)', value=date_run['date_run'])
+    df.insert(loc=14, column='input_croptype_product', value='n.a.')
+    df.insert(loc=15, column='group', value='JRC')
+    df.insert(loc=16, column='model_version', value='mil4cast_' + date_run['date_run'])
+    # yield_fcst (tn_ha) from fyield
+    df.rename(columns={'fyield': 'yield_fcst (tn_ha)'}, inplace=True)
+    df.insert(loc=18, column='is_final', value='n.a.')
+    df.insert(loc=19, column='notes', value='')
+    df = df.iloc[:, :20]
+    fn_out = os.path.join(dir_NASA,
+        'JRC_' + config.AOI + '_forecast_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
+    df.to_csv(fn_out, index=False)
+
+
 def make_consolidated_ope(config):
     """
     Gather crop-specific and unit level forecasts and generate a nation-scale forecast
@@ -232,7 +270,7 @@ def make_consolidated_ope(config):
     for crop_name in config.crops:
         print(crop_name)
         fns_crop = [s for s in fns if re.search(f".*{crop_name}_forecast.*", s)]
-        # first save a single file with all estimations, ordered by region and by fyield_rMAEp_hindcasting
+        # first save a single file with all estimations (unconsolidated), ordered by region and by fyield_rMAEp_hindcasting
         listDFs = []
         # for fn in fns:
         for fn in fns_crop:
@@ -244,6 +282,7 @@ def make_consolidated_ope(config):
         fn_out = '_'.join(tmp.split('_')[0:-1] + ['unconsolidated.csv'])
         fn_out = os.path.join(config.ope_run_out_dir, 'best_accuracy', os.path.basename(fn_out))
         Path(os.path.join(config.ope_run_out_dir, 'best_accuracy')).mkdir(parents=True, exist_ok=True)
+        # Write unconsolidated
         df.to_csv(fn_out, index=False)
 
         # best model by admin (best accuracy and conservative accuracy)
@@ -251,8 +290,10 @@ def make_consolidated_ope(config):
         fn_out = '_'.join(tmp.split('_')[0:-1] + ['best_by_admin.csv'])
         fn_out = os.path.join(config.ope_run_out_dir, 'best_accuracy', os.path.basename(fn_out))
         df_best_est = df_best_est.sort_values(by=['Region_name'], ascending=True)
+        # Write consolidated (best by admin) and add NASA harvest Intercomparison format
         df_best_est.to_csv(fn_out, index=False)
-
+        # NASA PART
+        NASA_format(df_best_est, config)
         # update conservative estimates
         fn_out = '_'.join(tmp.split('_')[0:-1] + ['conservative_estimates.csv'])
         # Subset stats
@@ -271,6 +312,7 @@ def make_consolidated_ope(config):
         fn_out = os.path.join(config.ope_run_out_dir, 'conservative_estimates', os.path.basename(fn_out))
         Path(os.path.join(config.ope_run_out_dir, 'conservative_estimates')).mkdir(parents=True, exist_ok=True)
         df_cons_est = df_cons_est.sort_values(by=['Region_name'], ascending=True)
+        # Write conservative
         df_cons_est.to_csv(fn_out, index=False)
         # get National level estimates
         for selection_type, df in zip(['best_accuracy', 'conservative_estimates'], [df_best_est, df_cons_est]):

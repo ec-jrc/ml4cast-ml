@@ -55,6 +55,7 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
     b1['rRMSE_p_areaWeighted'] = -999
     b1 = b1.reset_index()  # the index was repeating
     dfAU = pd.DataFrame()
+    dfAU_WithExcluded = pd.DataFrame()
 
     # for each best model and benchmarks, compute error at the admin level using mRes
     for index, row in b1.iterrows():
@@ -71,32 +72,47 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
             fn_spec = os.path.join(config.models_spec_dir, str(myID) + '_' + row['Crop'] + '_' + row['Estimator'] + '.json')
             mRes = d090_model_wrapper.fit_and_validate_single_model(fn_spec, config, 'tuning', run2get_mres_only=True)
 
-        # if there was a crop_au_exclusions for ML, remove results for all (they are there for benchmark) to make a fair
-        # comparison
+        # # if there was a crop_au_exclusions for ML, remove results for all (they are there for benchmark) to make a fair
+        # # comparison
         if bool(config.crop_au_exclusions):
             if row['Crop'] in config.crop_au_exclusions.keys():
-                # print(row['Estimator'])
                 au_id_to_remove = df_regNames[df_regNames['adm_name'].isin(config.crop_au_exclusions[row['Crop']])]['adm_id'].tolist()
-                mRes = mRes.loc[~mRes['adm_id'].isin(au_id_to_remove)]
-
+                #mRes = mRes.loc[~mRes['adm_id'].isin(au_id_to_remove)]
+                mResWithoutExcluded = mRes.loc[~mRes['adm_id'].isin(au_id_to_remove)]
+        # With Excluded
         rRMSE_pByAdmin = d140_modelStats.statsByAdmin(mRes)
         rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
         rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_Stats[df_Stats['Crop_name|first'] == row['Crop']], how='left',
                                               left_on='adm_id', right_on='adm_id|')
-        # The wighted avg was computed using au rrmse, which is not coorect, It has to be computed using all data at once,
-        # weighting each single error-admin by the area-admin
-
-        mResWithArea = mRes.merge(rRMSE_pByAdmin[['adm_id|', 'Area|mean']], how='left', left_on='adm_id', right_on='adm_id|')
+        mResWithArea = mRes.merge(rRMSE_pByAdmin[['adm_id|', 'Area|mean']], how='left', left_on='adm_id',
+                                  right_on='adm_id|')
         z = d140_modelStats.rmse_rrmse_weighed_overall(mRes, mResWithArea['Area|mean'])
         row['rRMSE_p_areaWeighted'] = z['rel_Pred_RMSE']
         rRMSE_pByAdmin.insert(1, column='Estimator', value=row['Estimator'])
         rRMSE_pByAdmin.insert(2, column='forecast_time', value=row['forecast_time'])
         rRMSE_pByAdmin = rRMSE_pByAdmin.assign(**row.to_frame().T.to_dict(orient='records')[0])
+        dfAU_WithExcluded = pd.concat([dfAU_WithExcluded, rRMSE_pByAdmin])
 
+        # without Excluded
+        rRMSE_pByAdmin = d140_modelStats.statsByAdmin(mResWithoutExcluded)
+        rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
+        rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_Stats[df_Stats['Crop_name|first'] == row['Crop']], how='left',
+                                              left_on='adm_id', right_on='adm_id|')
+        mResWithArea = mResWithoutExcluded.merge(rRMSE_pByAdmin[['adm_id|', 'Area|mean']], how='left', left_on='adm_id',
+                                  right_on='adm_id|')
+        z = d140_modelStats.rmse_rrmse_weighed_overall(mResWithoutExcluded, mResWithArea['Area|mean'])
+        row['rRMSE_p_areaWeighted'] = z['rel_Pred_RMSE']
+        rRMSE_pByAdmin.insert(1, column='Estimator', value=row['Estimator'])
+        rRMSE_pByAdmin.insert(2, column='forecast_time', value=row['forecast_time'])
+        rRMSE_pByAdmin = rRMSE_pByAdmin.assign(**row.to_frame().T.to_dict(orient='records')[0])
         dfAU = pd.concat([dfAU, rRMSE_pByAdmin])
-    dfAU.to_csv(os.path.join(outputDir, 'all_model_best1_AU_error.csv'))
+
+
+
+    dfAU_WithExcluded.to_csv(os.path.join(outputDir, 'all_model_best1_AU_error.csv'))
+
     crops = dfAU['Crop'].unique()
-    # exclude admins based on rRMSEp threshold on the first forecast
+    # print to exclude admins based on rRMSEp threshold on the first forecast
     if True:
         rrmse_prct_threshold = 50
         first_forecast_time = dfAU['forecast_time'].min()
@@ -119,14 +135,16 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
             file.write(stringOut)
     if not adm_id_in_shp_2keep is None:
         # boundaries are changing in time (Morocco case), keep only admin represented in the last shp
-        dfAU = dfAU[dfAU['adm_id'].isin(adm_id_in_shp_2keep)]
-        dfAU.to_csv(os.path.join(outputDir, 'all_model_best1_AU_error' + suffix + '.csv'))
+        dfAU_WithExcluded = dfAU[dfAU['adm_id'].isin(adm_id_in_shp_2keep)]
+        dfAU_WithExcluded.to_csv(os.path.join(outputDir, 'all_model_best1_AU_error' + suffix + '.csv'))
     # Plot
     for crop in crops:
         dfAUc = dfAU[dfAU['Crop'] == crop].copy()
         forcTime = dfAUc["forecast_time"].unique()
 
-        fig, axes = plt.subplots(len(forcTime), 1, figsize=(8*len(forcTime),10))
+        fig, axes = plt.subplots(len(forcTime), 1, figsize=(8*len(forcTime),10)) #, squeeze=False)
+        if not isinstance(axes, (list, np.ndarray)):
+            axes = [axes]
         ax_c = 0
         for ftime in forcTime:
             tmp = dfAUc[dfAUc["forecast_time"] == ftime]
@@ -148,21 +166,6 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
                                       rotation=70,
                                       horizontalalignment='right')
             ax_c = ax_c + 1
-            # if len(forcTime) > 1:
-            #     tmp = dfAUc[dfAUc["forecast_time"] == forcTime[1]]
-            #     tmp = tmp.sort_values('adm_name').reset_index()
-            #     # ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), ['Trend', 'PeakNDVI', 'Null_model'])[0]
-            #     ml_est_name = np.setdiff1d(list(tmp['Estimator'].unique()), mlsettings.benchmarks)[0]
-            #     # Tab change 2025
-            #     palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", "Tab": "purple", ml_est_name: "b"}
-            #     # palette = {"Trend": "g", "PeakNDVI": "r", "Null_model": "grey", ml_est_name: "b"}
-            #     p2 = sns.barplot(tmp, x="adm_name", y="rrmse_prct", hue="Estimator", ax=axes[1], palette=palette, order=tmp['adm_name'])
-            #     p2.set_title('Forecast_time = ' + str(forcTime[1]))
-            #     sns.move_legend(axes[1], "upper right", title=None, frameon=False)  # bbox_to_anchor=(1, 1)
-            #     # plt.xticks(rotation=70)
-            #     p2.set_xticklabels(p1.get_xticklabels(),
-            #                        rotation=70,
-            #                        horizontalalignment='right')
 
         text = ''
         if bool(config.crop_au_exclusions):
@@ -172,7 +175,7 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
         plt.tight_layout()
         plt.savefig(os.path.join(outputDir, 'all_model_best1_AU_error_' + crop + suffix +'.png'))
         plt.close(fig)
-    return dfAU
+    return dfAU_WithExcluded
 def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputDir):
     # In this version I compute the rel RMSE by admin (aeach admin with its own mean yield) and then I weight them
     # using area of the last five years (to occount for the fact that larger errors are more tolerable if the area is small)

@@ -79,20 +79,14 @@ if __name__ == '__main__':
         #get best (can ML or bench)
         df_best = df_best_time_crop.loc[df_best_time_crop[metric_for_model_selection] == df_best_time_crop[metric_for_model_selection].min()]
         list2run = mlsettings.benchmarks.copy()
-        # # temporary
-        # list2run = [x for x in list2run if x != 'Tab']
         list2run.append(df_best['Estimator'].iloc[0])
         # if best is bench don't do it twice (remove duplicates from list using set)
         list2run = sorted(list(set(list2run)))
-        # list2runz = sorted(list(set([df_run['Estimator'].iloc[0], 'PeakNDVI'])))
-        # list2run = sorted(list(set([df_run['Estimator'].iloc[0], 'PeakNDVI', 'Null_model', ])))
         for est in list2run:    # make forecasts with the 2 or 3 estimators left
             print(crop, est)
             df_run = df_best_time_crop.loc[df_best_time_crop['Estimator'] == est]
             if est not in mlsettings.benchmarks:
                 df_run = df_run.loc[df_run[metric_for_model_selection] == df_run[metric_for_model_selection].min()]
-            # if est != 'PeakNDVI':
-            #     df_run = df_run.loc[df_run[metric_for_model_selection] == df_run[metric_for_model_selection].min()]
             # get the run id
             runID = df_run['runID'].values[0]
             # get the spec of the file and build specification file
@@ -167,5 +161,9 @@ if __name__ == '__main__':
 
                 F110_process_opeForecast_output.to_csv(config, forecast_issue_calendar_month, forecaster.uset, au_codes, forecasts, runID = runID)
 
+    # Add forecasting year and planting year to config (for NASA format)
+
+    # Here I make the best accuracy (by admin) estimates, and conservative estimates, and make state level estimates
+    config.harvest_year = forecastingYear
     F110_process_opeForecast_output.make_consolidated_ope(config)
     print('end ope forecast')

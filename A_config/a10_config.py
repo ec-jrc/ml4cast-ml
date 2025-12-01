@@ -81,8 +81,10 @@ class read:
     self.forecastingPrct = jdict['forecastingPrct']
     if self.sosMonth < self.eosMonth:
         real_months = list(range(int(self.sosMonth), int(self.eosMonth + 1)))
+        self.plantingYearDelta = 0
     else:
         real_months = list(range(int(self.sosMonth), 12 + 1)) + list(range(1, int(self.eosMonth) + 1))
+        self.plantingYearDelta = -1
 
     id_months = np.array(range(1,len(real_months)+1))
     # Now, no matter if 100 % forecast is used, store the last month in season to be used to limit use of Seasonal Forecast,
@@ -308,6 +310,15 @@ def config_reducer(modelSettings, run_name):
         modelSettings.addYieldTrend = [True]
         modelSettings.dataReduction = ['none']
     elif run_name == 'MA_20250904':
+        want_keys = ['Lasso']
+        modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
+        want_keys = ['rs_sm_reduced']
+        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
+        modelSettings.doOHEs = ['AU_level']
+        modelSettings.feature_selections = ['none']
+        modelSettings.addYieldTrend = [True]
+        modelSettings.dataReduction = ['none']
+    elif run_name == 'ZA_Int_test2':
         want_keys = ['Lasso']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         want_keys = ['rs_sm_reduced']

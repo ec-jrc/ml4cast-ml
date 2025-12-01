@@ -11,7 +11,21 @@ def mean_error_nan(y_true, y_pred):
     else:
         return np.nan
 
+def r2_pearson_nan(x, y): # x is observed, y is predicted
+    # scikit r2_score is not resistant to nan
+    x = np.array(x)
+    y = np.array(y)
+    nas = np.logical_or(np.isnan(x), np.isnan(y))
+    if not all(nas):
+        # compute as square of numpy r
 
+        #compute as R of scikit lin reg
+
+        #compare and stop if different
+    
+        #return metrics.r2_score(x[~nas], y[~nas])
+    else:
+        return np.nan
 def r2_nan(x, y): # x is observed, y is predicted
     # scikit r2_score is not resistant to nan
     x = np.array(x)
@@ -147,10 +161,21 @@ def statsByAdmin(mRes):
     avgs = mRes.groupby('adm_id').mean()
     rmse = mRes.groupby('adm_id').apply(lambda x: rmse_nan(x['yLoo_true'], x['yLoo_pred']))
     rmse = rmse.to_frame('rmse')
-    rmse_rrmse = pd.merge(rmse, avgs, left_index=True, right_index=True)
-    rmse_rrmse['rrmse_prct'] = rmse_rrmse['rmse']/rmse_rrmse['yLoo_true']*100
-    rmse_rrmse.drop(['yLoo_true', 'yLoo_pred', 'Year'], axis=1, inplace=True)
-    return rmse_rrmse.reset_index()
+    df = pd.merge(rmse, avgs, left_index=True, right_index=True)
+    df['rrmse_prct'] = df['rmse']/df['yLoo_true']*100
+    #add waht required by Intercomp exercise yield_mae	yield_rmse	yield_rrmse 	yield_mape	yield_r2_pearson	yield_r2_true
+    # mae, use: mean_absolute_error_nan
+    mae = mRes.groupby('adm_id').apply(lambda x: mean_absolute_error_nan(x['yLoo_true'], x['yLoo_pred']))
+    mae = mae.to_frame('mae')
+    df = pd.merge(df, mae, left_index=True, right_index=True)
+    df['rmae_prct'] = df['mae'] / df['yLoo_true'] * 100
+    # r2, coeff of det, use r2_nan
+    r2 = mRes.groupby('adm_id').apply(lambda x: r2_nan(x['yLoo_true'], x['yLoo_pred']))
+    r2 = r2.to_frame('r2_coeff_det')
+    df = pd.merge(df, r2, left_index=True, right_index=True)
+    df.drop(['yLoo_true', 'yLoo_pred', 'Year'], axis=1, inplace=True)
+
+    return df.reset_index()
 
 def meanAUR2(mRes):
     # Compute the mean of the tempral R2 computed by AU
