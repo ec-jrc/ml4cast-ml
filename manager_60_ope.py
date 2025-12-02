@@ -156,7 +156,6 @@ if __name__ == '__main__':
                     forecasts = fitted_model.predict(X[forecast_indices, :][:, np.array(ind2retain)]).tolist()
                     au_codes = adm_ids[forecast_indices].tolist()
                 if mlsettings.setNegativePred2Zero == True:
-                    # mRes.loc[mRes['yLoo_pred'] < 0, 'yLoo_pred'] = 0
                     forecasts = [x if x >= 0 else 0 for x in forecasts]
 
                 F110_process_opeForecast_output.to_csv(config, forecast_issue_calendar_month, forecaster.uset, au_codes, forecasts, runID = runID)

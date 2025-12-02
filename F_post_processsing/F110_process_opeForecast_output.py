@@ -30,16 +30,18 @@ def percentile_below(x, xt):
     idx = np.where(xt < v)[0][0]
     return p[idx]/100
 
-# def to_csv(self, regions, forecasts, funcertainty, fmae, runID = ''):
-# def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, rMAE_p_hindcasting, runID=''):
+
 def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, runID=''):
     df_forecast = pd.DataFrame({'adm_id': regions,
                                 'Region_name': np.nan,
                                 'Crop_name': uset['crop'],
                                 'fyield': forecasts,
-                                # 'fyield_SD_Bootstrap_1yr': funcertainty,
+                                'fyield_RMSEp_hindcasting': np.nan,
                                 'fyield_rRMSEp_prct_hindcasting': np.nan,
-                                # 'fyield_rMAEp_hindcasting': rMAE_p_hindcasting,
+                                'fyield_MAEp_hindcasting': np.nan,
+                                'fyield_rMAEp_prct_hindcasting': np.nan,
+                                'fyield_r2_coeff_det_by_admin_hindcasting': np.nan,
+                                'fyield_r2_pearson_by_admin_hindcasting': np.nan,
                                 'fyield_percentile': np.nan,
                                 'avg_obs_yield': np.nan,
                                 'avg_obs_yield_last5yrs': np.nan,
@@ -73,10 +75,14 @@ def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, runI
             df_forecast.loc[df_forecast['adm_id'] == region, [col for col in df_forecast.columns if col not in ['adm_id', 'df_forecast']]] = np.nan
         else:
             fyield_region = df_forecast.loc[df_forecast['adm_id'] == region, 'fyield'].values
-            # try:
-            df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_rRMSEp_prct_hindcasting'] = defAuError_region.rrmse_prct.values[0]
-            # except:
-            #     print('debug try f110 line 67')
+            # get hindcasting stats also including those for NASA Intercomparison
+            df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_RMSEp_hindcasting'] =  defAuError_region['rmse'].values[0]
+            df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_rRMSEp_prct_hindcasting'] = defAuError_region['rrmse_prct'].values[0]
+            df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_MAEp_hindcasting'] =   defAuError_region['mae'].values[0]
+            df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_rMAEp_prct_hindcasting'] =  defAuError_region['rmae_prct'].values[0]
+            df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_r2_coeff_det_by_admin_hindcasting'] = defAuError_region['r2_coeff_det'].values[0]
+            df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_r2_pearson_by_admin_hindcasting'] =   defAuError_region['r2_pearson'].values[0]
+
             df_forecast.loc[df_forecast['adm_id'] == region, 'adm_id'] = stats_region.iloc[0]['adm_id']
             df_forecast.loc[df_forecast['adm_id'] == region, 'fyield_percentile'] = \
                 percentile_below(stats_region['Yield'], fyield_region)
@@ -99,7 +105,7 @@ def to_csv(config, forecast_issue_calendar_month, uset, regions, forecasts, runI
                                uset['crop'] + '_forecast_mInSeas' + str(uset['forecast_time'])
                                + '_early_' + str(forecast_issue_calendar_month) + '_' + uset['algorithm'] +
                                '.csv' )
-    df_forecast.to_csv(forecast_fn, float_format='%.2f')
+    df_forecast.to_csv(forecast_fn, float_format='%.3f')
 
 def check_replace_percentile_exceedance(df_in, column_low, column_high, column_yield):
     """
@@ -220,6 +226,7 @@ def NASA_format(df_in, config):
     df = df_in.copy()
     dir_NASA = os.path.join(config.ope_run_out_dir, "best_accuracy", "NasaHarvest_format")
     Path(dir_NASA).mkdir(parents=True, exist_ok=True)
+    # First make forecast according to template
     df.rename(columns={'adm_id': 'source_id'}, inplace=True)  # rename adm_id
     fn = b50_yield_data_analysis.find_last_version_csv(config.AOI + '_STATS', config.data_dir)
     df.insert(loc=1, column='source_name_version', value=fn)
@@ -245,10 +252,29 @@ def NASA_format(df_in, config):
     df.rename(columns={'fyield': 'yield_fcst (tn_ha)'}, inplace=True)
     df.insert(loc=18, column='is_final', value='n.a.')
     df.insert(loc=19, column='notes', value='')
-    df = df.iloc[:, :20]
-    fn_out = os.path.join(dir_NASA,
-        'JRC_' + config.AOI + '_forecast_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
+    df_forecast = df.iloc[:, :20].copy()
+    fn_out = os.path.join(dir_NASA, 'JRC_' + config.AOI + '_forecast_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
+    df_forecast.to_csv(fn_out, index=False)
+
+        # remove columns not requested
+    df = df.drop(columns=["yield_fcst (tn_ha)", "is_final", "notes"])
+    df.rename(columns={'crop_season': 'season'}, inplace=True)
+    df.insert(loc=17, column='cross_validation', value=0)
+    df.rename(columns={'fyield_MAEp_hindcasting': 'yield_mae'}, inplace=True)
+    df.rename(columns={'fyield_RMSEp_hindcasting': 'yield_rmse'}, inplace=True)
+    df.rename(columns={'fyield_rRMSEp_prct_hindcasting': 'yield_rrmse'}, inplace=True)
+    df.rename(columns={'fyield_rMAEp_prct_hindcasting': 'yield_mape'}, inplace=True)
+    df.rename(columns={'fyield_r2_pearson_by_admin_hindcasting': 'yield_r2_pearson'}, inplace=True)
+    df.rename(columns={'fyield_r2_coeff_det_by_admin_hindcasting': 'yield_r2_true'}, inplace=True)
+    # reorder according to template
+    df = df[['source_id', 'source_name_version', 'admin_0', 'admin_1', 'admin_2', 'admin_3', 'planted_year', 'approx_planted_month', 'harvest_year', 'approx_harvest_month', 'crop', 'season',
+            'forecast_issue_date (yyyy-mm-dd)', 'date_model_run (yyyy-mm-dd)', 'input_croptype_product', 'group', 'model_version', 'cross_validation',
+            'yield_mae', 'yield_rmse', 'yield_rrmse', 'yield_mape', 'yield_r2_pearson', 'yield_r2_true']]
+    df["metric_years"] = ",".join(str(y) for y in range(config.year_start, config.year_end+1))
+    df["notes"] = ""
+    fn_out = os.path.join(dir_NASA, 'JRC_' + config.AOI + '_accuracy_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
     df.to_csv(fn_out, index=False)
+
 
 
 def make_consolidated_ope(config):
@@ -280,8 +306,8 @@ def make_consolidated_ope(config):
         # replace Null_model with NullModel to avoid wrong splitting
         tmp = fns_crop[0].replace("Null_model", "NullModel")
         fn_out = '_'.join(tmp.split('_')[0:-1] + ['unconsolidated.csv'])
-        fn_out = os.path.join(config.ope_run_out_dir, 'best_accuracy', os.path.basename(fn_out))
         Path(os.path.join(config.ope_run_out_dir, 'best_accuracy')).mkdir(parents=True, exist_ok=True)
+        fn_out = os.path.join(config.ope_run_out_dir, 'best_accuracy', os.path.basename(fn_out))
         # Write unconsolidated
         df.to_csv(fn_out, index=False)
 

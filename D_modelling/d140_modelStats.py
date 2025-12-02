@@ -1,6 +1,8 @@
 import sklearn.metrics as metrics
+from sklearn.linear_model import LinearRegression
 import numpy as np
 import pandas as pd
+import sys
 
 def mean_error_nan(y_true, y_pred):
     y_true = np.array(y_true)
@@ -16,14 +18,18 @@ def r2_pearson_nan(x, y): # x is observed, y is predicted
     x = np.array(x)
     y = np.array(y)
     nas = np.logical_or(np.isnan(x), np.isnan(y))
+
     if not all(nas):
         # compute as square of numpy r
-
+        pearson_square = np.corrcoef(x[~nas], y[~nas])[0,1] ** 2
         #compute as R of scikit lin reg
-
+        reg = LinearRegression().fit(x[~nas].reshape(-1, 1) , y[~nas].reshape(-1, 1))
+        r2linreg = reg.score(x[~nas].reshape(-1, 1), y[~nas].reshape(-1, 1))
         #compare and stop if different
-    
-        #return metrics.r2_score(x[~nas], y[~nas])
+        if np.isclose(pearson_square, r2linreg, atol=5e-6, rtol=0):
+            return pearson_square
+        else:
+            sys.exit('problem with r2_pearson_nan')
     else:
         return np.nan
 def r2_nan(x, y): # x is observed, y is predicted
@@ -173,8 +179,11 @@ def statsByAdmin(mRes):
     r2 = mRes.groupby('adm_id').apply(lambda x: r2_nan(x['yLoo_true'], x['yLoo_pred']))
     r2 = r2.to_frame('r2_coeff_det')
     df = pd.merge(df, r2, left_index=True, right_index=True)
+    # r2 pearson, use: r2_pearson_nan
+    r2p = mRes.groupby('adm_id').apply(lambda x: r2_pearson_nan(x['yLoo_true'], x['yLoo_pred']))
+    r2p = r2p.to_frame('r2_pearson')
+    df = pd.merge(df, r2p, left_index=True, right_index=True)
     df.drop(['yLoo_true', 'yLoo_pred', 'Year'], axis=1, inplace=True)
-
     return df.reset_index()
 
 def meanAUR2(mRes):

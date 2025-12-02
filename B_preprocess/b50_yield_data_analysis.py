@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+import datetime
 import pandas as pd
 import numpy as np
 import re
@@ -209,6 +210,40 @@ def find_last_version_csv(base_name, directory):
     return largest_file[0]
 
 
+def yield_NASA_format(stat_fileLAST_VERSION, config):
+    units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
+    area_unit = units['Area'].values[0]
+    yield_unit = units['Yield'].values[0]
+    if 'Production' in units.columns:
+        prod_units = units['Production'].values[0]
+    else:
+        prod_units = 'kt'
+    df = pd.read_csv(stat_fileLAST_VERSION)
+    df.rename(columns={'adm_id': 'source_id'}, inplace=True)  # rename adm_id
+    df = df.drop(columns=["Crop_ID"])
+    fn = find_last_version_csv(config.AOI + '_STATS', config.data_dir)
+    df.insert(loc=1, column='source_name_version', value=fn)
+    df.insert(loc=2, column='admin_0', value=config.country_name_in_shp_file)
+    df.rename(columns={'adm_name': 'admin_1'}, inplace=True)
+    df.insert(loc=4, column='admin_2', value="")
+    df.insert(loc=5, column='admin_3', value="")
+    df.insert(loc=6, column='planted_year', value=df["Year"] + config.plantingYearDelta)
+    df.insert(loc=7, column='approx_planted_month', value=config.sosMonth)
+    df.rename(columns={'Year': 'harvest_year'}, inplace=True)
+    df.insert(loc=9, column='approx_harvest_month', value=config.eosMonth)
+    df.rename(columns={'Crop_name': 'crop'}, inplace=True)
+    df.insert(loc=11, column='crop_season', value="n.a.")
+    df.rename(columns={'Area': 'area_obs'}, inplace=True)
+    df["area_obs_units"] = area_unit
+    df.rename(columns={'Production': 'production_obs'}, inplace=True)
+    df["production_obs_units"] = prod_units
+    df.rename(columns={'Yield': 'yield_obs'}, inplace=True)
+    df["yield_obs_units"] = yield_unit
+    df = df[['source_id', 'source_name_version', 'admin_0', 'admin_1', 'admin_2', 'admin_3', 'planted_year', 'approx_planted_month',
+             'harvest_year', 'approx_harvest_month', 'crop', 'crop_season', 'area_obs',  'area_obs_units', 'production_obs', 'production_obs_units', 'yield_obs', 'yield_obs_units']]
+    fn_out = os.path.join(os.path.dirname(stat_fileLAST_VERSION),'JRC_' + config.AOI + '_historical_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
+    df.to_csv(fn_out, index=False)
+
 
 
 def saveYieldStats(config, period = 'Last5yrs', prct2retain=100):
@@ -224,6 +259,9 @@ def saveYieldStats(config, period = 'Last5yrs', prct2retain=100):
     fn = find_last_version_csv(config.AOI + '_STATS', config.data_dir)
     stat_file_for_writing = os.path.join(config.data_dir, config.AOI + '_STATS.csv') # name used in writing
     stat_fileLAST_VERSION = os.path.join(config.data_dir, fn)  # name used in reading
+
+    # make a copy in NASA Intercomp format
+    yield_NASA_format(stat_fileLAST_VERSION, config)
 
     # quality check and outlier removal
     stats = b100_load.LoadLabel_check_quality_and_clean(stat_fileLAST_VERSION, stat_file_for_writing, config.year_start, config.year_end, make_charts=True, perc_threshold=-1, crops_names=config.crops)

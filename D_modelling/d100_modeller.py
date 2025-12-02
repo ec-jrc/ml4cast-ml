@@ -55,7 +55,8 @@ class DataMixin:
         # if working on a ML model and there is some crop-au combination to exclude, do it here upfront
         # do the same if I am in ope (the au error is not computed (they have in general very bad accuracy))
         if not(self.uset['algorithm'] == 'Null_model' or self.uset['algorithm'] == 'Trend' or
-               self.uset['algorithm'] == 'PeakNDVI') or runType == 'opeForecast':
+               self.uset['algorithm'] == 'PeakNDVI'):
+               #self.uset['algorithm'] == 'PeakNDVI') or runType == 'opeForecast': # replaced on 2025 12 02 because it was excluding benchmarks on ope (not sure why)
             if bool(config.crop_au_exclusions):
                 for key_crop, value_au_list in config.crop_au_exclusions.items():
                     for value_au in value_au_list:
