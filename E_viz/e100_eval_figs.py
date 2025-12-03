@@ -94,19 +94,21 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
         dfAU_WithExcluded = pd.concat([dfAU_WithExcluded, rRMSE_pByAdmin])
 
         # without Excluded
-        rRMSE_pByAdmin = d140_modelStats.statsByAdmin(mResWithoutExcluded)
-        rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
-        rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_Stats[df_Stats['Crop_name|first'] == row['Crop']], how='left',
-                                              left_on='adm_id', right_on='adm_id|')
-        mResWithArea = mResWithoutExcluded.merge(rRMSE_pByAdmin[['adm_id|', 'Area|mean']], how='left', left_on='adm_id',
-                                  right_on='adm_id|')
-        z = d140_modelStats.rmse_rrmse_weighed_overall(mResWithoutExcluded, mResWithArea['Area|mean'])
-        row['rRMSE_p_areaWeighted'] = z['rel_Pred_RMSE']
-        rRMSE_pByAdmin.insert(1, column='Estimator', value=row['Estimator'])
-        rRMSE_pByAdmin.insert(2, column='forecast_time', value=row['forecast_time'])
-        rRMSE_pByAdmin = rRMSE_pByAdmin.assign(**row.to_frame().T.to_dict(orient='records')[0])
-        dfAU = pd.concat([dfAU, rRMSE_pByAdmin])
-
+        if bool(config.crop_au_exclusions):
+            rRMSE_pByAdmin = d140_modelStats.statsByAdmin(mResWithoutExcluded)
+            rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_regNames, how='left', left_on='adm_id', right_on='adm_id')
+            rRMSE_pByAdmin = rRMSE_pByAdmin.merge(df_Stats[df_Stats['Crop_name|first'] == row['Crop']], how='left',
+                                                  left_on='adm_id', right_on='adm_id|')
+            mResWithArea = mResWithoutExcluded.merge(rRMSE_pByAdmin[['adm_id|', 'Area|mean']], how='left', left_on='adm_id',
+                                      right_on='adm_id|')
+            z = d140_modelStats.rmse_rrmse_weighed_overall(mResWithoutExcluded, mResWithArea['Area|mean'])
+            row['rRMSE_p_areaWeighted'] = z['rel_Pred_RMSE']
+            rRMSE_pByAdmin.insert(1, column='Estimator', value=row['Estimator'])
+            rRMSE_pByAdmin.insert(2, column='forecast_time', value=row['forecast_time'])
+            rRMSE_pByAdmin = rRMSE_pByAdmin.assign(**row.to_frame().T.to_dict(orient='records')[0])
+            dfAU = pd.concat([dfAU, rRMSE_pByAdmin])
+        else:
+            dfAU = dfAU_WithExcluded.copy()
 
 
     dfAU_WithExcluded.to_csv(os.path.join(outputDir, 'all_model_best1_AU_error.csv'))

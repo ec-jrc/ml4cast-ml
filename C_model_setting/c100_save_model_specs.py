@@ -18,7 +18,8 @@ def save_model_specs(config, modelSettings):
     if config.useSF == True:
         useSF = True
         #condider two options: monthly values and seasonal aggergation (eos-1 month)
-        aggregationSFs = ['monthly', 'seasonal']
+        #aggregationSFs = ['monthly', 'seasonal']
+        aggregationSFs = ['seasonal']
     else:
         useSF = False
         aggregationSFs = ['none']

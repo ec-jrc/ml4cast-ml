@@ -23,16 +23,16 @@ else:
 # path_fromBaseDir = r'\TN\SF\ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json'
 # run_name = 'TNv_ObsAsSF'
 # TN SfAsSF
-# path_fromBaseDir = r'TN\SF\SF\TNMultiple_WC-Tunisia-ASAP_config_SfAsForecast.json'
-# run_name = 'TNv_SfAsSF'
+path_fromBaseDir = r'TN\SF\SF\TNMultiple_WC-Tunisia-ASAP_config_SfAsForecast.json'
+run_name = 'TNv_SfAsSF'
 
 # Morocco
 # path_fromBaseDir = r'V:\foodsec\Projects\SNYF\SIDv\MA\MAfews_config.json'
 # run_name = 'MA_test'
 
 # ZA
-path_fromBaseDir = r'V:\foodsec\Projects\SNYF\SIDv\ZAInt\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-run_name = 'ZA_Int'
+# path_fromBaseDir = r'ZAInt\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+# run_name = 'ZA_Int'
 
 ############################################################################################
 if 'win' in sys.platform:
