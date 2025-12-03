@@ -32,7 +32,7 @@ else:
 
 # ZA
 path_fromBaseDir = r'V:\foodsec\Projects\SNYF\SIDv\ZAInt\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-run_name = 'ZA_Int_test2'
+run_name = 'ZA_Int'
 
 ############################################################################################
 if 'win' in sys.platform:

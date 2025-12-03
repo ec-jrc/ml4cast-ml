@@ -338,7 +338,8 @@ def config_reducer(modelSettings, run_name):
     else: #some default
         # want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         # Remove GPR to slow, and RandomForest, never selected
-        want_keys = ['Lasso', 'XGBoost', 'SVR_linear', 'SVR_rbf']
+        want_keys = ['Lasso', 'GPR', 'SVR_linear', 'SVR_rbf']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        # want_keys = ['rs_met_sm_reduced',  'rs',  'rs_reduced', 'rs_sm_reduced', 'met_sm_reduced']
+        want_keys = ['rs_met_reduced', 'rs_met_sm_reduced', 'rs', 'rs_reduced', 'rs_sm_reduced', 'met_reduced', 'met_sm_reduced']
+        modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
     return modelSettings

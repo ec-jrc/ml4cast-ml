@@ -187,11 +187,9 @@ if __name__ == '__main__':
     ##########################################################################################
 
     config = a10_config.read(config_fn, run_name, run_type=runType)
-    # tune_on_condor = 'True'
     if tune_on_condor:
         # dowload the checkpoint for Tab to be later copied to Condor scratch2
         downloadTabCheck(config)
-    # forecastingMonths = config.forecastingMonths
     spec_files_list = tuner.tuneA(run_name, config_fn, tune_on_condor, runType)
     tuner.tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list)
     if tune_on_condor:
