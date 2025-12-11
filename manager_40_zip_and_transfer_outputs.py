@@ -20,12 +20,12 @@ if __name__ == '__main__':
 
     # config.models_dir is the output dir (specs and out)
     jeo_share_root = '/mnt/cidstorage/cidportal/data/cid-bulk22/Shared/tmp/projectData/ML4CAST/'
-    condor_log_root = '/mnt/jeoproc/log/ml4castproc/' + config.AOI + '/'
+    # condor_log_root = '/mnt/jeoproc/log/ml4castproc/' + config.AOI + '/'
 
-    # zip and transfer logs
-    output_filename = os.path.join(jeo_share_root, 'TUNE_' + run_name + '_logs')
-    dir_name = condor_log_root
-    shutil.make_archive(output_filename, 'zip', dir_name)
+    # # zip and transfer logs
+    # output_filename = os.path.join(jeo_share_root, 'TUNE_' + run_name + '_logs')
+    # dir_name = condor_log_root
+    # shutil.make_archive(output_filename, 'zip', dir_name)
 
     # zip and transfer outputs
     output_filename = os.path.join(jeo_share_root, 'TUNE_' + run_name) #config.AOI + '_' + run_name + '_model_outputs')

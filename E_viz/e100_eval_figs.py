@@ -48,8 +48,9 @@ def AU_error(b1, config, outputDir, suffix, adm_id_in_shp_2keep=None):
     mlsettings = a10_config.mlSettings(forecastingMonths=0)
 
     os.path.join(config.data_dir, 'Label_analysis')
+    # use the same (LT vs last 5)!!! config.refPeriod
     df_Stats = pd.read_csv(os.path.join(os.path.join(config.data_dir, 'Label_analysis' + str(config.prct2retain)),
-                                            config.AOI + '_LTstats_retainPRCT' + str(config.prct2retain) + '.csv'))
+                                            config.AOI + '_' + config.refPeriod + 'Stats_retainPRCT' + str(config.prct2retain) + '.csv'))
     df_regNames = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
     # Now read mres, compute metric2use at the admin level, and make an area average add as a new columns
     b1['rRMSE_p_areaWeighted'] = -999
@@ -194,7 +195,9 @@ def bars_by_forecast_time2(b1, config, metric2use, mlsettings, var4time, outputD
         # get forecast_issue_calendar_month
         forecast_issue_calendar_month = calendar.month_abbr[
             b1[b1[var4time] == t]['forecast_issue_calendar_month'].iloc[0]]
-        fig, axs = plt.subplots(nrows=2, ncols=max(len(crops), 2), figsize=(14,10))  # need two at least for the loop below
+        #fig, axs = plt.subplots(nrows=2, ncols=max(len(crops), 2), figsize=(14,10))  # need two at least for the loop below
+        ncols = max(len(crops), 2)
+        fig, axs = plt.subplots(nrows=2, ncols=ncols, figsize=(ncols*5, 10))  # need two at least for the loop below
         ax_c = 0  # ax counter
         # get max mteric
         ymax = np.max([b1[b1[var4time] == t][metric2use].max(),  b1[b1[var4time] == t]['rRMSE_p_areaWeighted'].max()])

@@ -280,17 +280,16 @@ def saveYieldStats(config, period = 'Last5yrs', prct2retain=100):
     make_fig_crop_corr(config, stats, outDir, '_all_admin_from_' + str(config.year_start))
     if period == 'Last5yrs':
         y = compute_stats(stats, prct2retain, outDir, config, period='Last5yrs')
+        # uncomment if the other file (LT) is needed
         not_used = compute_stats(stats, prct2retain, outDir, config, period='LT')
-    elif period == 'Last5yrs':
-        not_used = compute_stats(stats, prct2retain, outDir, config, period='Last5yrs')
+    elif period == 'LT':
         y = compute_stats(stats, prct2retain, outDir, config, period='LT')
+        # uncomment if the other file (5yrs) is needed
+        not_used = compute_stats(stats, prct2retain, outDir, config, period='Last5yrs')
     else:
         print("Warning: b50 compute_stats called with unkown period")
         os.exit(1)
     # compute multiannual stats (on full ts starting from config.year_end, or last 5 available years by region)
-
-
-
     crops = stats['Crop_name'].unique()
     # save a cleaned stat file with the prct2retain to be retained
     stats_prct2retain = stats.iloc[:0,:].copy() # empty df but same columns, same dtypes, and no row

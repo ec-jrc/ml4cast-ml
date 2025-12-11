@@ -24,7 +24,8 @@ class read_ope:
 
 class read:
   def __init__(self, full_path_config, run_name, run_type=None):
-
+    # define reference period
+    self.refPeriod = 'Last5yrs' # can be 'Last5yrs' or 'LT' for the full available period
     with open(full_path_config, 'r') as fp:
         jdict = json.load(fp)
     self.AOI = jdict['AOI']
@@ -330,9 +331,9 @@ def config_reducer(modelSettings, run_name):
     elif "SF" in run_name: # some default for SF runs
         # want_keys = ['XGBoost']
         # modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        want_keys = ['Lasso', 'XGBoost', 'SVR_linear', 'SVR_rbf', 'GPR']
+        want_keys = ['Lasso', 'SVR_linear', 'SVR_rbf', 'GPR']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        want_keys = ['rs_met_sm_reduced', 'rs_sm_reduced']
+        want_keys = ['rs_met_sm_reduced', 'rs_sm_reduced', 'rs_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
         modelSettings.ft_eng = None
     else: #some default

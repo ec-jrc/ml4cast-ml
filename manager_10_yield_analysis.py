@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # if data have multiple boundaries, the shp files must be listed in config and reported in Stats file (see for example MArocco)
 
 
-    b50_yield_data_analysis.saveYieldStats(config, period = 'Last5yrs', prct2retain=prct2retain)
+    b50_yield_data_analysis.saveYieldStats(config, period = config.refPeriod, prct2retain=prct2retain) #Last5yrs or LT
     e50_yield_data_analysis.mapYieldStats(config, config.fn_reference_shape, config.country_name_in_shp_file,\
                                           gdf_gaul0_column=config.gaul0_column_name_in_shp_file, adminID_column_name_in_shp_file = config.adminID_column_name_in_shp_file, prct2retain=prct2retain)
     e50_yield_data_analysis.trend_anlysis(config, prct2retain=prct2retain)

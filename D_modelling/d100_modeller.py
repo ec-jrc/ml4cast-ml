@@ -130,9 +130,16 @@ class DataMixin:
             ObsList2keep = ['^(?!.*SF).*M' + str(i) + '(?![0-9]).*$' for i in range(1, self.uset['forecast_time'] + 1)] + ['YieldFromTrend']
             # I am forecasting at end of MonthInSeason self.uset['forecast_time']
             # Discard the last month (that of eos) when using SF
-            # I have n months till end of season - 1 month, n = (config.eosMonthInSeason -1) - self.uset['forecast_time']
-            # therefore I have to keep up to SFn. SFm with m>n are after eos and must be discarded
-            SF_ind2keep = range(1, (config.eosMonthInSeason-1) - self.uset['forecast_time'] + 1)
+            # I have n months till end of season - 1 month, n = (config.eosMonthInSeason -1) - self.uset['forecast_time'] + 1
+            # therefore I have to keep up to SFn. SFm with m>n are after eos and must be discarded.
+
+            last_Month_Included = (config.eosMonthInSeason-1)
+            first_Month_Included = self.uset['forecast_time']
+            n_months = (config.eosMonthInSeason-1) - self.uset['forecast_time'] + 1
+            # SF of month M10 with horizon 1 refer to M11, so I am skipping one month
+            n_months = n_months - 1
+            # BE CARE, range is open on the right, I have to add 1
+            SF_ind2keep = range(1, n_months + 1)
             ForecastList2keep = ['^(?=.*SF.[' + str(i) + '])(?=.*M' + str(self.uset['forecast_time']) + '(?![0-9])).*$' for i in SF_ind2keep]
             if config.useSF == True: #Using SF
                 list2keep = ObsList2keep + ForecastList2keep
