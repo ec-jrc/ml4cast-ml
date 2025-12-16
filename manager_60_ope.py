@@ -165,4 +165,4 @@ if __name__ == '__main__':
     # Here I make the best accuracy (by admin) estimates, and conservative estimates, and make state level estimates
     config.harvest_year = forecastingYear
     F110_process_opeForecast_output.make_consolidated_ope(config)
-    print('end ope forecast')
+    print('End of operational forecast')

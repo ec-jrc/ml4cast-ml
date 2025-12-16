@@ -10,6 +10,7 @@ from B_preprocess import b50_yield_data_analysis
 import datetime
 import glob
 from pathlib import Path
+import shutil
 import json
 
 
@@ -226,10 +227,22 @@ def NASA_format(df_in, config):
     df = df_in.copy()
     dir_NASA = os.path.join(config.ope_run_out_dir, "best_accuracy", "NasaHarvest_format")
     Path(dir_NASA).mkdir(parents=True, exist_ok=True)
+    df_REGION_ID = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
+    if "source_id" in df_REGION_ID.columns:
+        df_REGION_ID = df_REGION_ID.drop(columns='adm_name')
+        df = df.merge(df_REGION_ID, on="adm_id")
+        df['adm_id']=df['source_id']
+        df = df.drop(columns='source_id')
+        col = "source_name_version"
+        cols = df.columns.tolist()
+        cols.insert(1, cols.pop(cols.index(col)))
+        df = df[cols]
+    else:
+        fn = b50_yield_data_analysis.find_last_version_csv(config.AOI + '_STATS', config.data_dir)
+        df.insert(loc=1, column='source_name_version', value=fn)
+
     # First make forecast according to template
     df.rename(columns={'adm_id': 'source_id'}, inplace=True)  # rename adm_id
-    fn = b50_yield_data_analysis.find_last_version_csv(config.AOI + '_STATS', config.data_dir)
-    df.insert(loc=1, column='source_name_version', value=fn)
     df.insert(loc=2, column='admin_0', value=config.country_name_in_shp_file)
     df.rename(columns={'Region_name': 'admin_1'}, inplace=True)
     df.insert(loc=4, column='admin_2', value="")
@@ -253,10 +266,12 @@ def NASA_format(df_in, config):
     df.insert(loc=18, column='is_final', value='n.a.')
     df.insert(loc=19, column='notes', value='')
     df_forecast = df.iloc[:, :20].copy()
-    fn_out = os.path.join(dir_NASA, 'JRC_' + config.AOI + '_forecast_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
+    country = config.country_name_in_shp_file.lower().replace(" ", "_")
+    fn_out = os.path.join(dir_NASA, 'jrc_' + country + '_forecast_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
     df_forecast.to_csv(fn_out, index=False)
 
-        # remove columns not requested
+    # Accuracy csv
+    # remove columns not requested
     df = df.drop(columns=["yield_fcst (tn_ha)", "is_final", "notes"])
     df.rename(columns={'crop_season': 'season'}, inplace=True)
     df.insert(loc=17, column='cross_validation', value=0)
@@ -272,8 +287,32 @@ def NASA_format(df_in, config):
             'yield_mae', 'yield_rmse', 'yield_rrmse', 'yield_mape', 'yield_r2_pearson', 'yield_r2_true']]
     df["metric_years"] = ",".join(str(y) for y in range(config.year_start, config.year_end+1))
     df["notes"] = ""
-    fn_out = os.path.join(dir_NASA, 'JRC_' + config.AOI + '_accuracy_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
+    fn_out = os.path.join(dir_NASA, 'jrc_' + country + '_accuracy_' + datetime.date.today().strftime("%Y-%m-%d") + '_USE_UPLOAD_DATE.csv')
     df.to_csv(fn_out, index=False)
+
+    # Transfer input data file (format?)
+    files = list(Path(config.data_dir).glob(f"jrc_{country}_historical_*"))
+    most_recent = max(files, key=lambda f: f.stat().st_mtime) if files else None
+    if most_recent is not None:
+        df_REGION_ID = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
+        if "source_id" in df_REGION_ID.columns:
+            df = pd.read_csv(most_recent)
+            df.rename(columns={'source_id': 'adm_id'}, inplace=True)
+            df = df.drop(columns='source_name_version')
+            df_REGION_ID = df_REGION_ID.drop(columns='adm_name')
+            df = df.merge(df_REGION_ID, on="adm_id")
+            df = df.drop(columns='adm_id')
+            cols = df.columns.tolist()
+            priority = ["source_id", "source_name_version"]
+            new_cols = priority + [c for c in cols if c not in priority]
+            df = df[new_cols]
+            df.to_csv(os.path.join(dir_NASA, most_recent.name), index=False)
+        else:
+            shutil.copy2(most_recent, os.path.join(dir_NASA, most_recent.name))
+    else:
+        raise FileNotFoundError("No matching jrc historical file found.")
+
+
 
 
 

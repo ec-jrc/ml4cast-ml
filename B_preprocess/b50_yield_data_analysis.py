@@ -241,7 +241,8 @@ def yield_NASA_format(stat_fileLAST_VERSION, config):
     df["yield_obs_units"] = yield_unit
     df = df[['source_id', 'source_name_version', 'admin_0', 'admin_1', 'admin_2', 'admin_3', 'planted_year', 'approx_planted_month',
              'harvest_year', 'approx_harvest_month', 'crop', 'crop_season', 'area_obs',  'area_obs_units', 'production_obs', 'production_obs_units', 'yield_obs', 'yield_obs_units']]
-    fn_out = os.path.join(os.path.dirname(stat_fileLAST_VERSION),'JRC_' + config.AOI + '_historical_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
+    country = config.country_name_in_shp_file.lower().replace(" ", "_")
+    fn_out = os.path.join(os.path.dirname(stat_fileLAST_VERSION),'jrc_' + country + '_historical_' + datetime.date.today().strftime("%Y-%m-%d") + '_USE_UPLOAD_DATE.csv')
     df.to_csv(fn_out, index=False)
 
 
