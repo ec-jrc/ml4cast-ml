@@ -11,7 +11,7 @@ metric = 'RMSE_val'
 n = 20
 if 'win' in sys.platform:
     tune_on_condor = False
-    baseDir = os.path.normpath(r'V:\foodsec\Projects\SNYF\SIDv')
+    baseDir = os.path.normpath(r'V:\foodsec\Projects\SNYF\SIDvs')
 else:
     tune_on_condor = True
     baseDir = os.path.normpath('/eos/jeodpp/data/projects/ML4CAST/VIIRS')
@@ -31,8 +31,8 @@ else:
 # run_name = 'MA_test'
 
 # ZA
-path_fromBaseDir = r'ZAInt\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-run_name = 'ZA_Int'
+path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
+run_name = 'ZA'
 
 ############################################################################################
 if 'win' in sys.platform:
