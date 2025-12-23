@@ -11,20 +11,21 @@ save it as fn extraction + _ObsAsForecast
 '''
 # ####################### USER PARAM
 # Filip's file
-fn_extraction = r'V:\foodsec\Projects\GYF\ASAP extractions\GAUL0-MultipleCrop-ASAP-ASIS_v9.0.csv\GAUL0-MultipleCrop-ASAP-ASIS_v9.0.csv'
-dateformat = '%Y%m%d' # GYF
-group_variables = ['asap_unit_id', 'fao_unit_id', 'unit_name', 'extraction_setup_id', 'extraction_setup_name', 'indicator_id', 'indicator_name',
-                   'mask_id', 'mask_name', 'mask_path']
-name_date_column = 'dekad'
-name_variable_column = 'indicator_name'
-columns_to_keep_as999 = ["id", "adm_unit_layer", 'std',	'px_cnt_total', 'px_cnt_valid_data', 'px_cnt_valid_data_after_masking', 'px_cnt_weight_sum', 'px_cnt_weight_sum_used']
+# fn_extraction = r'V:\foodsec\Projects\GYF\ASAP extractions\GAUL0-MultipleCrop-ASAP-ASIS_v9.0.csv\GAUL0-MultipleCrop-ASAP-ASIS_v9.0.csv'
+# dateformat = '%Y%m%d' # GYF
+# group_variables = ['asap_unit_id', 'fao_unit_id', 'unit_name', 'extraction_setup_id', 'extraction_setup_name', 'indicator_id', 'indicator_name',
+#                    'mask_id', 'mask_name', 'mask_path']
+# name_date_column = 'dekad'
+# name_variable_column = 'indicator_name'
+# columns_to_keep_as999 = ["id", "adm_unit_layer", 'std',	'px_cnt_total', 'px_cnt_valid_data', 'px_cnt_valid_data_after_masking', 'px_cnt_weight_sum', 'px_cnt_weight_sum_used']
+#
+# name_rainfall_var = 'ASAP:RAIN'
+# name_temperature_var = 'ASAP:TEMP'
 
-name_rainfall_var = 'ASAP:RAIN'
-name_temperature_var = 'ASAP:TEMP'
 
 
-
-# TUNISIA
+# SNYF
+# TN
 # fn_extraction = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF\NO_SF_baseline\Tuning_data\Multiple_WC-Tunisia-ASAP.csv'
 # dateformat = '%Y-%m-%d' # SNYF
 # group_variables = ['adm_name', 'adm_id', 'variable_name', 'var_id', 'classset_name','classesset_id', 'class_name', 'class_id']
@@ -35,6 +36,16 @@ name_temperature_var = 'ASAP:TEMP'
 # name_rainfall_var = 'rainfall'
 # name_temperature_var = 'temperature'
 
+# ZA
+fn_extraction = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\Tuning_data\Maize_(corn)_WC-South_Africa-ASAP.csv'
+dateformat = '%Y-%m-%d' # SNYF
+group_variables = ['adm_name', 'adm_id', 'variable_name', 'var_id', 'classset_name','classesset_id', 'class_name', 'class_id']
+name_date_column = 'date'
+name_variable_column = 'variable_name'
+columns_to_keep_as999 = ["stddev", "afi_pct_used", "extraction_results_id"]
+
+name_rainfall_var = 'rainfall'
+name_temperature_var = 'temperature'
 # ####################### END OF USER PARAM
 
 

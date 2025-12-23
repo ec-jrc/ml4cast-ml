@@ -14,7 +14,7 @@ if 'win' in sys.platform:
     baseDir = os.path.normpath(r'V:\foodsec\Projects\SNYF\SIDvs')
 else:
     tune_on_condor = True
-    baseDir = os.path.normpath('/eos/jeodpp/data/projects/ML4CAST/VIIRS')
+    baseDir = os.path.normpath('/eos/jeodpp/data/projects/ML4CAST/SIDvs')
 ############################################################################################
 # TN NoSF
 # path_fromBaseDir = r'\TN\SF\NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json'
@@ -31,8 +31,15 @@ else:
 # run_name = 'MA_test'
 
 # ZA
-path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
-run_name = 'ZA'
+# path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1257.json'
+# run_name = 'ZA'
+# SF test (run name must contain SF (to reduce setting in config)
+# path_fromBaseDir = r'ZA\summer2025data\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_SfAsForecast.json'
+# run_name = 'ZA_SfAsSF'
+# path_fromBaseDir = r'ZA\summer2025data\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_ObsAsForecast.json'
+# run_name = 'ZA_ObsAsSF'
+path_fromBaseDir = r'ZA\summer2025data\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235.json'
+run_name = 'ZA_NoSF'
 
 ############################################################################################
 if 'win' in sys.platform:

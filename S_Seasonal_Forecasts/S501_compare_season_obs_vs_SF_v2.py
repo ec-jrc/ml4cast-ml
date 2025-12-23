@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 import seaborn as sns
 import glasbey
+import math
+
 """
 Compare seasonal cumulation of obs and SF 
 """
@@ -15,19 +17,145 @@ pd.set_option('display.width', 5000)
 pd.set_option('display.max_columns', None)
 
 # configuration files and run names
-baseDir = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF'
-cf1 = os.path.join(baseDir, 'ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json')
-cf2 = os.path.join(baseDir, 'SF\TNMultiple_WC-Tunisia-ASAP_config_SfAsForecast.json')
+# TN
+# baseDir = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF'
+# cf1 = os.path.join(baseDir, 'ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json')
+# cf2 = os.path.join(baseDir, 'SF\TNMultiple_WC-Tunisia-ASAP_config_SfAsForecast.json')
+# # seasonal cumulation goes from .. to .. (in calendar month)
+# startMonth = 12 #10
+
+# # remember that forecast in month 10 with horizon 1 is that of 11,
+# # so in month 10 up to 5 I have to take horizon 1 (11) to 7 (5)
+# lastHorizon = 1 #7
+# ZA
+baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data'
+cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_ObsAsForecast.json')
+cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_SfAsForecast.json')
 # seasonal cumulation goes from .. to .. (in calendar month)
-startMonth = 12 #10
-endMonth = 5
+startMonth = 3 #10
+
 # remember that forecast in month 10 with horizon 1 is that of 11,
 # so in month 10 up to 5 I have to take horizon 1 (11) to 7 (5)
-lastHorizon = 1 #7
+lastHorizon = 2 #7
 
 prefix = 'M' + str(startMonth) + "_Horizon" + str(lastHorizon)
 ########################################################
 
+def plot_by_adm_and_time(df, fn):
+    """
+    Plot time series of sfMean_season and obsMean_season by adm_id.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Must contain columns:
+        ['adm_id', 'date', 'sf', 'obs']
+    """
+
+    # Ensure date is datetime
+    df = df.copy()
+    df['date'] = pd.to_datetime(df['date'])
+    fig, ax = plt.subplots(figsize=(10, 6))
+    # Create a color cycle explicitly
+    adm_ids = sorted(df['adm_id'].unique())
+    colors = plt.cm.tab10(range(len(adm_ids)))
+    color_map = dict(zip(adm_ids, colors))
+    for adm_id, g in df.groupby('adm_id'):
+        g = g.sort_values('date')
+        c = color_map[adm_id]
+        # sfMean_season: solid line
+        ax.plot(
+            g['date'],
+            g['sf'],
+            color=c,
+            linestyle='-',
+            label=f'{adm_id} sfMean'
+        )
+
+        # obsMean_season: dashed line
+        ax.plot(
+            g['date'],
+            g['obs'],
+            color=c,
+            linestyle='--',
+            label=f'{adm_id} obsMean'
+        )
+
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Seasonal Mean')
+    ax.set_title('sfMean_season vs obsMean_season by adm_id')
+
+    # Avoid duplicate legend entries
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(dict(zip(labels, handles)).values(),
+              dict(zip(labels, handles)).keys(),
+              loc='best')
+
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(fn, dpi=300, bbox_inches='tight')
+
+def plot_by_adm_and_time_subplots(df, fn):
+    """
+    Plot sfMean_season and obsMean_season time series,
+    one subplot per adm_id.
+    """
+
+    df = df.copy()
+    df['date'] = pd.to_datetime(df['date'])
+
+    adm_ids = sorted(df['adm_id'].unique())
+    n = len(adm_ids)
+
+    # Layout: up to 2 columns, adjust rows automatically
+    ncols = 2
+    nrows = math.ceil(n / ncols)
+
+    fig, axes = plt.subplots(
+        nrows=nrows,
+        ncols=ncols,
+        figsize=(12, 4 * nrows),
+        sharex=True,
+        sharey=True
+    )
+
+    axes = axes.flatten()
+
+    for ax, adm_id in zip(axes, adm_ids):
+        g = df[df['adm_id'] == adm_id].sort_values('date')
+
+        # Single color per subplot
+        color = 'tab:blue'
+
+        ax.plot(
+            g['date'],
+            g['sf'],
+            color=color,
+            linestyle='-',
+            label='sfMean_season'
+        )
+
+        ax.plot(
+            g['date'],
+            g['obs'],
+            color=color,
+            linestyle='--',
+            label='obsMean_season'
+        )
+
+        ax.set_title(f'adm_id: {adm_id}')
+        ax.grid(True, alpha=0.3)
+
+    # Remove unused subplots if any
+    for ax in axes[len(adm_ids):]:
+        ax.axis('off')
+
+    axes[0].legend(loc='best')
+
+    fig.supxlabel('Date')
+    fig.supylabel('Seasonal Mean')
+    fig.tight_layout()
+    plt.savefig(fn, dpi=300, bbox_inches='tight')
 
 def plot(df, fn, option='', colorby='year'):
     df["obs"] = pd.to_numeric(df["obs"], errors="coerce")
@@ -148,54 +276,7 @@ agg = agg.rename(columns={"obsMean_season": "obs", "sfMean_season": "sf"})
 
 plot(agg[agg["var"] == 'r'][["obs", "sf", "adm_id"]], os.path.join(dir_out, prefix + '_z_rain_corr_merge_adm_id.png'), option='z', colorby='adm_id')
 plot(agg[agg["var"] == 't'][["obs", "sf", "adm_id"]], os.path.join(dir_out, prefix + '_z_temp_corr_merge_adm_id.png'), option='z', colorby='adm_id')
-
-
-
-#
-#
-# # concat version
-# dfo = pd.read_csv(os.path.join(config1.data_dir, config1.afi + '.csv'))
-# dfs = pd.read_csv(os.path.join(config2.data_dir, config2.afi + '.csv'))
-# dfo["type"] = "obs"
-# dfs["type"] = "sf"
-# df = pd.concat([dfo, dfs], axis=0, ignore_index=True, sort=False)
-# df[['SF', 'var', 'horizon']] = df['variable_name'].str.split('_', n=2, expand=True)
-# # keep only forecast
-# df = df[df["variable_name"].str.contains("SF", na=False, case=False)]
-# # obs has newer dates
-# maxdate = df[df["type"] == 'sf']['date'].max()
-# df = df[df['date'] <= maxdate].copy()
-# # now keep forcast made in month startMonth
-# df["date"] = pd.to_datetime(df["date"], errors="coerce")
-# mask = df["date"].dt.month == startMonth      # Boolean Series
-# df_month = df.loc[mask].copy()
-# df_month.to_csv(os.path.join(dir_out, 'test.csv'), index=False)
-#
-# df_month["horizon"] = pd.to_numeric(df["horizon"], errors="coerce")
-# df_month = df_month.reset_index(drop=True)
-# mask = df_month["horizon"].between(1, lastHorizon, inclusive="both")   # pandas ≥1.3 uses inclusive="both"
-# df_filt = df_month.loc[mask].copy()
-# agg = (
-#     df_filt
-#     .groupby(["adm_id", "date", "type", "var"], as_index=False)   # keep keys as columns
-#     .agg(mean_avg=("mean", "mean"))   # rename the aggregated column to something clear
-# )
-# agg.to_csv(os.path.join(dir_out, 'test_agg.csv'), index=False)
-#
-#
-# obs = agg[(agg["type"] =='obs') & (agg["var"] == 'r')]["mean_avg"].tolist()
-# sf =  agg[(agg["type"] =='sf') & (agg["var"] == 'r')]["mean_avg"].tolist()
-# df = pd.DataFrame({'obs': obs, 'sf': sf})
-# plot(df, os.path.join(dir_out, 'rain_corr.png'))
-#
-# df['obs'] = (df['obs'] - df['obs'].mean()) / df['obs'].std()
-# df['sf'] = (df['sf'] - df['sf'].mean()) / df['sf'].std()
-# plot(df, os.path.join(dir_out, 'z_rain_corr.png'))
-#
-# obs = agg[(agg["type"] =='obs') & (agg["var"] == 't')]["mean_avg"].tolist()
-# sf =  agg[(agg["type"] =='sf') & (agg["var"] == 't')]["mean_avg"].tolist()
-# df = pd.DataFrame({'obs': obs, 'sf': sf})
-# plot(df, os.path.join(dir_out, 'temp_corr.png'))
-print()
+plot_by_adm_and_time(agg[agg["var"] == 'r'], os.path.join(dir_out, prefix + '_rain_time_series.png'))
+plot_by_adm_and_time_subplots(agg[agg["var"] == 'r'], os.path.join(dir_out, prefix + '_rain_time_series_subplots.png'))
 
 

@@ -232,17 +232,17 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                         #                          root_dir=config.models_dir, condor_task_list_base_name=condor_task_list_base_name2)  # , shDestination=shDestination)
                     with open(condSubPath2, 'w') as out:
                         out.write(content)
-                    # Make the dirs for condor output on /mnt/jeoproc/log/ml4castproc/, clean content
-                    Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'out')).mkdir(parents=True,
-                                                                                                exist_ok=True)
-                    Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'err')).mkdir(parents=True,
-                                                                                                exist_ok=True)
-                    Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'log')).mkdir(parents=True,exist_ok=True)
+                    # # Make the dirs for condor output on /mnt/jeoproc/log/ml4castproc/, clean content
+                    # Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'out')).mkdir(parents=True,
+                    #                                                                             exist_ok=True)
+                    # Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'err')).mkdir(parents=True,
+                    #                                                                             exist_ok=True)
+                    # Path(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'log')).mkdir(parents=True,exist_ok=True)
                     # delete logs only if teh firest chunk is not rerun
                     if len(spec_files_list1) == 0:
-                        remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'out'))
-                        remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'err'))
-                        remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', config.AOI, 'log'))
+                        remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'out'))
+                        remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc',base_log_dir_name, 'err'))
+                        remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'log'))
                     # Launch condor (sudo -u ml4castproc condor_submit condor.submit)
                     run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath2]
                     p = subprocess.run(run_cmd, shell=False, input='\n', capture_output=True, text=True)
