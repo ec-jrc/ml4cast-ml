@@ -10,18 +10,34 @@ Compare two results (e.g. without SF vs with SF)
 """
 
 # configuration files and run names
-baseDir = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF'
-cf1 = os.path.join(baseDir, 'NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json')
-rn1 = 'TNv_NoSF'
+# baseDir = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF'
+# cf1 = os.path.join(baseDir, 'NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json')
+# rn1 = 'TNv_NoSF'
+# short_name1 = 'noSF'
+#
+# cf2 = os.path.join(baseDir, 'ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json')
+# rn2 = 'TNv_ObsAsSF'
+# short_name2 = 'ObsAsSF'
+#
+# cf3 = os.path.join(baseDir, 'SF\TNMultiple_WC-Tunisia-ASAP_config_SfAsForecast.json')
+# rn3 = 'TNv_SfAsSF'
+# short_name3 = 'SF'
+
+baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF'
+cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235.json')
+rn1 = 'ZA_NoSF'
 short_name1 = 'noSF'
 
-cf2 = os.path.join(baseDir, 'ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json')
-rn2 = 'TNv_ObsAsSF'
+cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_ObsAsForecast.json')
+rn2 = 'ZA_ObsAsSF'
 short_name2 = 'ObsAsSF'
 
-cf3 = os.path.join(baseDir, 'SF\TNMultiple_WC-Tunisia-ASAP_config_SfAsForecast.json')
-rn3 = 'TNv_SfAsSF'
+cf3 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_SfAsForecast.json')
+rn3 = 'ZA_SfAsSF'
 short_name3 = 'SF'
+
+# plot Tab results or not
+plotTab = False
 ########################################################
 
 dir_out = os.path.join(baseDir, 'comp_' + rn1 + '_' + rn2 + '_' + rn3)
@@ -47,28 +63,7 @@ for run, config, short_name in zip(runs, configs, short_names):
     df = pd.concat([df, b1], ignore_index=True)
 list_time = df.forecast_time.unique()
 list_crop = df.Crop.unique()
-# for crop in list_crop:
-#     #plot rrmse of ML and bench trough time (ML and Tab has two versions, run1 and run2)
-#     fig, axs = plt.subplots(nrows=2, ncols=1)
-#     # get max
-#     ymax = df[df['Crop'] == crop]['rRMSE_p'].max()
-#     df2plot = df[(df['run_short_name']==short_name1) & (df['Crop']==crop)]
-#     df2plot['Estimator'] = df2plot['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
-#     p = sns.barplot(df2plot, x="forecast_time", y="rRMSE_p", hue="Estimator", ax=axs[0])
-#     plt.ylim(0, ymax)
-#     p.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-#     axs[0].set_title(short_name1)
-#
-#     df2plot = df[(df['run_short_name'] == short_name2) & (df['Crop'] == crop)]
-#     df2plot['Estimator'] = df2plot['Estimator'].map(lambda x: x if x in mlsettings.benchmarks else 'ML')
-#     p = sns.barplot(df2plot, x="forecast_time", y="rRMSE_p", hue="Estimator", ax=axs[1])
-#     plt.ylim(0, ymax)
-#     p.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-#     axs[1].set_title(short_name2)
-#     fig_name = os.path.join(dir_out, crop +'.png')
-#     plt.tight_layout()
-#     plt.savefig(fig_name)
-#     plt.close()
+
 
 # same but reshaped in one graph
 # check that  ["Null_model", "Trend", "PeakNDVI"] have same "rRMSE_p" at each 'forecast_time', no matter 'run_short_name'
@@ -101,14 +96,22 @@ for crop in list_crop:
             'Tab_' + df2.loc[df2['Estimator_plot'] == 'Tab', 'run_short_name']
     )
 
+    hue_order = ["Null_model", "Trend", "PeakNDVI", "ML_noSF", "Tab_noSF", "ML_ObsAsSF", "Tab_ObsAsSF", "ML_SF", "Tab_SF"]
+    colors = ["#969696", "#009600",     "#FF0000", "#0000FF", "#660066",   "#4da2e8",    "#660066",   "#4da2e8", "#660066"]
+    hatches = ["", "", "", "", "", "//", "//", "\\\\", "\\\\"]
+    fn_name = os.path.join(dir_out, crop + '_model_outputs.csv')
+    df2.to_csv(fn_name, index=False)
+    if plotTab != True:
+        df2 = df2[df2['Estimator'] != 'Tab']
+        indices = [0, 1, 2, 3, 5, 7]
+        hue_order = [hue_order[i] for i in indices]
+        colors = [colors[i] for i in indices]
+        hatches = [hatches[i] for i in indices]
+        suffix = '_no_Tab'
+    else:
+        suffix = ''
     plt.figure(figsize=(8, 5))
     x_order = df2.forecast_time.unique().tolist()
-    # hue_order = ["Null_model", "Trend", "PeakNDVI", "ML_noSF", "Tab_noSF", "ML_ObsAsSF", "Tab_ObsAsSF"]
-    # colors =    ["#969696",  "#009600", "#FF0000",  "#0000FF", "#660066",  "#0000FF",    "#660066"]
-    # hatches =   ["",         "",         "",       "",          "",        "///",  "///"]
-    hue_order = ["Null_model", "Trend", "PeakNDVI", "ML_noSF", "Tab_noSF", "ML_ObsAsSF", "Tab_ObsAsSF", "ML_SF", "Tab_SF"]
-    colors = ["#969696", "#009600", "#FF0000", "#0000FF", "#660066", "#0000FF", "#660066", "#0000FF", "#660066"]
-    hatches = ["", "", "", "", "", "//", "//", "\\\\", "\\\\"]
     palette = dict(zip(hue_order, colors))
     hatch_dict = dict(zip(hue_order, hatches))
 
@@ -116,7 +119,8 @@ for crop in list_crop:
 
     n_hues = len(hue_order)
     n_times = len(x_order)
-    for i, patch in enumerate(ax.patches[0:21+6]):
+    np = n_hues * n_times
+    for i, patch in enumerate(ax.patches[0:np]): #enumerate(ax.patches[0:21+6]):
         # Which hue does this patch belong to?
         # print(i, n_times, i % n_times, i//n_times)
         #hue = hue_order[i % n_hues]  # repeat the hue order for each x‑category
@@ -152,7 +156,7 @@ for crop in list_crop:
     # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     ax.set_ylabel("rRMSEp (%)", fontsize=12)
     ax.set_xlabel("Forecast time (month in season)", fontsize=12)
-    fig_name = os.path.join(dir_out, crop + '_one_graph.png')
+    fig_name = os.path.join(dir_out, crop + '_one_graph' + suffix + '.png')
     plt.tight_layout()
     plt.savefig(fig_name)
     plt.close()

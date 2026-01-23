@@ -331,11 +331,11 @@ def national_error_hindcasting(df, dirName, config, selection_type, df_stats_sum
     title = '\n'.join(textwrap.wrap(title, 40))
     plt.title(title)
     plt.tight_layout()
-    plt.savefig(os.path.join(dirName, crop + '_' + selection_type + '_national_hincasting.png'))
+    plt.savefig(os.path.join(dirName, crop + '_' + selection_type + '_national_hindcasting.png'))
     plt.close()
 
     #save data plot and dfYr for all years
-    mResNat.to_csv(os.path.join(dirName, crop + '_' + selection_type + '_national_hincasting.csv'), index=False)
+    mResNat.to_csv(os.path.join(dirName, crop + '_' + selection_type + '_national_hindcasting.csv'), index=False)
     dfAllYr = dfAllYr.drop(columns=['fyield', 'fyield_percentile', 'fyield_diff_pct (last 5 yrs in data avail)', 'fproduction(fyield*avg_obs_area_last5yrs)', 'fproduction_percentile'])
     dfAllYr.to_csv(os.path.join(dirName, crop + '_' + selection_type + '_all_hindacsting_results.csv'), index=False)
 

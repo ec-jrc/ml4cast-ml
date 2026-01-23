@@ -211,6 +211,7 @@ def find_last_version_csv(base_name, directory):
 
 
 def yield_NASA_format(stat_fileLAST_VERSION, config):
+    suffix_for_country_name = '_admin1'
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
     area_unit = units['Area'].values[0]
     yield_unit = units['Yield'].values[0]
@@ -241,7 +242,7 @@ def yield_NASA_format(stat_fileLAST_VERSION, config):
     df["yield_obs_units"] = yield_unit
     df = df[['source_id', 'source_name_version', 'admin_0', 'admin_1', 'admin_2', 'admin_3', 'planted_year', 'approx_planted_month',
              'harvest_year', 'approx_harvest_month', 'crop', 'crop_season', 'area_obs',  'area_obs_units', 'production_obs', 'production_obs_units', 'yield_obs', 'yield_obs_units']]
-    country = config.country_name_in_shp_file.lower().replace(" ", "_")
+    country = config.country_name_in_shp_file.lower().replace(" ", "") + suffix_for_country_name
     fn_out = os.path.join(os.path.dirname(stat_fileLAST_VERSION),'jrc_' + country + '_historical_' + datetime.date.today().strftime("%Y-%m-%d") + '_USE_UPLOAD_DATE.csv')
     df.to_csv(fn_out, index=False)
 

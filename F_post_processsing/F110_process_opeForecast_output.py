@@ -223,6 +223,7 @@ def combine_models(fns):
     return df_best, df_conservative_estimates
 
 def NASA_format(df_in, config):
+    suffix_for_country_name = '_admin1'
     pd.set_option('display.max_columns', None)
     df = df_in.copy()
     dir_NASA = os.path.join(config.ope_run_out_dir, "best_accuracy", "NasaHarvest_format")
@@ -237,6 +238,8 @@ def NASA_format(df_in, config):
         cols = df.columns.tolist()
         cols.insert(1, cols.pop(cols.index(col)))
         df = df[cols]
+        df['Region_name'] = df['admin_1']
+        df = df.drop(columns='admin_1')
     else:
         fn = b50_yield_data_analysis.find_last_version_csv(config.AOI + '_STATS', config.data_dir)
         df.insert(loc=1, column='source_name_version', value=fn)
@@ -254,6 +257,8 @@ def NASA_format(df_in, config):
     df.rename(columns={'Crop_name': 'crop'}, inplace=True)
     df.insert(loc=11, column='crop_season', value="n.a.")
     df.insert(loc=12, column='forecast_issue_date (yyyy-mm-dd)', value=pd.Timestamp.now().strftime("%Y-%m-%d"))
+    # 2026 Jan 23 rewrite for format mistakes 2026-01-12
+    # df.insert(loc=12, column='forecast_issue_date (yyyy-mm-dd)', value=pd.Timestamp("2026-01-12").strftime("%Y-%m-%d"))
     analysisOutputDir = os.path.join(config.models_out_dir, 'Analysis')
     with open(os.path.join(analysisOutputDir, 'date_model_tune.json'), 'r') as fp:
         date_run = json.load(fp)
@@ -266,9 +271,17 @@ def NASA_format(df_in, config):
     df.insert(loc=18, column='is_final', value='n.a.')
     df.insert(loc=19, column='notes', value='')
     df_forecast = df.iloc[:, :20].copy()
-    country = config.country_name_in_shp_file.lower().replace(" ", "_")
+    country = config.country_name_in_shp_file.lower().replace(" ", "") + suffix_for_country_name
     fn_out = os.path.join(dir_NASA, 'jrc_' + country + '_forecast_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
-    df_forecast.to_csv(fn_out, index=False)
+    # append if the file was created with previous crops
+    if os.path.exists(fn_out):
+        df_existing = pd.read_csv(fn_out, nrows=0)
+        df_forecast[df_existing.columns].to_csv(
+            fn_out, mode="a", header=False, index=False
+        )
+    else:
+        df_forecast.to_csv(fn_out, index=False)
+    # df_forecast.to_csv(fn_out, index=False)
 
     # Accuracy csv
     # remove columns not requested
@@ -288,7 +301,15 @@ def NASA_format(df_in, config):
     df["metric_years"] = ",".join(str(y) for y in range(config.year_start, config.year_end+1))
     df["notes"] = ""
     fn_out = os.path.join(dir_NASA, 'jrc_' + country + '_accuracy_' + datetime.date.today().strftime("%Y-%m-%d") + '_USE_UPLOAD_DATE.csv')
-    df.to_csv(fn_out, index=False)
+    # append if the file was created with previous crops
+    if os.path.exists(fn_out):
+        df_existing = pd.read_csv(fn_out, nrows=0)
+        df[df_existing.columns].to_csv(
+            fn_out, mode="a", header=False, index=False
+        )
+    else:
+        df.to_csv(fn_out, index=False)
+    # df.to_csv(fn_out, index=False)
 
     # Transfer input data file (format?)
     files = list(Path(config.data_dir).glob(f"jrc_{country}_historical_*"))
@@ -300,8 +321,10 @@ def NASA_format(df_in, config):
             df.rename(columns={'source_id': 'adm_id'}, inplace=True)
             df = df.drop(columns='source_name_version')
             df_REGION_ID = df_REGION_ID.drop(columns='adm_name')
+            df_REGION_ID.rename(columns={'admin_1': 'admin_1_HarvestStat'}, inplace=True)
             df = df.merge(df_REGION_ID, on="adm_id")
-            df = df.drop(columns='adm_id')
+            df['admin_1'] = df['admin_1_HarvestStat']
+            df = df.drop(columns=['adm_id', 'admin_1_HarvestStat'])
             cols = df.columns.tolist()
             priority = ["source_id", "source_name_version"]
             new_cols = priority + [c for c in cols if c not in priority]

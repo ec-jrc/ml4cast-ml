@@ -31,15 +31,18 @@ else:
 # run_name = 'MA_test'
 
 # ZA
-# path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1257.json'
-# run_name = 'ZA'
+path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1257.json'
+run_name = 'ZA'
+# path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config346.json'
+# run_name = 'ZA346'
+
 # SF test (run name must contain SF (to reduce setting in config)
 # path_fromBaseDir = r'ZA\summer2025data\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_SfAsForecast.json'
 # run_name = 'ZA_SfAsSF'
 # path_fromBaseDir = r'ZA\summer2025data\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_ObsAsForecast.json'
 # run_name = 'ZA_ObsAsSF'
-path_fromBaseDir = r'ZA\summer2025data\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235.json'
-run_name = 'ZA_NoSF'
+# path_fromBaseDir = r'ZA\summer2025data\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235.json'
+# run_name = 'ZA_NoSF'
 
 ############################################################################################
 if 'win' in sys.platform:
