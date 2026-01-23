@@ -97,7 +97,7 @@ class read:
     for prct in self.forecastingPrct:
         self.forecastingMonths = self.forecastingMonths + list([int(id_months[np.argmin(np.abs(prct_months-float(prct)))])])
         self.forecastingCalendarMonths =self.forecastingCalendarMonths + list([int(real_months[np.argmin(np.abs(prct_months-float(prct)))])])
-
+    print()
 
 class mlSettings:
   def __init__(self, forecastingMonths=0):

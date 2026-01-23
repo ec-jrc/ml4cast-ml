@@ -31,10 +31,14 @@ else:
 # run_name = 'MA_test'
 
 # ZA
-path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1257.json'
-run_name = 'ZA'
+# path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1257.json'
+# run_name = 'ZA'
 # path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config346.json'
 # run_name = 'ZA346'
+
+# MW
+path_fromBaseDir = r'MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
+run_name = 'MW'
 
 # SF test (run name must contain SF (to reduce setting in config)
 # path_fromBaseDir = r'ZA\summer2025data\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_SfAsForecast.json'

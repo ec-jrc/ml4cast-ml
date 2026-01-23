@@ -232,13 +232,17 @@ def NASA_format(df_in, config):
     if "source_id" in df_REGION_ID.columns:
         df_REGION_ID = df_REGION_ID.drop(columns='adm_name')
         df = df.merge(df_REGION_ID, on="adm_id")
-        df['adm_id']=df['source_id']
+        df['adm_id'] = df['source_id']
         df = df.drop(columns='source_id')
         col = "source_name_version"
         cols = df.columns.tolist()
         cols.insert(1, cols.pop(cols.index(col)))
         df = df[cols]
+        # transfer 'admin_1'
         df['Region_name'] = df['admin_1']
+        # manage 'admin_2'
+        if 'admin_2' not in df.columns:
+            df['admin_2'] = ''
         df = df.drop(columns='admin_1')
     else:
         fn = b50_yield_data_analysis.find_last_version_csv(config.AOI + '_STATS', config.data_dir)
@@ -248,7 +252,9 @@ def NASA_format(df_in, config):
     df.rename(columns={'adm_id': 'source_id'}, inplace=True)  # rename adm_id
     df.insert(loc=2, column='admin_0', value=config.country_name_in_shp_file)
     df.rename(columns={'Region_name': 'admin_1'}, inplace=True)
-    df.insert(loc=4, column='admin_2', value="")
+    #df.insert(loc=4, column='admin_2', value="")
+    col = df.pop('admin_2')
+    df.insert(4, 'admin_2', col)
     df.insert(loc=5, column='admin_3', value="")
     df.insert(loc=6, column='planted_year', value=config.harvest_year+config.plantingYearDelta)
     df.insert(loc=7, column='approx_planted_month', value=config.sosMonth)
