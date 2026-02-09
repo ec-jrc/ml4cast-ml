@@ -25,10 +25,11 @@ if __name__ == '__main__':
     n = upar.n  # ml models to rerun (obsrvation show that the best model found by standard tuning is within the first 10 found by fast tuning
     config_fn = upar.config_fn
     run_name = upar.run_name
+    run_type = 'fast_tuning' # 'tuning'
     # END OF USER PARAMS
 
     config = a10_config.read(config_fn, run_name,
-                             run_type='fast_tuning')  # only to get where the fast tuning was stored
+                             run_type=run_type)  # only to get where the results were stored
     out_fast = config.models_out_dir
     F100_analyze_hindcast_output.gather_output(config)
     runIDs2rerun = F100_analyze_hindcast_output.compare_fast_outputs(config, n, metric2use=metric)
