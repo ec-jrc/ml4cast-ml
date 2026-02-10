@@ -47,35 +47,35 @@ plotTab = False
 makeTaylor = True
 ########################################################
 
+def get_seasonal_meteo_of_forecast_month():
+    x = 0
+
+
 dir_out = os.path.join(baseDir, 'comp_' + rn1 + '_' + rn2 + '_' + rn3)
 os.makedirs(dir_out, exist_ok=True)
 mlsettings = a10_config.mlSettings(forecastingMonths=0)
 # to gather: list of times, list of crops; a df with:
 # run_name, time, crop, model (get all for now), avg rmse_perct, avg r2 by admin, same at national lvel
 
-
+# get best model of each run
 df = pd.DataFrame()
 configs = [a10_config.read(cf1, rn1), a10_config.read(cf2, rn2), a10_config.read(cf3, rn3)]
+
 runs = [rn1, rn2, rn3]
 short_names = [short_name1, short_name2, short_name3]
 for run, config, short_name in zip(runs, configs, short_names):
     analysisOutputDir = os.path.join(config.models_out_dir, 'Analysis')
     b1 = pd.read_csv(analysisOutputDir + '/' + 'all_model_best1.csv')
-    # metric2use = 'rRMSE_p'
-    # var4time = 'forecast_time'
-    # mlsettings = a10_config.mlSettings(forecastingMonths=0)
-    # b1, b4 = F100_analyze_hindcast_output.extract_best_1_and_4(mo, metric2use, var4time, config, mlsettings)
     b1.insert(0, 'run_name', run)
     b1.insert(1, 'run_short_name', short_name)
     df = pd.concat([df, b1], ignore_index=True)
 list_time = df.forecast_time.unique()
 list_crop = df.Crop.unique()
 
-
+# replace name for plotting
 df["Estimator"] = df["Estimator"].replace("PeakNDVI", "PeakFPAR")
 
-# same but reshaped in one graph
-# check that  ["Null_model", "Trend", "PeakNDVI"] have same "rRMSE_p" at each 'forecast_time', no matter 'run_short_name'
+# sanity check that  ["Null_model", "Trend", "PeakNDVI"] have same "rRMSE_p" at each 'forecast_time', no matter 'run_short_name'
 for crop in list_crop:
     for t in df.forecast_time.unique():
         for est in ["Null_model", "Trend", "PeakFPAR"]:
@@ -86,7 +86,7 @@ for crop in list_crop:
 
 first_crop = True
 for crop in list_crop:
-    df2 = df.head(0)
+    df2 = df.head(0) #make an empty
     for t in df.forecast_time.unique():
         tmp = df[(df['Crop'] == crop) & (df['forecast_time'] == t)]
         print()
@@ -276,6 +276,8 @@ for crop in list_crop:
         fig, axs = plt.subplots(max([len(adm_ids), 2]), 1, figsize=(10, 2.5 * len(adm_ids)))  # the max here is used because there might be just one admin, and subplot does not return axes
         axs = axs.flatten()
         axs_counter = 0
+
+        # get pheno, cumulated and sanity check
 
         for adm_id in adm_ids:
             # plot ref

@@ -25,7 +25,7 @@ if __name__ == '__main__':
     n = upar.n  # ml models to rerun (obsrvation show that the best model found by standard tuning is within the first 10 found by fast tuning
     config_fn = upar.config_fn
     run_name = upar.run_name
-    run_type = 'fast_tuning' # 'tuning'
+    run_type = 'fast_tuning'
     # END OF USER PARAMS
 
     config = a10_config.read(config_fn, run_name,

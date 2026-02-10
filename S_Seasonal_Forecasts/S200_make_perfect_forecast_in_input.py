@@ -1,13 +1,21 @@
 import pandas as pd
 import os
 from S_Seasonal_Forecasts import date
+pd.set_option('display.width', 5000)
 pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', 50)
 
 '''
 take extracted data,
 add monthly observed cum rain and mean temp (computed from dekadal values) as forecasts,
 save it as fn extraction + _ObsAsForecast
+
+Monthly values are computed from observed data.  Monthly precip value of month MM is assigned to 
+MM/01 and called SF_r_1
+MM-1/01 and called SF_r_2
+ect
+so SF_r_1 refers to the month of its date,
+SF_r_2 refers to the month+1 starting its date,
+
 '''
 # ####################### USER PARAM
 # Filip's file
@@ -131,17 +139,3 @@ df.to_csv(fn_out, index=False)
 
 
 print('Finished')
-#
-#
-# # debug, compare difference woth previous version
-# csv1 = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF\ObsAsSF\Tuning_data\Multiple_WC-Tunisia-ASAP_ObsAsForecast.csv'
-# csv2 = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF\NO_SF_baseline\Tuning_data\Multiple_WC-Tunisia-ASAP_ObsAsForecast2test.csv'
-#
-# df1 = pd.read_csv(csv1)
-# df2 = pd.read_csv(csv2)
-#
-# print("Shape df1:", df1.shape)
-# print("Shape df2:", df2.shape)
-#
-# print("\nColumns only in df1:", set(df1.columns) - set(df2.columns))
-# print("Columns only in df2:", set(df2.columns) - set(df1.columns))

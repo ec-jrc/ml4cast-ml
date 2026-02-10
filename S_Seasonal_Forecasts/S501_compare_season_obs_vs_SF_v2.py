@@ -228,42 +228,72 @@ def plot(df, fn, option='', colorby='year'):
     plt.savefig(fn, dpi=300, bbox_inches='tight')
 
 
-config1 = a10_config.read(cf1, "")
-config2 = a10_config.read(cf2, "")
+def get_sea_Obs_SF(congig_path_ObsAsSF, congig_path_SF, startMonth, lastHorizon):
+    config_ObsAsSF = a10_config.read(congig_path_ObsAsSF, "")
+    config_SF = a10_config.read(congig_path_SF, "")
+    dfo = pd.read_csv(os.path.join(config_ObsAsSF.data_dir, config_ObsAsSF.afi + '.csv'))
+    dfo = dfo.rename(columns={'mean': 'obsMean'})
+    dfs = pd.read_csv(os.path.join(config_SF.data_dir, config_SF.afi + '.csv'))
+    dfs = dfs.rename(columns={'mean': 'sfMean'})
+    # merge versions
+    df = pd.merge(dfs, dfo, on=['adm_id', 'variable_name', 'date'])
+    # keep only forecast
+    df = df[df["variable_name"].str.contains("SF", na=False, case=False)]
+    df[['SF', 'var', 'horizon']] = df['variable_name'].str.split('_', n=2, expand=True)
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    mask = df["date"].dt.month == startMonth  # Boolean Series
+    df_month = df.loc[mask].copy()
+    df_month["horizon"] = pd.to_numeric(df["horizon"], errors="coerce")
+    df_month = df_month.reset_index(drop=True)
+    mask = df_month["horizon"].between(1, lastHorizon, inclusive="both")  # pandas ≥1.3 uses inclusive="both"
+    df_filt = df_month.loc[mask].copy()
+    # df_filt.to_csv(os.path.join(dir_out, prefix + 'test_merge.csv'), index=False)
+    agg = (
+        df_filt
+        .groupby(["adm_id", "date", "var"], as_index=False)  # keep keys as columns
+        .agg(sfMean_season=("sfMean", "mean"), obsMean_season=("obsMean", "mean"),
+             )  # rename the aggregated column to something clear
+    )
+    return agg
 
+agg = get_sea_Obs_SF(cf1, cf2, startMonth, lastHorizon)
 dir_out = os.path.join(baseDir, 'comp_seasonal_obs_SF')
 os.makedirs(dir_out, exist_ok=True)
-mlsettings = a10_config.mlSettings(forecastingMonths=0)
 
-dfo = pd.read_csv(os.path.join(config1.data_dir, config1.afi + '.csv'))
-dfo = dfo.rename(columns={'mean': 'obsMean'})
-
-dfs = pd.read_csv(os.path.join(config2.data_dir, config2.afi + '.csv'))
-dfs = dfs.rename(columns={'mean': 'sfMean'})
-
-# merge version
-df = pd.merge(dfs, dfo, on=['adm_id', 'variable_name', 'date'])
-# df = df.drop('x', axis=1)
-# keep only forecast
-df = df[df["variable_name"].str.contains("SF", na=False, case=False)]
-df[['SF', 'var', 'horizon']] = df['variable_name'].str.split('_', n=2, expand=True)
-# df.to_csv(os.path.join(dir_out, 'test_merge.csv'), index=False)
-df["date"] = pd.to_datetime(df["date"], errors="coerce")
-mask = df["date"].dt.month == startMonth      # Boolean Series
-df_month = df.loc[mask].copy()
-df_month["horizon"] = pd.to_numeric(df["horizon"], errors="coerce")
-df_month = df_month.reset_index(drop=True)
-mask = df_month["horizon"].between(1, lastHorizon, inclusive="both")   # pandas ≥1.3 uses inclusive="both"
-df_filt = df_month.loc[mask].copy()
-df_filt.to_csv(os.path.join(dir_out, prefix + 'test_merge.csv'), index=False)
-agg = (
-    df_filt
-    .groupby(["adm_id", "date", "var"], as_index=False)   # keep keys as columns
-    .agg(
-        sfMean_season=("sfMean", "mean"),
-        obsMean_season=("obsMean", "mean"),
-    )   # rename the aggregated column to something clear
-)
+# config1 = a10_config.read(cf1, "")
+# config2 = a10_config.read(cf2, "")
+#
+# dir_out = os.path.join(baseDir, 'comp_seasonal_obs_SF')
+# os.makedirs(dir_out, exist_ok=True)
+# mlsettings = a10_config.mlSettings(forecastingMonths=0)
+#
+# dfo = pd.read_csv(os.path.join(config1.data_dir, config1.afi + '.csv'))
+# dfo = dfo.rename(columns={'mean': 'obsMean'})
+#
+# dfs = pd.read_csv(os.path.join(config2.data_dir, config2.afi + '.csv'))
+# dfs = dfs.rename(columns={'mean': 'sfMean'})
+#
+# # merge version
+# df = pd.merge(dfs, dfo, on=['adm_id', 'variable_name', 'date'])
+# # df = df.drop('x', axis=1)
+# # keep only forecast
+# df = df[df["variable_name"].str.contains("SF", na=False, case=False)]
+# df[['SF', 'var', 'horizon']] = df['variable_name'].str.split('_', n=2, expand=True)
+# # df.to_csv(os.path.join(dir_out, 'test_merge.csv'), index=False)
+# df["date"] = pd.to_datetime(df["date"], errors="coerce")
+# mask = df["date"].dt.month == startMonth      # Boolean Series
+# df_month = df.loc[mask].copy()
+# df_month["horizon"] = pd.to_numeric(df["horizon"], errors="coerce")
+# df_month = df_month.reset_index(drop=True)
+# mask = df_month["horizon"].between(1, lastHorizon, inclusive="both")   # pandas ≥1.3 uses inclusive="both"
+# df_filt = df_month.loc[mask].copy()
+# df_filt.to_csv(os.path.join(dir_out, prefix + 'test_merge.csv'), index=False)
+# agg = (
+#     df_filt
+#     .groupby(["adm_id", "date", "var"], as_index=False)   # keep keys as columns
+#     .agg(sfMean_season=("sfMean", "mean"), obsMean_season=("obsMean", "mean"),
+#     )   # rename the aggregated column to something clear
+# )
 agg.to_csv(os.path.join(dir_out, prefix + 'test_agg_merge.csv'), index=False)
 agg = agg.rename(columns={"obsMean_season": "obs", "sfMean_season": "sf"})
 
