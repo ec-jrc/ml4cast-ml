@@ -133,8 +133,8 @@ class DataMixin:
             # I have n months till end of season - 1 month, n = (config.eosMonthInSeason -1) - self.uset['forecast_time'] + 1
             # therefore I have to keep up to SFn. SFm with m>n are after eos and must be discarded.
 
-            last_Month_Included = (config.eosMonthInSeason-1)
-            first_Month_Included = self.uset['forecast_time']
+            # last_Month_Included = (config.eosMonthInSeason-1)
+            # first_Month_Included = self.uset['forecast_time']
             n_months = (config.eosMonthInSeason-1) - self.uset['forecast_time'] + 1
             # SF of month M10 with horizon 1 refer to M11, so I am skipping one month
             n_months = n_months - 1

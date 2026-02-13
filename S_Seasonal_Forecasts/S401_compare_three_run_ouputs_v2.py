@@ -1,14 +1,18 @@
 import pandas as pd
 from A_config import a10_config
 import os
+import sys
 import glob
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import skill_metrics as sm
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
-from  D_modelling import d140_modelStats
+from D_modelling import d140_modelStats
+from S_Seasonal_Forecasts import S501_compare_season_obs_vs_SF_v2
 from F_post_processsing import F100_analyze_hindcast_output
 """
 Compare two results (e.g. without SF vs with SF) 
@@ -44,11 +48,10 @@ short_name3 = 'SF'
 # plot Tab results or not
 plotTab = False
 # Plot Taylor
-makeTaylor = True
+makeTaylor = False
 ########################################################
 
-def get_seasonal_meteo_of_forecast_month():
-    x = 0
+
 
 
 dir_out = os.path.join(baseDir, 'comp_' + rn1 + '_' + rn2 + '_' + rn3)
@@ -60,6 +63,18 @@ mlsettings = a10_config.mlSettings(forecastingMonths=0)
 # get best model of each run
 df = pd.DataFrame()
 configs = [a10_config.read(cf1, rn1), a10_config.read(cf2, rn2), a10_config.read(cf3, rn3)]
+
+# get start and end month sosMonth': 11, 'eosMonth': 5
+sosMonthCalendar = [x.sosMonth for x in configs]
+eosMonthCalendar = [x.eosMonth for x in configs]
+if (all(x == sosMonthCalendar[0] for x in sosMonthCalendar) == False) or \
+(all(x == eosMonthCalendar[0] for x in eosMonthCalendar) == False):
+    print('Different dates in configs')
+    sys.exit("Condition met, exiting program")
+else:
+    sosMonthCalendar = sosMonthCalendar[0]
+    eosMonthCalendar = eosMonthCalendar[0]
+    eosMonthInSeason = configs[0].eosMonthInSeason
 
 runs = [rn1, rn2, rn3]
 short_names = [short_name1, short_name2, short_name3]
@@ -183,16 +198,16 @@ print('First plotting finished')
 # Now hindcasting by crop and admin (and Taylor?, corr is overall in laylor, unless I give the avg corr, but would be strange)
 # drop Tab
 df_all = df_all[df_all['Estimator'] != 'Tab']
-months = [1, 2, 3]
+months_inSeas = [1, 2, 3]
 # get reg short_names
 df_regNames = pd.read_csv(os.path.join(configs[0].data_dir, config.AOI + '_REGION_id.csv'))
 # loop on crops
 # list_crop = ['Maize_white']
-# months = [2]
+# months_inSeas = [2]
 for crop in list_crop:
     # loop on forecasting times
-    for month in months:
-        df = df_all[(df_all['Crop'] == crop) & (df_all['forecast_time'] == month)]
+    for month_inSeas in months_inSeas:
+        df = df_all[(df_all['Crop'] == crop) & (df_all['forecast_time'] == month_inSeas)]
         # here I have six runs: nul, peak, trend, ML, Ml_ObsAsSF, ML_SF
         model_names = df['Estimator_plot'].unique()
         model_names = ['ML_noSF', 'ML_ObsAsSF', 'ML_SF']
@@ -260,7 +275,7 @@ for crop in list_crop:
                               markerLabel=label,  markerLegend='on')
 
 
-            fn = os.path.join(dir_out, 'Taylor_' + crop + '_month_' + str(month) + '.png')
+            fn = os.path.join(dir_out, 'Taylor_' + crop + '_month_inSeas_' + str(month_inSeas) + '.png')
             plt.savefig(fn)
             plt.close()
             # Keep only where all have finite values
@@ -271,21 +286,170 @@ for crop in list_crop:
 
             print()
 
-        # loop over admin id
+        # layout 1 loop over admin id
         adm_ids = model_mRes_dfs[0]['adm_id'].unique()
         fig, axs = plt.subplots(max([len(adm_ids), 2]), 1, figsize=(10, 2.5 * len(adm_ids)))  # the max here is used because there might be just one admin, and subplot does not return axes
         axs = axs.flatten()
         axs_counter = 0
 
-        # get pheno, cumulated and sanity check
+        # get pheno, cumulated and sanity check,
+        # S501_compare_season_obs_vs_SF_v2.get_seas_Obs_SF(config_path_ObsAsSF, config_path_SF, startCalendarMonth, lastHorizon)
+        # now I am in month_inSeas, sosMonthCalendar
+        # I want to see the used  forecast used (from now to eos - 1 month)
+        startCalendarMonth = sosMonthCalendar + month_inSeas - 1
+        if startCalendarMonth > 12:
+            startCalendarMonth = startCalendarMonth -12
+        lastHorizon = eosMonthInSeason - month_inSeas - 1
+        print('Month in season: ' + str(month_inSeas)  + ', calendar month: ' + str(startCalendarMonth) + ', eosMonthCalendar: ' + str(eosMonthCalendar) + ', n months of seas:' + str(lastHorizon))
+        df = S501_compare_season_obs_vs_SF_v2.get_seas_Obs_SF(cf2, cf3, startCalendarMonth, lastHorizon)
+        # I have to assign a year (that of eos) to the extracted seas values
+        if startCalendarMonth > eosMonthCalendar:
+            df['Year'] = df['date'].dt.year + 1
+        else:
+            df['Year'] = df['date'].dt.year
+        # for adm_id in adm_ids:
+        #     lw = 0.75
+        #     ax1  = axs[axs_counter]
+        #     # plot ref
+        #     ref_data = model_mRes_dfs[0][model_mRes_dfs[0]['adm_id']==adm_id]
+        #     merged_df = pd.merge(ref_data, df, on=['adm_id', 'Year'], how='left')
+        #     ax1.plot(ref_data['Year'], ref_data['yLoo_true'], "--o", color='green', label='Observed')
+        #     ax2 = ax1.twinx()
+        #     prec = merged_df[merged_df['var'] == 'r']
+        #
+        #     ax2.plot(prec['Year'], prec['obsMean_season'], "-", color='black', label='Prec_obsMean_season', linewidth=lw)
+        #     ax2.plot(prec['Year'], prec['sfMean_season'], "--", color='black', label='Prec_sfMean_season', linewidth=lw)
+        #     ax2.set_ylabel('Prec season mean (mm/month')
+        #
+        #     # Tertiary y-axis (offset)
+        #     ax3 = ax1.twinx()
+        #     ax3.spines['right'].set_position(('outward', 60))  # shift right
+        #     temp = merged_df[merged_df['var'] == 't']
+        #     ax3.plot(temp['Year'], temp['obsMean_season'], "-", color='red', label='Temp_obsMean_season', linewidth=lw)
+        #     ax3.plot(temp['Year'], temp['sfMean_season'], "--", color='red', label='Temp_sfMean_season', linewidth=lw)
+        #     ax3.set_ylabel('Temp season mean (deg C)')
+        #     # ax2.plot(merged_df['Year'], merged_df['yLoo_true'], "--o", color='green', label='Observed')
+        #     # models
+        #     for idx, model in enumerate(model_names):
+        #         model_data = model_mRes_dfs[idx][model_mRes_dfs[idx]['adm_id']==adm_id]
+        #         if model == 'Trend':
+        #             color = 'green'
+        #         elif model == 'Null_model':
+        #             color = 'grey'
+        #         else:
+        #             ind = hue_order.index(model)
+        #             color = colors[ind]
+        #         r2 = d140_modelStats.r2_nan(model_data['yLoo_true'] ,model_data['yLoo_pred'])
+        #         ax1.plot(model_data['Year'], model_data['yLoo_pred'], "-o", color=color, label=model + ' R2p = ' + str(round(r2, 2)), linewidth=1.125, markersize=4.5)
+        #     # ax1.legend(prop={'size': 6}, loc="upper left")
+        #     ax1.set_title(ref_data['adm_name'].iloc[0])
+        #     ax1.set_xlabel('Years')
+        #     ax1.set_ylabel('Yield [t/ha]')
+        #     axs_counter = axs_counter + 1
+        #     lines1, labels1 = ax1.get_legend_handles_labels()
+        #     lines2, labels2 = ax2.get_legend_handles_labels()
+        #     lines3, labels3 = ax3.get_legend_handles_labels()
+        #     ax1.legend(
+        #         lines1 + lines2 + lines3,
+        #         labels1 + labels2 + labels3,
+        #         loc="upper left", prop={'size': 6}
+        #     )
+        #     # put yield in the foreground
+        #     ax1.set_zorder(3)
+        #     ax2.set_zorder(2)
+        #     ax3.set_zorder(1)
+        #     # hide axis backgrounds
+        #     ax1.patch.set_visible(False)
+        #     ax2.patch.set_visible(False)
+        #     ax3.patch.set_visible(False)
+        #
+        #     # raise ALL lines plotted on ax1
+        #     for line in ax1.lines:
+        #         line.set_zorder(10)
+        # fig.tight_layout()
+        # fn_name = os.path.join(dir_out, 'hindcasting_' + crop + '_month_inSeas_' + str(month_inSeas) + '.pdf')
+        # plt.savefig(fn_name)
+        # plt.close()
 
-        for adm_id in adm_ids:
+        # layout 2 with correlation
+        lw = 0.75
+        n = len(adm_ids)
+        fig = plt.figure(figsize=(10, 4 * n), constrained_layout=True)
+        fig.subplots_adjust(right=0.6)
+        # fig.subplots_adjust(
+        #     top=0.95,
+        #     bottom=0.05
+        # )
+        # gs = GridSpec(
+        #     nrows=2 * n,
+        #     ncols=2,
+        #     height_ratios=[2, 1] * n,  # big plot taller
+        #     hspace=0.4,
+        #     wspace=0.3
+        # )
+        gs = GridSpec(
+            nrows=2 * n,
+            ncols=2,
+            height_ratios=[2, 2] * n,  # ⬅ second row same height as column width
+            hspace=0.3,
+            wspace=0.4 #0.2
+        )
+        # gs = GridSpec(
+        #     nrows=3 * n,
+        #     ncols=2,
+        #     height_ratios=[2, 2, 0.3] * n,  # big, square, spacer
+        #     hspace=0.0,
+        #     wspace=0.25
+        # )
+        axes = []
+        for i in range(n):
+            # big plot (row 2*i, spans 2 columns)
+            ax_big = fig.add_subplot(gs[2 * i, :])
+            # two small plots (row 2*i + 1)
+            ax_left = fig.add_subplot(gs[2 * i + 1, 0])
+            ax_right = fig.add_subplot(gs[2 * i + 1, 1])
+            ax_left.set_box_aspect(1)
+            ax_right.set_box_aspect(1)
+            # row = 3 * i
+            #
+            # ax_big = fig.add_subplot(gs[row, :])
+            #
+            # ax_left = fig.add_subplot(gs[row + 1, 0])
+            # ax_right = fig.add_subplot(gs[row + 1, 1])
+            #
+            # # square bottom plots
+            # ax_left.set_box_aspect(1)
+            # ax_right.set_box_aspect(1)
+            axes.append((ax_big, ax_left, ax_right))
+
+        # for i, (ax_big, ax_l, ax_r) in enumerate(axes):
+        for i, (adm_id, (ax_big, ax_left, ax_right)) in enumerate(zip(adm_ids, axes)):
+            # ax_big.plot([1, 2, 3], [i, i + 1, i + 2])
+            # ax_big.set_title(f'Big plot {i + 1}')
             # plot ref
-            ref_data = model_mRes_dfs[0][model_mRes_dfs[0]['adm_id']==adm_id]
-            axs[axs_counter].plot(ref_data['Year'], ref_data['yLoo_true'], "--o", color='green', label='Observed')
+            ref_data = model_mRes_dfs[0][model_mRes_dfs[0]['adm_id'] == adm_id]
+            merged_df = pd.merge(ref_data, df, on=['adm_id', 'Year'], how='left')
+            ax_big.plot(ref_data['Year'], ref_data['yLoo_true'], "--o", color='green', label='Observed')
+            ax_big2 = ax_big.twinx()
+            prec = merged_df[merged_df['var'] == 'r']
+            ax_big2.plot(prec['Year'], prec['obsMean_season'], "-", color='black', label='Prec_obsMean_season',
+                     linewidth=lw)
+            ax_big2.plot(prec['Year'], prec['sfMean_season'], "--", color='black', label='Prec_sfMean_season', linewidth=lw)
+            ax_big2.set_ylabel('Prec season mean (mm/month')
+
+            # Tertiary y-axis (offset)
+            ax_big3 = ax_big.twinx()
+            # divider = make_axes_locatable(ax_big)
+            # ax_big3 = divider.append_axes("right", size="4%", pad=0.6)
+            ax_big3.spines['right'].set_position(('outward', 30))  # shift right
+            temp = merged_df[merged_df['var'] == 't']
+            ax_big3.plot(temp['Year'], temp['obsMean_season'], "-", color='red', label='Temp_obsMean_season', linewidth=lw)
+            ax_big3.plot(temp['Year'], temp['sfMean_season'], "--", color='red', label='Temp_sfMean_season', linewidth=lw)
+            ax_big3.set_ylabel('Temp season mean (deg C)')
+            # ax2.plot(merged_df['Year'], merged_df['yLoo_true'], "--o", color='green', label='Observed')
             # models
             for idx, model in enumerate(model_names):
-                model_data = model_mRes_dfs[idx][model_mRes_dfs[idx]['adm_id']==adm_id]
+                model_data = model_mRes_dfs[idx][model_mRes_dfs[idx]['adm_id'] == adm_id]
                 if model == 'Trend':
                     color = 'green'
                 elif model == 'Null_model':
@@ -293,18 +457,66 @@ for crop in list_crop:
                 else:
                     ind = hue_order.index(model)
                     color = colors[ind]
-                r2 = d140_modelStats.r2_nan(model_data['yLoo_true'] ,model_data['yLoo_pred'])
-                axs[axs_counter].plot(model_data['Year'], model_data['yLoo_pred'], "-o", color=color, label=model + ' R2p = ' + str(round(r2, 2)))
-            axs[axs_counter].legend(prop={'size': 6}, loc="upper left")
-            axs[axs_counter].set_title(ref_data['adm_name'].iloc[0])
-            axs[axs_counter].set_xlabel('Years')
-            axs[axs_counter].set_ylabel('Yield [t/ha]')
-            axs_counter = axs_counter + 1
-        fn_name = os.path.join(dir_out, 'hindcasting_' + crop + '_month_' + str(month) + '.pdf')
-        fig.tight_layout()
+                r2 = d140_modelStats.r2_nan(model_data['yLoo_true'], model_data['yLoo_pred'])
+                ax_big.plot(model_data['Year'], model_data['yLoo_pred'], "-o", color=color,
+                         label=model + ' R2p = ' + str(round(r2, 2)), linewidth=1.125, markersize=4.5)
+            # ax1.legend(prop={'size': 6}, loc="upper left")
+            ax_big.set_title(ref_data['adm_name'].iloc[0])
+            ax_big.set_xlabel('Years')
+            ax_big.set_ylabel('Yield [t/ha]')
+            lines1, labels1 = ax_big.get_legend_handles_labels()
+            lines2, labels2 = ax_big2.get_legend_handles_labels()
+            lines3, labels3 = ax_big3.get_legend_handles_labels()
+            ax_big.legend(
+                lines1 + lines2 + lines3,
+                labels1 + labels2 + labels3,
+                loc="upper left", prop={'size': 6}
+            )
+            # put yield in the foreground
+            ax_big.set_zorder(3)
+            ax_big2.set_zorder(2)
+            ax_big3.set_zorder(1)
+            # hide axis backgrounds
+            ax_big.patch.set_visible(False)
+            ax_big2.patch.set_visible(False)
+            ax_big3.patch.set_visible(False)
+
+            # raise ALL lines plotted on ax1
+            for line in ax_big.lines:
+                line.set_zorder(10)
+
+            # scatters
+            x = prec['obsMean_season'].to_numpy()
+            y = prec['yLoo_true'].to_numpy()
+            ax_left.scatter(x, y, s=25,  alpha=0.8)
+            # correlation coefficient (Pearson)
+            mask = ~np.isnan(x) & ~np.isnan(y)
+            r = np.corrcoef(x[mask], y[mask])[0, 1]
+            # add text to plot
+            ax_left.text(0.05, 0.95, f'r = {r:.2f}', transform=ax_left.transAxes, ha='left', va='top')
+            # labels
+            ax_left.set_xlabel('Prec obs mean (mm/month)')
+            ax_left.set_ylabel('Yield (t/ha)')
+
+            x = temp['obsMean_season'].to_numpy()
+            y = prec['yLoo_true'].to_numpy()
+            ax_right.scatter(x, y, s=25, alpha=0.8)
+            # correlation coefficient (Pearson)
+            mask = ~np.isnan(x) & ~np.isnan(y)
+            r = np.corrcoef(x[mask], y[mask])[0, 1]
+            # add text to plot
+            ax_right.text(0.05, 0.95, f'r = {r:.2f}', transform=ax_right.transAxes, ha='left', va='top')
+            # labels
+            ax_right.set_xlabel('Temp obs mean (mm/month)')
+            ax_right.set_ylabel('Yield (t/ha)')
+            # ax_l.plot([1, 2, 3], [3, 2, 1])
+            # ax_l.set_title('Small left')
+            #
+            # ax_r.plot([1, 2, 3], [1, 2, 3])
+            # ax_r.set_title('Small right')
+
+        # fig.tight_layout()
+        fn_name = os.path.join(dir_out, 'hindcasting_' + crop + '_month_inSeas_' + str(month_inSeas) + '_v2.pdf')
         plt.savefig(fn_name)
         plt.close()
-
-
-
 

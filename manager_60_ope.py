@@ -30,7 +30,7 @@ if __name__ == '__main__':
     config_fn = upar.config_fn
     run_name = upar.run_name
     metric_for_model_selection = upar.metric
-    config_ope = a10_config.read_ope(config_fn)
+    config_ope = a10_config.read_ope(config_fn) # the read_ope use the tuning config file name and add '_ope'
     forecastingMonth = config_ope.forecastingMonth  # month X means that all months up to X (included) are used, so this is possible in month X+1
     forecastingYear = config_ope.Year  # This year refer to time of EOS
     tune_on_condor = upar.tune_on_condor

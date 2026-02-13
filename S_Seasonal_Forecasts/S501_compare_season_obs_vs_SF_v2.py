@@ -13,33 +13,39 @@ import math
 """
 Compare seasonal cumulation of obs and SF 
 """
-pd.set_option('display.width', 5000)
-pd.set_option('display.max_columns', None)
 
-# configuration files and run names
-# TN
-# baseDir = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF'
-# cf1 = os.path.join(baseDir, 'ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json')
-# cf2 = os.path.join(baseDir, 'SF\TNMultiple_WC-Tunisia-ASAP_config_SfAsForecast.json')
-# # seasonal cumulation goes from .. to .. (in calendar month)
-# startMonth = 12 #10
-
-# # remember that forecast in month 10 with horizon 1 is that of 11,
-# # so in month 10 up to 5 I have to take horizon 1 (11) to 7 (5)
-# lastHorizon = 1 #7
-# ZA
-baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data'
-cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_ObsAsForecast.json')
-cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_SfAsForecast.json')
-# seasonal cumulation goes from .. to .. (in calendar month)
-startMonth = 3 #10
-
-# remember that forecast in month 10 with horizon 1 is that of 11,
-# so in month 10 up to 5 I have to take horizon 1 (11) to 7 (5)
-lastHorizon = 2 #7
-
-prefix = 'M' + str(startMonth) + "_Horizon" + str(lastHorizon)
-########################################################
+def get_seas_Obs_SF(config_path_ObsAsSF, config_path_SF, startCalendarMonth, lastHorizon):
+    # startCalendarMonth is the first month to consider
+    # lastHorizon makes the last month to consider (last = startCalendarMonth + lastHorizon -1)
+    # remember that SF_r_1 of calendar month 5 is month 5
+    # output is the mean of ObsAsSF and SF over the period startCalendarMonth : startCalendarMonth + lastHorizon -1
+    # so if I ask start 5, horizon 3, it is the mean of 5, 6, 7 (SF_r_1, SF_r_2, SF_r_3)
+    config_ObsAsSF = a10_config.read(config_path_ObsAsSF, "")
+    config_SF = a10_config.read(config_path_SF, "")
+    dfo = pd.read_csv(os.path.join(config_ObsAsSF.data_dir, config_ObsAsSF.afi + '.csv'))
+    dfo = dfo.rename(columns={'mean': 'obsMean'})
+    dfs = pd.read_csv(os.path.join(config_SF.data_dir, config_SF.afi + '.csv'))
+    dfs = dfs.rename(columns={'mean': 'sfMean'})
+    # merge versions
+    df = pd.merge(dfs, dfo, on=['adm_id', 'variable_name', 'date'])
+    # keep only forecast
+    df = df[df["variable_name"].str.contains("SF", na=False, case=False)]
+    df[['SF', 'var', 'horizon']] = df['variable_name'].str.split('_', n=2, expand=True)
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    mask = df["date"].dt.month == startCalendarMonth  # Boolean Series
+    df_month = df.loc[mask].copy()
+    df_month["horizon"] = pd.to_numeric(df["horizon"], errors="coerce")
+    df_month = df_month.reset_index(drop=True)
+    mask = df_month["horizon"].between(1, lastHorizon, inclusive="both")  # pandas ≥1.3 uses inclusive="both"
+    df_filt = df_month.loc[mask].copy()
+    # df_filt.to_csv(os.path.join(dir_out, prefix + 'test_merge.csv'), index=False)
+    agg = (
+        df_filt
+        .groupby(["adm_id", "date", "var"], as_index=False)  # keep keys as columns
+        .agg(sfMean_season=("sfMean", "mean"), obsMean_season=("obsMean", "mean"),
+             )  # rename the aggregated column to something clear
+    )
+    return agg
 
 def plot_by_adm_and_time(df, fn):
     """
@@ -228,85 +234,86 @@ def plot(df, fn, option='', colorby='year'):
     plt.savefig(fn, dpi=300, bbox_inches='tight')
 
 
-def get_sea_Obs_SF(congig_path_ObsAsSF, congig_path_SF, startMonth, lastHorizon):
-    config_ObsAsSF = a10_config.read(congig_path_ObsAsSF, "")
-    config_SF = a10_config.read(congig_path_SF, "")
-    dfo = pd.read_csv(os.path.join(config_ObsAsSF.data_dir, config_ObsAsSF.afi + '.csv'))
-    dfo = dfo.rename(columns={'mean': 'obsMean'})
-    dfs = pd.read_csv(os.path.join(config_SF.data_dir, config_SF.afi + '.csv'))
-    dfs = dfs.rename(columns={'mean': 'sfMean'})
-    # merge versions
-    df = pd.merge(dfs, dfo, on=['adm_id', 'variable_name', 'date'])
-    # keep only forecast
-    df = df[df["variable_name"].str.contains("SF", na=False, case=False)]
-    df[['SF', 'var', 'horizon']] = df['variable_name'].str.split('_', n=2, expand=True)
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    mask = df["date"].dt.month == startMonth  # Boolean Series
-    df_month = df.loc[mask].copy()
-    df_month["horizon"] = pd.to_numeric(df["horizon"], errors="coerce")
-    df_month = df_month.reset_index(drop=True)
-    mask = df_month["horizon"].between(1, lastHorizon, inclusive="both")  # pandas ≥1.3 uses inclusive="both"
-    df_filt = df_month.loc[mask].copy()
+if __name__ == '__main__':
+    pd.set_option('display.width', 5000)
+    pd.set_option('display.max_columns', None)
+
+    # configuration files and run names
+    # TN
+    # baseDir = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF'
+    # cf1 = os.path.join(baseDir, 'ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json')
+    # cf2 = os.path.join(baseDir, 'SF\TNMultiple_WC-Tunisia-ASAP_config_SfAsForecast.json')
+    # # seasonal cumulation goes from .. to .. (in calendar month)
+    # startMonth = 12 #10
+
+    # # remember that forecast in month 10 with horizon 1 is that of 11,
+    # # so in month 10 up to 5 I have to take horizon 1 (11) to 7 (5)
+    # lastHorizon = 1 #7
+    # ZA
+    baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF'
+    cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_ObsAsForecast.json')
+    cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_SfAsForecast.json')
+    # seasonal cumulation goes from .. to .. (in calendar month)
+    startMonth = 3  # 10
+
+    # remember that forecast in month 10 with horizon 1 is that of 11,
+    # so in month 10 up to 5 I have to take horizon 1 (11) to 7 (5)
+    lastHorizon = 2  # 7
+
+    prefix = 'M' + str(startMonth) + "_Horizon" + str(lastHorizon)
+    ########################################################
+
+    agg = get_seas_Obs_SF(cf1, cf2, startMonth, lastHorizon)
+    dir_out = os.path.join(baseDir, 'comp_seasonal_obs_SF')
+    os.makedirs(dir_out, exist_ok=True)
+
+    # config1 = a10_config.read(cf1, "")
+    # config2 = a10_config.read(cf2, "")
+    #
+    # dir_out = os.path.join(baseDir, 'comp_seasonal_obs_SF')
+    # os.makedirs(dir_out, exist_ok=True)
+    # mlsettings = a10_config.mlSettings(forecastingMonths=0)
+    #
+    # dfo = pd.read_csv(os.path.join(config1.data_dir, config1.afi + '.csv'))
+    # dfo = dfo.rename(columns={'mean': 'obsMean'})
+    #
+    # dfs = pd.read_csv(os.path.join(config2.data_dir, config2.afi + '.csv'))
+    # dfs = dfs.rename(columns={'mean': 'sfMean'})
+    #
+    # # merge version
+    # df = pd.merge(dfs, dfo, on=['adm_id', 'variable_name', 'date'])
+    # # df = df.drop('x', axis=1)
+    # # keep only forecast
+    # df = df[df["variable_name"].str.contains("SF", na=False, case=False)]
+    # df[['SF', 'var', 'horizon']] = df['variable_name'].str.split('_', n=2, expand=True)
+    # # df.to_csv(os.path.join(dir_out, 'test_merge.csv'), index=False)
+    # df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    # mask = df["date"].dt.month == startMonth      # Boolean Series
+    # df_month = df.loc[mask].copy()
+    # df_month["horizon"] = pd.to_numeric(df["horizon"], errors="coerce")
+    # df_month = df_month.reset_index(drop=True)
+    # mask = df_month["horizon"].between(1, lastHorizon, inclusive="both")   # pandas ≥1.3 uses inclusive="both"
+    # df_filt = df_month.loc[mask].copy()
     # df_filt.to_csv(os.path.join(dir_out, prefix + 'test_merge.csv'), index=False)
-    agg = (
-        df_filt
-        .groupby(["adm_id", "date", "var"], as_index=False)  # keep keys as columns
-        .agg(sfMean_season=("sfMean", "mean"), obsMean_season=("obsMean", "mean"),
-             )  # rename the aggregated column to something clear
-    )
-    return agg
+    # agg = (
+    #     df_filt
+    #     .groupby(["adm_id", "date", "var"], as_index=False)   # keep keys as columns
+    #     .agg(sfMean_season=("sfMean", "mean"), obsMean_season=("obsMean", "mean"),
+    #     )   # rename the aggregated column to something clear
+    # )
+    agg.to_csv(os.path.join(dir_out, prefix + 'test_agg_merge.csv'), index=False)
+    agg = agg.rename(columns={"obsMean_season": "obs", "sfMean_season": "sf"})
 
-agg = get_sea_Obs_SF(cf1, cf2, startMonth, lastHorizon)
-dir_out = os.path.join(baseDir, 'comp_seasonal_obs_SF')
-os.makedirs(dir_out, exist_ok=True)
+    #Plotting
+    # plot(agg[agg["var"] == 'r'][["obs", "sf", "date"]], os.path.join(dir_out, prefix + '_rain_corr_merge.png'), option='')
+    # plot(agg[agg["var"] == 't'][["obs", "sf", "date"]], os.path.join(dir_out, prefix + '_temp_corr_merge.png'), option='')
+    # # now z
+    # plot(agg[agg["var"] == 'r'][["obs", "sf", "date"]], os.path.join(dir_out, prefix + '_z_rain_corr_merge_year.png'), option='z', colorby='year')
+    # plot(agg[agg["var"] == 't'][["obs", "sf", "date"]], os.path.join(dir_out, prefix + '_z_temp_corr_merge_year.png'), option='z', colorby='year')
 
-# config1 = a10_config.read(cf1, "")
-# config2 = a10_config.read(cf2, "")
-#
-# dir_out = os.path.join(baseDir, 'comp_seasonal_obs_SF')
-# os.makedirs(dir_out, exist_ok=True)
-# mlsettings = a10_config.mlSettings(forecastingMonths=0)
-#
-# dfo = pd.read_csv(os.path.join(config1.data_dir, config1.afi + '.csv'))
-# dfo = dfo.rename(columns={'mean': 'obsMean'})
-#
-# dfs = pd.read_csv(os.path.join(config2.data_dir, config2.afi + '.csv'))
-# dfs = dfs.rename(columns={'mean': 'sfMean'})
-#
-# # merge version
-# df = pd.merge(dfs, dfo, on=['adm_id', 'variable_name', 'date'])
-# # df = df.drop('x', axis=1)
-# # keep only forecast
-# df = df[df["variable_name"].str.contains("SF", na=False, case=False)]
-# df[['SF', 'var', 'horizon']] = df['variable_name'].str.split('_', n=2, expand=True)
-# # df.to_csv(os.path.join(dir_out, 'test_merge.csv'), index=False)
-# df["date"] = pd.to_datetime(df["date"], errors="coerce")
-# mask = df["date"].dt.month == startMonth      # Boolean Series
-# df_month = df.loc[mask].copy()
-# df_month["horizon"] = pd.to_numeric(df["horizon"], errors="coerce")
-# df_month = df_month.reset_index(drop=True)
-# mask = df_month["horizon"].between(1, lastHorizon, inclusive="both")   # pandas ≥1.3 uses inclusive="both"
-# df_filt = df_month.loc[mask].copy()
-# df_filt.to_csv(os.path.join(dir_out, prefix + 'test_merge.csv'), index=False)
-# agg = (
-#     df_filt
-#     .groupby(["adm_id", "date", "var"], as_index=False)   # keep keys as columns
-#     .agg(sfMean_season=("sfMean", "mean"), obsMean_season=("obsMean", "mean"),
-#     )   # rename the aggregated column to something clear
-# )
-agg.to_csv(os.path.join(dir_out, prefix + 'test_agg_merge.csv'), index=False)
-agg = agg.rename(columns={"obsMean_season": "obs", "sfMean_season": "sf"})
-
-#Plotting
-# plot(agg[agg["var"] == 'r'][["obs", "sf", "date"]], os.path.join(dir_out, prefix + '_rain_corr_merge.png'), option='')
-# plot(agg[agg["var"] == 't'][["obs", "sf", "date"]], os.path.join(dir_out, prefix + '_temp_corr_merge.png'), option='')
-# # now z
-# plot(agg[agg["var"] == 'r'][["obs", "sf", "date"]], os.path.join(dir_out, prefix + '_z_rain_corr_merge_year.png'), option='z', colorby='year')
-# plot(agg[agg["var"] == 't'][["obs", "sf", "date"]], os.path.join(dir_out, prefix + '_z_temp_corr_merge_year.png'), option='z', colorby='year')
-
-plot(agg[agg["var"] == 'r'][["obs", "sf", "adm_id"]], os.path.join(dir_out, prefix + '_z_rain_corr_merge_adm_id.png'), option='z', colorby='adm_id')
-plot(agg[agg["var"] == 't'][["obs", "sf", "adm_id"]], os.path.join(dir_out, prefix + '_z_temp_corr_merge_adm_id.png'), option='z', colorby='adm_id')
-plot_by_adm_and_time(agg[agg["var"] == 'r'], os.path.join(dir_out, prefix + '_rain_time_series.png'))
-plot_by_adm_and_time_subplots(agg[agg["var"] == 'r'], os.path.join(dir_out, prefix + '_rain_time_series_subplots.png'))
+    plot(agg[agg["var"] == 'r'][["obs", "sf", "adm_id"]], os.path.join(dir_out, prefix + '_z_rain_corr_merge_adm_id.png'), option='z', colorby='adm_id')
+    plot(agg[agg["var"] == 't'][["obs", "sf", "adm_id"]], os.path.join(dir_out, prefix + '_z_temp_corr_merge_adm_id.png'), option='z', colorby='adm_id')
+    plot_by_adm_and_time(agg[agg["var"] == 'r'], os.path.join(dir_out, prefix + '_rain_time_series.png'))
+    plot_by_adm_and_time_subplots(agg[agg["var"] == 'r'], os.path.join(dir_out, prefix + '_rain_time_series_subplots.png'))
 
 
