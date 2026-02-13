@@ -17,9 +17,10 @@ def save_model_specs(config, modelSettings):
     # Use of SG
     if config.useSF == True:
         useSF = True
-        #condider two options: monthly values and seasonal aggergation (eos-1 month)
-        #aggregationSFs = ['monthly', 'seasonal']
-        aggregationSFs = ['seasonal']
+        # condsider two options: monthly values and seasonal aggergation (eos-1 month)
+        # aggregationSFs = ['monthly', 'seasonal']
+        # aggregationSFs = ['seasonal']
+        aggregationSFs = ['seasonalPT', 'seasonalP', 'seasonalT']
     else:
         useSF = False
         aggregationSFs = ['none']
@@ -64,7 +65,7 @@ def save_model_specs(config, modelSettings):
                 'scoringMetric': modelSettings.scoringMetric,
                 'nJobsForGridSearchCv': modelSettings.nJobsForGridSearchCv}
         if skip == False:
-            print(runID, crop, algo, forecast_time, oheTxt, addYieldTrendtXT, useSF, aggregationSFtxt)
+            print(runID, crop, algo, forecast_time, oheTxt, addYieldTrendtXT, useSFtxt, aggregationSFtxt)
             myID = f'{runID:06d}'
             with open(os.path.join(config.models_spec_dir, myID + '_' + crop + '_' + algo + '.json'), 'w') as fp:
                 json.dump(uset, fp, indent=4)

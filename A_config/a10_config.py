@@ -333,7 +333,7 @@ def config_reducer(modelSettings, run_name):
         # modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         want_keys = ['Lasso', 'SVR_linear', 'SVR_rbf', 'GPR']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        want_keys = ['rs_met_sm_reduced', 'rs_sm_reduced', 'rs_reduced']
+        want_keys = ['rs_met_sm_reduced', 'rs_sm_reduced', 'rs_reduced', 'met_sm_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
         modelSettings.ft_eng = None
     else: #some default

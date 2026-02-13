@@ -141,18 +141,26 @@ class DataMixin:
             # BE CARE, range is open on the right, I have to add 1
             SF_ind2keep = range(1, n_months + 1)
             ForecastList2keep = ['^(?=.*SF.[' + str(i) + '])(?=.*M' + str(self.uset['forecast_time']) + '(?![0-9])).*$' for i in SF_ind2keep]
-            if config.useSF == True: #Using SF
+            if self.uset['useSF'] == True: #Using SF
                 list2keep = ObsList2keep + ForecastList2keep
             else:
                 list2keep = ObsList2keep
             # list2keep = ['(^|\D)M' + str(i) + '($|\D)' for i in range(0, self.uset['forecast_time'] + 1)] + ['YieldFromTrend']
             yxData = yxData.filter(regex='|'.join(list2keep))
-            if config.useSF == True and self.uset['aggregationSF'] == 'seasonal': #sesonal aggreg requested
-                yxData['SFrSeasM1'] = yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').mean(axis=1)
-                yxData['SFtSeasM1'] = yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').mean(axis=1)
+            if self.uset['useSF'] == True:
+                if self.uset['aggregationSF'] == 'seasonalPT': #sesonal aggreg requested
+                    yxData['SFrSeasM1'] = yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').mean(axis=1)
+                    yxData['SFtSeasM1'] = yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').mean(axis=1)
+                elif self.uset['aggregationSF'] == 'seasonalP':
+                    yxData['SFrSeasM1'] = yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').mean(axis=1)
+                elif self.uset['aggregationSF'] == 'seasonalT':
+                    yxData['SFtSeasM1'] = yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').mean(axis=1)
+                else:
+                    print('d100: unknown aggregation, the program will stop')
+                    print(self.uset['aggregationSF'])
+                    sys.exit()
                 yxData = yxData.drop(columns=yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').columns)
                 yxData = yxData.drop(columns=yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').columns)
-
             if self.uset['algorithm'] == 'PeakNDVI':
                 # the only feature is max NDVI in the period
                 feature_names = ['FPpeak'] #['NDpeak']
@@ -191,7 +199,7 @@ class DataMixin:
                         list2keep = ['^' + str(i) + 'M\d+$' for i in _features] + ['YieldFromTrend']
                     else:
                         list2keep = ['^' + str(i) + 'M\d+$' for i in _features]
-                    if config.useSF == True: # if forecast use is asked, keep al SF in addition to feature_group
+                    if self.uset['useSF'] == True: # if forecast use is asked, keep al SF in addition to feature_group
                         list2keep = list2keep + ['.*SF.*']
                     if '@' in self.uset['algorithm']:
                         list2keep = list2keep + ['peakFPAR']

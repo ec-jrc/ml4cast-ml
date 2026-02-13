@@ -211,7 +211,12 @@ def find_last_version_csv(base_name, directory):
 
 
 def yield_NASA_format(stat_fileLAST_VERSION, config):
-    suffix_for_country_name = '_admin1'
+    # suffix_for_country_name = '_admin1'
+    df_REGION_ID = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
+    if 'admin_2' in df_REGION_ID.columns:
+        suffix_for_country_name = '_admin2'
+    else:
+        suffix_for_country_name = '_admin1'
     units = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_measurement_units.csv'))
     area_unit = units['Area'].values[0]
     yield_unit = units['Yield'].values[0]

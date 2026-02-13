@@ -1,3 +1,5 @@
+import sys
+
 import pandas as pd
 import numpy as np
 import os
@@ -223,12 +225,17 @@ def combine_models(fns):
     return df_best, df_conservative_estimates
 
 def NASA_format(df_in, config):
-    suffix_for_country_name = '_admin1'
+
     pd.set_option('display.max_columns', None)
     df = df_in.copy()
     dir_NASA = os.path.join(config.ope_run_out_dir, "best_accuracy", "NasaHarvest_format")
     Path(dir_NASA).mkdir(parents=True, exist_ok=True)
     df_REGION_ID = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
+    if 'admin_2' in df_REGION_ID.columns:
+        suffix_for_country_name = '_admin2'
+    else:
+        suffix_for_country_name = '_admin1'
+
     if "source_id" in df_REGION_ID.columns:
         df_REGION_ID = df_REGION_ID.drop(columns='adm_name')
         df = df.merge(df_REGION_ID, on="adm_id")
@@ -277,8 +284,8 @@ def NASA_format(df_in, config):
     df.insert(loc=18, column='is_final', value='n.a.')
     df.insert(loc=19, column='notes', value='')
     df_forecast = df.iloc[:, :20].copy()
-    country = config.country_name_in_shp_file.lower().replace(" ", "") + suffix_for_country_name
-    fn_out = os.path.join(dir_NASA, 'jrc_' + country + '_forecast_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
+    tmp = config.country_name_in_shp_file.lower().replace(" ", "") + suffix_for_country_name
+    fn_out = os.path.join(dir_NASA, 'jrc_' + tmp + '_forecast_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
     # append if the file was created with previous crops
     if os.path.exists(fn_out):
         df_existing = pd.read_csv(fn_out, nrows=0)
@@ -306,7 +313,7 @@ def NASA_format(df_in, config):
             'yield_mae', 'yield_rmse', 'yield_rrmse', 'yield_mape', 'yield_r2_pearson', 'yield_r2_true']]
     df["metric_years"] = ",".join(str(y) for y in range(config.year_start, config.year_end+1))
     df["notes"] = ""
-    fn_out = os.path.join(dir_NASA, 'jrc_' + country + '_accuracy_' + datetime.date.today().strftime("%Y-%m-%d") + '_USE_UPLOAD_DATE.csv')
+    fn_out = os.path.join(dir_NASA, 'jrc_' + tmp + '_accuracy_' + datetime.date.today().strftime("%Y-%m-%d") + '_USE_UPLOAD_DATE.csv')
     # append if the file was created with previous crops
     if os.path.exists(fn_out):
         df_existing = pd.read_csv(fn_out, nrows=0)
@@ -318,7 +325,7 @@ def NASA_format(df_in, config):
     # df.to_csv(fn_out, index=False)
 
     # Transfer input data file (format?)
-    files = list(Path(config.data_dir).glob(f"jrc_{country}_historical_*"))
+    files = list(Path(config.data_dir).glob(f"jrc_{tmp}_historical_*"))
     most_recent = max(files, key=lambda f: f.stat().st_mtime) if files else None
     if most_recent is not None:
         df_REGION_ID = pd.read_csv(os.path.join(config.data_dir, config.AOI + '_REGION_id.csv'))
@@ -328,16 +335,26 @@ def NASA_format(df_in, config):
             df = df.drop(columns='source_name_version')
             df_REGION_ID = df_REGION_ID.drop(columns='adm_name')
             df_REGION_ID.rename(columns={'admin_1': 'admin_1_HarvestStat'}, inplace=True)
+            if 'admin_2' in df_REGION_ID.columns:
+                df_REGION_ID.rename(columns={'admin_2': 'admin_2_HarvestStat'}, inplace=True)
+            else:
+                df_REGION_ID['admin_2_HarvestStat'] = ''
             df = df.merge(df_REGION_ID, on="adm_id")
             df['admin_1'] = df['admin_1_HarvestStat']
-            df = df.drop(columns=['adm_id', 'admin_1_HarvestStat'])
+            df['admin_2'] = df['admin_2_HarvestStat']
+            df = df.drop(columns=['admin_1_HarvestStat', 'admin_2_HarvestStat'])
             cols = df.columns.tolist()
             priority = ["source_id", "source_name_version"]
             new_cols = priority + [c for c in cols if c not in priority]
             df = df[new_cols]
-            df.to_csv(os.path.join(dir_NASA, most_recent.name), index=False)
+            # df.to_csv(os.path.join(dir_NASA, most_recent.name), index=False)
+            fn_out = os.path.join(dir_NASA, 'jrc_' + tmp + '_historical_' + datetime.date.today().strftime(
+                "%Y-%m-%d") + '_USE_UPLOAD_DATE.csv')
+            df.to_csv(os.path.join(dir_NASA, fn_out), index=False)
         else:
-            shutil.copy2(most_recent, os.path.join(dir_NASA, most_recent.name))
+            # shutil.copy2(most_recent, os.path.join(dir_NASA, most_recent.name))
+            print('F110, no source_id, the program will stop')
+            sys.exit()
     else:
         raise FileNotFoundError("No matching jrc historical file found.")
 

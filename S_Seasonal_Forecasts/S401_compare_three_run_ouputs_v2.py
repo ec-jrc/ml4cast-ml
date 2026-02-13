@@ -509,11 +509,6 @@ for crop in list_crop:
             # labels
             ax_right.set_xlabel('Temp obs mean (mm/month)')
             ax_right.set_ylabel('Yield (t/ha)')
-            # ax_l.plot([1, 2, 3], [3, 2, 1])
-            # ax_l.set_title('Small left')
-            #
-            # ax_r.plot([1, 2, 3], [1, 2, 3])
-            # ax_r.set_title('Small right')
 
         # fig.tight_layout()
         fn_name = os.path.join(dir_out, 'hindcasting_' + crop + '_month_inSeas_' + str(month_inSeas) + '_v2.pdf')
