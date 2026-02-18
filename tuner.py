@@ -142,6 +142,16 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
         # get the produced spec file list
         for fn in spec_files_list:
             print(fn)
+            # make sure that the spec file is using a lot of processor (if written on linux it will use one)
+            with open(fn, "r") as f:
+                cfg = json.load(f)
+            # check and update
+            if cfg.get("nJobsForGridSearchCv") == 1:
+                cfg["nJobsForGridSearchCv"] = 16
+                # save back to the SAME file
+                with open(fn, "w") as f:
+                    json.dump(cfg, f, indent=2)
+
             d090_model_wrapper.fit_and_validate_single_model(fn, config, runType)
         #F100_analyze_hindcast_output.gather_output(config.models_out_dir)
         print("--- %s seconds ---" % (time.time() - start_time))

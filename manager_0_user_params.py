@@ -37,8 +37,8 @@ else:
 # run_name = 'ZA346'
 
 # MW
-# path_fromBaseDir = r'MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
-# run_name = 'MWInt'
+path_fromBaseDir = r'MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
+run_name = 'MWInt'
 
 # ZW
 # path_fromBaseDir = r'ZW\main\Maize_(corn)_WC-Zimbabwe-HARVESTAT.json'
