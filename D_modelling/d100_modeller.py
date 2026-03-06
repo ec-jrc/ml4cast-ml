@@ -146,6 +146,7 @@ class DataMixin:
             else:
                 list2keep = ObsList2keep
             # list2keep = ['(^|\D)M' + str(i) + '($|\D)' for i in range(0, self.uset['forecast_time'] + 1)] + ['YieldFromTrend']
+            yxData_adm_id = yxData['adm_id'].copy()
             yxData = yxData.filter(regex='|'.join(list2keep))
             if self.uset['useSF'] == True:
                 if self.uset['aggregationSF'] == 'seasonalPT': #sesonal aggreg requested
@@ -210,18 +211,26 @@ class DataMixin:
                     if self.uset['dataScaling'] == 'z_f':       # scale all features
                             X = scaler.fit_transform(X)
                     elif self.uset['dataScaling'] == 'z_f_au': # scale all features by AU
-                        X = (yxData.groupby('adm_id')[feature_names].transform(lambda x: scaler.fit_transform(x)))
+                        yxData_with_adm_id = yxData.copy()
+                        yxData_with_adm_id['adm_id'] = yxData_adm_id
+                        means = yxData_with_adm_id.groupby('adm_id')[feature_names].transform('mean')
+                        stds = yxData_with_adm_id.groupby('adm_id')[feature_names].transform('std')
+                        X = (yxData[feature_names] - means) / stds
+                        X = X.to_numpy()
+                        # X = (yxData_with_adm_id.groupby('adm_id')[feature_names].transform(lambda x: scaler.fit_transform(x))) does not work
                     elif self.uset['dataScaling'] == 'z_fl':    # scale all features and label as well
                         X = scaler.fit_transform(X)
                         y = scaler.fit_transform(y.reshape(-1, 1)).reshape(-1)  # set in back to (n,)
                     elif self.uset['dataScaling']== 'z_fl_au': # scale by AU (both scaling functions checked with xls)
-                        y = yxData['Yield'].subtract(yxData.groupby(yxData['adm_id'])['Yield'].transform(np.mean)) \
-                            .divide(yxData.groupby(yxData['adm_id'])['Yield'].transform(np.std))
-                        y = y.to_numpy()
-                        X = yxData[feature_names].subtract(
-                            yxData.groupby(yxData['adm_id'])[feature_names].transform(np.mean)) \
-                            .divide(yxData.groupby(yxData['adm_id'])[feature_names].transform(np.std))
-                        X = X.to_numpy()
+                        sys.exit()
+                        # no more adm id see above, needs revision if used
+                        # y = yxData['Yield'].subtract(yxData.groupby(yxData['adm_id'])['Yield'].transform(np.mean)) \
+                        #     .divide(yxData.groupby(yxData['adm_id'])['Yield'].transform(np.std))
+                        # y = y.to_numpy()
+                        # X = yxData[feature_names].subtract(
+                        #     yxData.groupby(yxData['adm_id'])[feature_names].transform(np.mean)) \
+                        #     .divide(yxData.groupby(yxData['adm_id'])[feature_names].transform(np.std))
+                        # X = X.to_numpy()
                     else:
                         print('Data scaling non implemented:  ' + self.uset['dataScaling'])
                         exit()
