@@ -209,6 +209,8 @@ class DataMixin:
                     scaler = StandardScaler()  # z-score scaler
                     if self.uset['dataScaling'] == 'z_f':       # scale all features
                             X = scaler.fit_transform(X)
+                    elif self.uset['dataScaling'] == 'z_f_au': # scale all features by AU
+                        X = (yxData.groupby('adm_id')[feature_names].transform(lambda x: scaler.fit_transform(x)))
                     elif self.uset['dataScaling'] == 'z_fl':    # scale all features and label as well
                         X = scaler.fit_transform(X)
                         y = scaler.fit_transform(y.reshape(-1, 1)).reshape(-1)  # set in back to (n,)

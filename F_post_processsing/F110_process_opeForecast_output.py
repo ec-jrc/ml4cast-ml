@@ -285,7 +285,13 @@ def NASA_format(df_in, config):
     df.insert(loc=19, column='notes', value='')
     df_forecast = df.iloc[:, :20].copy()
     tmp = config.country_name_in_shp_file.lower().replace(" ", "") + suffix_for_country_name
+
+    # Write NASA Intercomp forecast
     fn_out = os.path.join(dir_NASA, 'jrc_' + tmp + '_forecast_' + datetime.date.today().strftime("%Y-%m-%d") + '.csv')
+    # 2026 02 24 Christina asked to name "Maize_total" as "Maize"
+    if (df_forecast.values == "Maize_total").any():
+        print("Maize_total present, it will be replace by Maize as per C.J. request")
+        df_forecast = df_forecast.replace("Maize_total", "Maize")
     # append if the file was created with previous crops
     if os.path.exists(fn_out):
         df_existing = pd.read_csv(fn_out, nrows=0)
@@ -313,7 +319,12 @@ def NASA_format(df_in, config):
             'yield_mae', 'yield_rmse', 'yield_rrmse', 'yield_mape', 'yield_r2_pearson', 'yield_r2_true']]
     df["metric_years"] = ",".join(str(y) for y in range(config.year_start, config.year_end+1))
     df["notes"] = ""
+
+    # Write NASA Intercomp accuracy
     fn_out = os.path.join(dir_NASA, 'jrc_' + tmp + '_accuracy_' + datetime.date.today().strftime("%Y-%m-%d") + '_USE_UPLOAD_DATE.csv')
+    if (df_forecast.values == "Maize_total").any():
+        print("Maize_total present, it will be replace by Maize as per C.J. request")
+        df = df.replace("Maize_total", "Maize")
     # append if the file was created with previous crops
     if os.path.exists(fn_out):
         df_existing = pd.read_csv(fn_out, nrows=0)
@@ -347,9 +358,13 @@ def NASA_format(df_in, config):
             priority = ["source_id", "source_name_version"]
             new_cols = priority + [c for c in cols if c not in priority]
             df = df[new_cols]
-            # df.to_csv(os.path.join(dir_NASA, most_recent.name), index=False)
+
+            # Write NASA Intercomp historical
             fn_out = os.path.join(dir_NASA, 'jrc_' + tmp + '_historical_' + datetime.date.today().strftime(
                 "%Y-%m-%d") + '_USE_UPLOAD_DATE.csv')
+            if (df_forecast.values == "Maize_total").any():
+                print("Maize_total present, it will be replace by Maize as per C.J. request")
+                df = df.replace("Maize_total", "Maize")
             df.to_csv(os.path.join(dir_NASA, fn_out), index=False)
         else:
             # shutil.copy2(most_recent, os.path.join(dir_NASA, most_recent.name))

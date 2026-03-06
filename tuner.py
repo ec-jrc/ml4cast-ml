@@ -147,7 +147,7 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                 cfg = json.load(f)
             # check and update
             if cfg.get("nJobsForGridSearchCv") == 1:
-                cfg["nJobsForGridSearchCv"] = 16
+                cfg["nJobsForGridSearchCv"] = -1
                 # save back to the SAME file
                 with open(fn, "w") as f:
                     json.dump(cfg, f, indent=2)

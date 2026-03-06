@@ -30,15 +30,15 @@ else:
 # path_fromBaseDir = r'V:\foodsec\Projects\SNYF\SIDv\MA\MAfews_config.json'
 # run_name = 'MA_test'
 
-# ZA
+# ZA Intercomp
 # path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1257.json'
 # run_name = 'ZA'
 # path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config346.json'
 # run_name = 'ZA346'
 
 # MW
-path_fromBaseDir = r'MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
-run_name = 'MWInt'
+# path_fromBaseDir = r'MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
+# run_name = 'MWInt'
 
 # ZW
 # path_fromBaseDir = r'ZW\main\Maize_(corn)_WC-Zimbabwe-HARVESTAT.json'
@@ -58,6 +58,14 @@ run_name = 'MWInt'
 # path_fromBaseDir = r'ZA\summer2025data\SF2\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json'
 # run_name = 'ZA_ObsAsSF'
 # path_fromBaseDir = r'ZA\summer2025data\SF2\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
+# run_name = 'ZA_SfAsSF'
+
+# SF3 test, standardize features at AU (run name must contain SF (to reduce setting in config), try seasonal PT, P, and T. Use a group without faper ('met_sm_reduced')
+path_fromBaseDir = r'ZA\summer2025data\SF3au\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345.json'
+run_name = 'ZA_NoSF'
+# path_fromBaseDir = r'ZA\summer2025data\SF3au\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json'
+# run_name = 'ZA_ObsAsSF'
+# path_fromBaseDir = r'ZA\summer2025data\SF3au\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
 # run_name = 'ZA_SfAsSF'
 
 ############################################################################################

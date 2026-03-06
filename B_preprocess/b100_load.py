@@ -30,6 +30,7 @@ def LoadPredictors_Save_Csv(config, runType):
         dirOut = config.ope_run_dir
         Path(dirOut).mkdir(parents=True, exist_ok=True)
         df = pd.read_csv(os.path.join(dirInOpe, config.afi + '.csv'))
+        print('Loading ' + os.path.join(dirInOpe, config.afi + '.csv'))
     else:
         df = pd.read_csv(os.path.join(dirIn, config.afi + '.csv'))
 

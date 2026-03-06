@@ -124,9 +124,10 @@ class mlSettings:
     self.setNegativePred2Zero = True
     # Input data scaling. Admitted values:
     # z_f: z-score features
+    # z_f_au: z-score features by AY
     # z_fl: z-score features and labels
     # z_fl_au: z-score features and labels by AU
-    self.dataScaling = 'z_f'
+    self.dataScaling = 'z_f_au' #'z_f'
 
     # The cost function. Values: 'neg_root_mean_squared_error' and ‘r2’
     self.scoringMetric = 'neg_root_mean_squared_error'

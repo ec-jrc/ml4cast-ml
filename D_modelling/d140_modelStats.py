@@ -3,6 +3,7 @@ from sklearn.linear_model import LinearRegression
 import numpy as np
 import pandas as pd
 import sys
+from scipy.stats import wilcoxon
 
 def mean_error_nan(y_true, y_pred):
     y_true = np.array(y_true)
@@ -197,3 +198,49 @@ def meanAUR2(mRes):
     res = mRes.groupby('adm_id').apply(r2_au)
     return res.mean()
 
+def paired_wilcoxon(x, y, alternative="two-sided", alpha=0.05, verbose=True):
+    """
+    Perform Wilcoxon signed-rank test on paired samples x and y.
+
+    Parameters
+    ----------
+    x, y : array-like
+        Paired samples (same length).
+    alternative : {'two-sided', 'greater', 'less'}
+        Defines the alternative hypothesis.
+    alpha : float
+        Significance level.
+    verbose : bool
+        If True, prints interpretation.
+
+    Returns
+    -------
+    statistic : float
+    p_value : float
+    """
+
+    # Convert to numpy arrays
+    x = np.asarray(x)
+    y = np.asarray(y)
+
+    # Remove pairs with NaNs
+    mask = ~np.isnan(x) & ~np.isnan(y)
+    x_clean = x[mask]
+    y_clean = y[mask]
+
+    if len(x_clean) == 0:
+        raise ValueError("No valid paired observations after removing NaNs.")
+
+    # Perform Wilcoxon test
+    stat, p_value = wilcoxon(x_clean, y_clean, alternative=alternative)
+
+    if verbose:
+        print(f"Wilcoxon statistic = {stat:.4f}")
+        print(f"p-value = {p_value:.4e}")
+
+        if p_value < alpha:
+            print(f"Result: Significant difference (p < {alpha})")
+        else:
+            print(f"Result: Not significant (p ≥ {alpha})")
+
+    return stat, p_value
