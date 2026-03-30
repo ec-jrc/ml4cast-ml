@@ -88,6 +88,7 @@ monthly_r = monthly_r.rename_axis(index=group_variables).reset_index()
 # fix names
 monthly_r = monthly_r.rename(columns={"monthly_sum": "mean", "first_date": "date_dt"})
 monthly_r[name_variable_column] = 'rainfall_monthly_sum'
+
 # Temperature
 temp = df[df[name_variable_column] == name_temperature_var].copy()
 def agg_weighted_mean_and_first_date(sub):

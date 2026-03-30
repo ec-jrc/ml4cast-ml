@@ -20,9 +20,9 @@ pd.set_option('display.max_columns', None)
 # runType = 'fast_tuning' #'fast_tuning'
 # run_name = 'MZ_20250527'
 
-config_fn = r'V:\foodsec\Projects\SNYF\SIDvs\MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
-run_name = 'MWInt'
-fn = r'V:\foodsec\Projects\SNYF\SIDvs\MW\main\RUN_Maize_(corn)_WC-Malawi-HARVESTAT\TUNE_MWInt\Specs\000642_Maize_GPR.json'
+config_fn = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF2\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
+run_name = 'ZA_SfAsSF'
+fn = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF2\RUN_Maize_(corn)_WC-South_Africa-ASAP_SfAsForecast\TUNE_ZA_SfAsSF\Specs\009438_Maize_white_SVR_rbf.json'
 # 000041_Ble_tendre_Lasso.json
 runType = 'tuning'
 
