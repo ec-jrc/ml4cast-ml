@@ -108,9 +108,6 @@ def checkExistingSubmit(condor_task_list_base_name, condor_task_list_fn, config,
         # update spec_files_list
         new_file_list = []
         for el in spec_files_list:
-            # print(el)
-            # if el == '/eos/jeodpp/data/projects/ML4CAST/DZ/RUN_Multiple_WC-Algeria-ASAP/TUNE_DZ_20241226/Specs/006737_Barley_XGBoost@PeakFPARAndLast3.json':
-            #     print('here')
             # make the expected output name
             with open(el, 'r') as fp:
                 uset = json.load(fp)
@@ -181,7 +178,49 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
         if len(spec_files_list1) == 0 and len(spec_files_list2) == 0:
             print('No files to re-run, execution will stop')
             sys.exit()
-        # spec_files_list1 exists if I am here
+        # spec_files_list1 may be non empty because:
+        # - I am at first run
+        # - I am running rerunning
+        # spec_files_list1 may be empty if I am rerunning, but spec_files_list2 may be not empty
+        if len(spec_files_list1) == 0 and len(spec_files_list2) > 0:
+            if os.path.exists(condor_task_list_fn2):
+                os.remove(condor_task_list_fn2)
+            f_obj = open(condor_task_list_fn2, 'a')
+            for el in spec_files_list2:
+                f_obj.write(f'{str(el)} {config_fn} {run_name} {runType}\n')
+            f_obj.close()
+            # Make sure that the run.sh in this project is executable (# chmod 755 run.sh)
+            # adjust the condor.submit template
+            condSubPath2 = os.path.join(dir_condor_submit, 'condor.submit2')
+            with open('G_HTCondor/condor.submit_template') as tmpl:
+                content = tmpl.read()
+                content = content.format(run_name=run_name + '_' + runType, AOI=config.AOI,
+                                         root_dir=config.models_dir,
+                                         condor_task_list_base_name=condor_task_list_base_name2,
+                                         rcpu=modelSettings.condor_param['request_cpus'])
+                # content = content.format(AOI=config.AOI,
+                #                          root_dir=config.models_dir, condor_task_list_base_name=condor_task_list_base_name2)  # , shDestination=shDestination)
+            with open(condSubPath2, 'w') as out:
+                out.write(content)
+            base_log_dir_name = config.AOI + '_' + run_name + '_' + runType
+            Path(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'out')).mkdir(parents=True,
+                                                                                               exist_ok=True)
+            Path(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'err')).mkdir(parents=True,
+                                                                                               exist_ok=True)
+            Path(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'log')).mkdir(parents=True,
+                                                                                               exist_ok=True)
+            remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'out'))
+            remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'err'))
+            remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'log'))
+            # Launch condor (sudo -u ml4castproc condor_submit condor.submit)
+            run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath2]
+            p = subprocess.run(run_cmd, shell=False, input='\n', capture_output=True, text=True)
+            if p.returncode != 0:
+                print('ERR', p.stderr)
+                raise Exception('Step subprocess error')
+            print('Batch submitted by tuner: ' + 'ml4cast_' + config.AOI)
+            print(p.stdout)
+
         if len(spec_files_list1) > 0:
             if os.path.exists(condor_task_list_fn1):
                 os.remove(condor_task_list_fn1)
