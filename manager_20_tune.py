@@ -174,6 +174,7 @@ if __name__ == '__main__':
     # be care forecstingMonths is in config!
     # month X means that all months up to X (included) are used, so this is possible in month X+1
     config_fn = upar.config_fn
+
     run_name = upar.run_name
     runType = upar.runType
     tune_on_condor = upar.tune_on_condor

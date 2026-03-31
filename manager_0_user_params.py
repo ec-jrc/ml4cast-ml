@@ -57,15 +57,31 @@ else:
 # run_name = 'ZA_NoSF'
 # path_fromBaseDir = r'ZA\summer2025data\SF2\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json'
 # run_name = 'ZA_ObsAsSF'
-path_fromBaseDir = r'ZA\summer2025data\SF2\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
-run_name = 'ZA_SfAsSF'
+# path_fromBaseDir = r'ZA\summer2025data\SF2\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
+# run_name = 'ZA_SfAsSF'
 
-# SF3 test, standardize features at AU (run name must contain SF (to reduce setting in config), try seasonal PT, P, and T. Use a group without faper ('met_sm_reduced')
-# path_fromBaseDir = r'ZA\summer2025data\SF3au\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345.json'
+# ZA SF4 test, yield version 6
+# path_fromBaseDir = r'ZA\summer2025data\SF4\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345.json'
 # run_name = 'ZA_NoSF'
-# path_fromBaseDir = r'ZA\summer2025data\SF3au\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json'
+# path_fromBaseDir = r'ZA\summer2025data\SF4\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json'
 # run_name = 'ZA_ObsAsSF'
-# path_fromBaseDir = r'ZA\summer2025data\SF3au\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
+# path_fromBaseDir = r'ZA\summer2025data\SF4\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
+# run_name = 'ZA_SfAsSF'
+
+# MW SF test, remember to set NO GPR, too slow !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+path_fromBaseDir = r'MW\main\SF\Maize_(corn)_WC-Malawi-HARVESTAT_config12345.json'
+run_name = 'ZA_NoSF'
+# path_fromBaseDir = r'MW\main\SF\Maize_(corn)_WC-Malawi-HARVESTAT_config12345_ObsAsForecast.json'
+# run_name = 'ZA_ObsAsSF'
+# path_fromBaseDir = r'MW\main\SF\Maize_(corn)_WC-Malawi-HARVESTAT_config12345_SfAsForecast.json'
+# run_name = 'ZA_SfAsSF'
+
+# ZW SF test
+# path_fromBaseDir = r'ZW\main\SF\Maize_(corn)_WC-Zimbabwe-HARVESTAT_config123456.json'
+# run_name = 'ZA_NoSF'
+# path_fromBaseDir = r'ZW\main\SF\Maize_(corn)_WC-Zimbabwe-HARVESTAT_config123456_ObsAsForecast.json'
+# run_name = 'ZA_ObsAsSF'
+# path_fromBaseDir = r'ZW\main\SF\Maize_(corn)_WC-Zimbabwe-HARVESTAT_config123456_SfAsForecast.json'
 # run_name = 'ZA_SfAsSF'
 
 ############################################################################################

@@ -45,7 +45,23 @@ SF_r_2 refers to the month+1 starting its date,
 # name_temperature_var = 'temperature'
 
 # ZA
-fn_extraction = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\Tuning_data\Maize_(corn)_WC-South_Africa-ASAP.csv'
+# fn_extraction = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\Tuning_data\Maize_(corn)_WC-South_Africa-ASAP.csv'
+# dateformat = '%Y-%m-%d' # SNYF
+# group_variables = ['adm_name', 'adm_id', 'variable_name', 'var_id', 'classset_name','classesset_id', 'class_name', 'class_id']
+# name_date_column = 'date'
+# name_variable_column = 'variable_name'
+# columns_to_keep_as999 = ["stddev", "afi_pct_used", "extraction_results_id"]
+
+# MW
+# fn_extraction = r'V:\foodsec\Projects\SNYF\SIDvs\MW\main\SF\Tuning_data\Maize_(corn)_WC-Malawi-HARVESTAT.csv'
+# dateformat = '%Y-%m-%d' # SNYF
+# group_variables = ['adm_name', 'adm_id', 'variable_name', 'var_id', 'classset_name','classesset_id', 'class_name', 'class_id']
+# name_date_column = 'date'
+# name_variable_column = 'variable_name'
+# columns_to_keep_as999 = ["stddev", "afi_pct_used", "extraction_results_id"]
+
+# ZW
+fn_extraction = r'V:\foodsec\Projects\SNYF\SIDvs\ZW\main\SF\Tuning_data\Maize_(corn)_WC-Zimbabwe-HARVESTAT.csv'
 dateformat = '%Y-%m-%d' # SNYF
 group_variables = ['adm_name', 'adm_id', 'variable_name', 'var_id', 'classset_name','classesset_id', 'class_name', 'class_id']
 name_date_column = 'date'
