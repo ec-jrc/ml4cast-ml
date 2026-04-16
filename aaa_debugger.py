@@ -20,11 +20,11 @@ pd.set_option('display.max_columns', None)
 # runType = 'fast_tuning' #'fast_tuning'
 # run_name = 'MZ_20250527'
 
-config_fn = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF2\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
+config_fn = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF4\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
 run_name = 'ZA_SfAsSF'
-fn = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF2\RUN_Maize_(corn)_WC-South_Africa-ASAP_SfAsForecast\TUNE_ZA_SfAsSF\Specs\009438_Maize_white_SVR_rbf.json'
+fn = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF4\RUN_Maize_(corn)_WC-South_Africa-ASAP_SfAsForecast\TUNE_ZA_SfAsSF\Specs\002210_Maize_total_GPR.json'
 # 000041_Ble_tendre_Lasso.json
-runType = 'tuning'
+runType = 'tuning' # 'tuning'
 
 # fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZA_20250410\Specs\000147_Sunflower_SVR_linear.json'
 # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'

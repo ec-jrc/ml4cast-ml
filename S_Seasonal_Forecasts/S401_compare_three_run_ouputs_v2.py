@@ -48,22 +48,8 @@ Compare two results (e.g. without SF vs with SF)
 # rn3 = 'ZA_SfAsSF'
 # short_name3 = 'SF'
 
-# SF2
-baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF2'
-cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345.json')
-rn1 = 'ZA_NoSF'
-short_name1 = 'noSF'
-
-cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json')
-rn2 = 'ZA_ObsAsSF'
-short_name2 = 'ObsAsSF'
-
-cf3 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json')
-rn3 = 'ZA_SfAsSF'
-short_name3 = 'SF'
-
-# # SF3
-# baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF3au'
+# # SF2
+# baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF2'
 # cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345.json')
 # rn1 = 'ZA_NoSF'
 # short_name1 = 'noSF'
@@ -76,14 +62,63 @@ short_name3 = 'SF'
 # rn3 = 'ZA_SfAsSF'
 # short_name3 = 'SF'
 
+# SF4
+# baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF4'
+# cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345.json')
+# rn1 = 'ZA_NoSF'
+# short_name1 = 'noSF'
+#
+# cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json')
+# rn2 = 'ZA_ObsAsSF'
+# short_name2 = 'ObsAsSF'
+#
+# cf3 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json')
+# rn3 = 'ZA_SfAsSF'
+# short_name3 = 'SF'
+
+
+# # ZW
+# baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZW\main\SF'
+# cf1 = os.path.join(baseDir, 'Maize_(corn)_WC-Zimbabwe-HARVESTAT_config123456.json')
+# rn1 = 'ZW_NoSF'
+# short_name1 = 'noSF'
+#
+# cf2 = os.path.join(baseDir, 'Maize_(corn)_WC-Zimbabwe-HARVESTAT_config123456_ObsAsForecast.json')
+# rn2 = 'ZW_ObsAsSF'
+# short_name2 = 'ObsAsSF'
+#
+# cf3 = os.path.join(baseDir, 'Maize_(corn)_WC-Zimbabwe-HARVESTAT_config123456_SfAsForecast.json')
+# rn3 = 'ZW_SfAsSF'
+short_name3 = 'SF'
+
+# MW
+baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\MW\main\SF'
+cf1 = os.path.join(baseDir, 'Maize_(corn)_WC-Malawi-HARVESTAT_config12345.json')
+rn1 = 'MW_NoSF'
+short_name1 = 'noSF'
+
+cf2 = os.path.join(baseDir, 'Maize_(corn)_WC-Malawi-HARVESTAT_config12345_ObsAsForecast.json')
+rn2 = 'MW_ObsAsSF'
+short_name2 = 'ObsAsSF'
+
+cf3 = os.path.join(baseDir, 'Maize_(corn)_WC-Malawi-HARVESTAT_config12345_SfAsForecast.json')
+rn3 = 'MW_SfAsSF'
+short_name3 = 'SF'
+
+# Months to consider
+months_inSeas = [2, 3, 4, 5, 6]
+# months_inSeas = [1, 2, 3, 4, 5, 6]
+# months_inSeas = [2, 3, 4, 5, 6, 7]
+# test type
+test_type = 'tw' #'w' 'tw'
+# Wilcoxon level
+alphaW = 0.05
 # plot Tab results or not
 plotTab = False
 # plot Peak
 plotPeak = False
 # Plot Taylor
 makeTaylor = False
-# Wilcoxon level
-alphaW = 0.05
 ########################################################
 def squared_error_from_mRes_file(fn):
     mRes = pd.read_csv(fn)
@@ -98,6 +133,26 @@ def squared_error_from_mRes_file(fn):
     err2 = (y_true_valid - y_pred_valid) ** 2
     # Convert to numpy array
     return err2.to_numpy()
+
+def test_type_apply(x,y):
+    if test_type == 't':
+        # test normality for paired t-test
+        stat, p = shapiro(x - y)
+        if p > alphaW:
+            print('SUBNAT D is not normal')
+        test = ttest_rel(x, y, alternative="greater")
+    elif test_type == 'w':
+        # do wilcoxon 1 (noSF vs ObsAsSF)
+        test = d140_modelStats.paired_wilcoxon(x, y, alternative="greater", alpha=alphaW, verbose=False)
+    elif test_type == 'tw':
+        # test normality for paired t-test
+        stat, p = shapiro(x - y)
+        if p > alphaW:
+            print('Not normal')
+            test = d140_modelStats.paired_wilcoxon(x, y, alternative="greater", alpha=alphaW, verbose=False)
+        else:
+            test = ttest_rel(x, y, alternative="greater")
+    return test
 
 def compute_paired_test(group, runs, configs, short_names):
     # ['noSF', 'ObsAsSF', 'SF']
@@ -128,13 +183,16 @@ def compute_paired_test(group, runs, configs, short_names):
         print('compute_paired_test, more than one file')
         sys.exit()
     err2_ObsAsSF = squared_error_from_mRes_file(mRes_file[0])
-    # test normality for paired t-test
-    stat, p = shapiro(err2_noSF - err2_ObsAsSF)
-    if p > alphaW:
-        print('SUBNAT D is not normal')
-    test = ttest_rel(err2_noSF, err2_ObsAsSF, alternative="greater")
-    # # do wilcoxon 1 (noSF vs ObsAsSF)
-    # test = d140_modelStats.paired_wilcoxon(err2_noSF, err2_ObsAsSF, alternative="greater", alpha=alphaW, verbose=False)
+    test = test_type_apply(err2_noSF,err2_ObsAsSF)
+    # if test_type == 't':
+    #     # test normality for paired t-test
+    #     stat, p = shapiro(err2_noSF - err2_ObsAsSF)
+    #     if p > alphaW:
+    #         print('SUBNAT D is not normal')
+    #     test = ttest_rel(err2_noSF, err2_ObsAsSF, alternative="greater")
+    # elif test_type == 'w':
+    #     # do wilcoxon 1 (noSF vs ObsAsSF)
+    #      test = d140_modelStats.paired_wilcoxon(err2_noSF, err2_ObsAsSF, alternative="greater", alpha=alphaW, verbose=False)
     out.loc[(out['run_short_name'] == shortName) & (out['Estimator'] != 'PeakFPAR'), 'wilcoxon'] = test[1]
 
     # get ML_sf
@@ -149,12 +207,15 @@ def compute_paired_test(group, runs, configs, short_names):
         print('compute_paired_test, more than one file')
         sys.exit()
     err2_SF = squared_error_from_mRes_file(mRes_file[0])
-    stat, p = shapiro(err2_noSF - err2_SF)
-    if p > alphaW:
-        print('SUBNAT D is not normal')
-    test = ttest_rel(err2_noSF, err2_SF, alternative="greater")
-    # # do wilcoxon 2 (noSF vs SF)
-    # test = d140_modelStats.paired_wilcoxon(err2_noSF, err2_SF, alternative="greater", alpha=alphaW, verbose=False)
+    test = test_type_apply(err2_noSF, err2_SF)
+    # if test_type == 't':
+    #     stat, p = shapiro(err2_noSF - err2_SF)
+    #     if p > alphaW:
+    #         print('SUBNAT D is not normal')
+    #     test = ttest_rel(err2_noSF, err2_SF, alternative="greater")
+    # elif test_type == 'w':
+    #     # do wilcoxon 2 (noSF vs SF)
+    #     test = d140_modelStats.paired_wilcoxon(err2_noSF, err2_SF, alternative="greater", alpha=alphaW, verbose=False)
     out.loc[(out['run_short_name'] == shortName) & (out['Estimator'] != 'PeakFPAR'), 'wilcoxon'] = test[1]
 
     # bins = np.histogram_bin_edges(err2_noSF, bins=30)
@@ -181,24 +242,30 @@ def compute_paired_test_nat(group):
     # now Ml_ObsAsSF
     err2_ObsAsSF = (out[out['model_name']=='ML_ObsAsSF']['y_true'].iloc[0].to_numpy() -
                     out[out['model_name']=='ML_ObsAsSF']['y_pred'].iloc[0].to_numpy())**2
-    # test normality for paired t-test
-    stat, p = shapiro(err2_noSF - err2_ObsAsSF)
-    if p > alphaW:
-        print('Nat D is not normal')
-    test = ttest_rel(err2_noSF, err2_ObsAsSF, alternative="greater")
-    # # do wilcoxon 1 (noSF vs ObsAsSF)
-    # test = d140_modelStats.paired_wilcoxon(err2_noSF, err2_ObsAsSF, alternative="greater", alpha=alphaW, verbose=False)
+    test = test_type_apply(err2_noSF, err2_ObsAsSF)
+    # # test normality for paired t-test
+    # if test_type == 't':
+    #     stat, p = shapiro(err2_noSF - err2_ObsAsSF)
+    #     if p > alphaW:
+    #         print('Nat D is not normal')
+    #     test = ttest_rel(err2_noSF, err2_ObsAsSF, alternative="greater")
+    # elif test_type == 'w':
+    #     # do wilcoxon 1 (noSF vs ObsAsSF)
+    #     test = d140_modelStats.paired_wilcoxon(err2_noSF, err2_ObsAsSF, alternative="greater", alpha=alphaW, verbose=False)
     out.loc[(out['model_name'] == 'ML_ObsAsSF'), 'wilcoxon'] = test[1]
 
     # now ML_sf
     err2_SF = (out[out['model_name']=='ML_SF']['y_true'].iloc[0].to_numpy() -
                out[out['model_name']=='ML_SF']['y_pred'].iloc[0].to_numpy())**2
-    stat, p = shapiro(err2_noSF - err2_SF)
-    if p > alphaW:
-        print('Nat D is not normal')
-    test = ttest_rel(err2_noSF, err2_SF, alternative="greater")
-    # # do wilcoxon 2 (noSF vs SF)
-    # test = d140_modelStats.paired_wilcoxon(err2_noSF, err2_SF, alternative="greater", alpha=alphaW, verbose=False)
+    test = test_type_apply(err2_noSF, err2_SF)
+    # if test_type == 't':
+    #     stat, p = shapiro(err2_noSF - err2_SF)
+    #     if p > alphaW:
+    #         print('Nat D is not normal')
+    #     test = ttest_rel(err2_noSF, err2_SF, alternative="greater")
+    # elif test_type == 'w':
+    #     # do wilcoxon 2 (noSF vs SF)
+    #     test = d140_modelStats.paired_wilcoxon(err2_noSF, err2_SF, alternative="greater", alpha=alphaW, verbose=False)
     out.loc[(out['model_name'] == 'ML_SF'), 'wilcoxon'] = test[1]
     return out
 def nat_level_comparison(config, model_mRes_dfs, model_names, crop, month_inSeas, hue_order, colors, dir_out):
@@ -310,7 +377,7 @@ if __name__ == '__main__':
         for t in df.forecast_time.unique():
             for est in ["Null_model", "Trend", "PeakFPAR"]:
                 tmp = df[(df['Crop'] == crop) & (df['forecast_time'] == t) & (df['Estimator'] == est)]
-                if tmp["rRMSE_p"].nunique() != 1:
+                if tmp["rRMSE_p"].round(2).nunique() != 1:
                     print(crop, t, est)
                     print("Not all rRMSE_p values are equal")
 
@@ -439,7 +506,7 @@ if __name__ == '__main__':
     # Now hindcasting by crop and admin (and Taylor, optiona;)
     # drop Tab
     df_all = df_all[df_all['Estimator'] != 'Tab']
-    months_inSeas = [1, 2, 3, 4, 5]
+
     # get reg short_names
     df_regNames = pd.read_csv(os.path.join(configs[0].data_dir, config.AOI + '_REGION_id.csv'))
     allNatErrorStats = []
@@ -534,7 +601,7 @@ if __name__ == '__main__':
             # layout 2 with correlation
             lw = 0.75
             n = len(adm_ids)
-            fig = plt.figure(figsize=(10, 4 * n), constrained_layout=True)
+            fig = plt.figure(figsize=(10, 6 * n), constrained_layout=True)
             fig.subplots_adjust(right=0.6)
             gs = GridSpec(nrows=2 * n, ncols=2, height_ratios=[2, 2] * n, hspace=0.3, wspace=0.4)
             axes = []

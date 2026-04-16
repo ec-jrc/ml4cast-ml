@@ -30,8 +30,8 @@ def fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False):
         if os.path.exists(fn_mRes_out):
             mRes = pd.read_csv(fn_mRes_out)
             return mRes
-    exits = os.path.exists(fn_out)
-    if not exits or run2get_mres_only:
+    exists = os.path.exists(fn_out)
+    if not exists or run2get_mres_only:
         hindcaster = d100_modeller.YieldModeller(uset)
         # preprocess
         X, y, groups, feature_names, adm_ids = hindcaster.preprocess(config, runType, run2get_mres_only)

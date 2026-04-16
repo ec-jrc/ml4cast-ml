@@ -69,19 +69,37 @@ else:
 # run_name = 'ZA_SfAsSF'
 
 # MW SF test, remember to set NO GPR, too slow !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-path_fromBaseDir = r'MW\main\SF\Maize_(corn)_WC-Malawi-HARVESTAT_config12345.json'
-run_name = 'ZA_NoSF'
+# path_fromBaseDir = r'MW\main\SF\Maize_(corn)_WC-Malawi-HARVESTAT_config12345.json'
+# run_name = 'MW_NoSF'
 # path_fromBaseDir = r'MW\main\SF\Maize_(corn)_WC-Malawi-HARVESTAT_config12345_ObsAsForecast.json'
-# run_name = 'ZA_ObsAsSF'
+# run_name = 'MW_ObsAsSF'
 # path_fromBaseDir = r'MW\main\SF\Maize_(corn)_WC-Malawi-HARVESTAT_config12345_SfAsForecast.json'
-# run_name = 'ZA_SfAsSF'
+# run_name = 'MW_SfAsSF'
 
 # ZW SF test
 # path_fromBaseDir = r'ZW\main\SF\Maize_(corn)_WC-Zimbabwe-HARVESTAT_config123456.json'
-# run_name = 'ZA_NoSF'
+# run_name = 'ZW_NoSF'
 # path_fromBaseDir = r'ZW\main\SF\Maize_(corn)_WC-Zimbabwe-HARVESTAT_config123456_ObsAsForecast.json'
-# run_name = 'ZA_ObsAsSF'
+# run_name = 'ZW_ObsAsSF'
 # path_fromBaseDir = r'ZW\main\SF\Maize_(corn)_WC-Zimbabwe-HARVESTAT_config123456_SfAsForecast.json'
+# run_name = 'ZW_SfAsSF'
+
+# ZA SF5 test, stoppo SF 3 mesi prima invece che 1
+# ATTENZIONE: modificare riga 138 di d100 modeller
+# path_fromBaseDir = r'ZA\summer2025data\SF5\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123.json'
+# run_name = 'ZA_NoSF'
+# path_fromBaseDir = r'ZA\summer2025data\SF5\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123_ObsAsForecast.json'
+# run_name = 'ZA_ObsAsSF'
+# path_fromBaseDir = r'ZA\summer2025data\SF5\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123_SfAsForecast.json'
+# run_name = 'ZA_SfAsSF'
+
+
+# ZA SF6 test, 90 % instead of 99
+path_fromBaseDir = r'ZA\summer2025data\SF6_90\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345.json'
+run_name = 'ZA_NoSF'
+# path_fromBaseDir = r'ZA\summer2025data\SF6_90\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json'
+# run_name = 'ZA_ObsAsSF'
+# path_fromBaseDir = r'ZA\summer2025data\SF6_90\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
 # run_name = 'ZA_SfAsSF'
 
 ############################################################################################
