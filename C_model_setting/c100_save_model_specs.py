@@ -82,8 +82,6 @@ def save_model_specs(config, modelSettings):
     feature_sets = list(modelSettings.feature_groups.keys())
 
 
-    # a = [config.crops, ML_algos, modelSettings.forecastingMonths,
-    #      modelSettings.doOHEs, feature_sets, modelSettings.feature_selections, modelSettings.dataReduction, modelSettings.addYieldTrend]
     a = [config.crops, ML_algos, modelSettings.forecastingMonths,
          modelSettings.doOHEs, feature_sets, modelSettings.feature_selections, modelSettings.dataReduction,
          modelSettings.addYieldTrend, aggregationSFs]

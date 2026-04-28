@@ -94,13 +94,13 @@ else:
 # run_name = 'ZA_SfAsSF'
 
 
-# ZA SF6 test, 90 % instead of 99
-path_fromBaseDir = r'ZA\summer2025data\SF6_90\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345.json'
-run_name = 'ZA_NoSF'
-# path_fromBaseDir = r'ZA\summer2025data\SF6_90\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json'
+# ZA SF7
+# path_fromBaseDir = r'ZA\summer2025data\SF7\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345.json'
+# run_name = 'ZA_NoSF'
+# path_fromBaseDir = r'ZA\summer2025data\SF7\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json'
 # run_name = 'ZA_ObsAsSF'
-# path_fromBaseDir = r'ZA\summer2025data\SF6_90\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
-# run_name = 'ZA_SfAsSF'
+path_fromBaseDir = r'ZA\summer2025data\SF7\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
+run_name = 'ZA_SfAsSF'
 
 ############################################################################################
 if 'win' in sys.platform:

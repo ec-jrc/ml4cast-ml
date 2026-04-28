@@ -89,25 +89,39 @@ Compare two results (e.g. without SF vs with SF)
 #
 # cf3 = os.path.join(baseDir, 'Maize_(corn)_WC-Zimbabwe-HARVESTAT_config123456_SfAsForecast.json')
 # rn3 = 'ZW_SfAsSF'
-short_name3 = 'SF'
+# short_name3 = 'SF'
 
 # MW
-baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\MW\main\SF'
-cf1 = os.path.join(baseDir, 'Maize_(corn)_WC-Malawi-HARVESTAT_config12345.json')
-rn1 = 'MW_NoSF'
+# baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\MW\main\SF'
+# cf1 = os.path.join(baseDir, 'Maize_(corn)_WC-Malawi-HARVESTAT_config12345.json')
+# rn1 = 'MW_NoSF'
+# short_name1 = 'noSF'
+#
+# cf2 = os.path.join(baseDir, 'Maize_(corn)_WC-Malawi-HARVESTAT_config12345_ObsAsForecast.json')
+# rn2 = 'MW_ObsAsSF'
+# short_name2 = 'ObsAsSF'
+#
+# cf3 = os.path.join(baseDir, 'Maize_(corn)_WC-Malawi-HARVESTAT_config12345_SfAsForecast.json')
+# rn3 = 'MW_SfAsSF'
+# short_name3 = 'SF'
+
+# SF6 est, 90 % instead of 99
+baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF6_90'
+cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345.json')
+rn1 = 'ZA_NoSF'
 short_name1 = 'noSF'
 
-cf2 = os.path.join(baseDir, 'Maize_(corn)_WC-Malawi-HARVESTAT_config12345_ObsAsForecast.json')
-rn2 = 'MW_ObsAsSF'
+cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json')
+rn2 = 'ZA_ObsAsSF'
 short_name2 = 'ObsAsSF'
 
-cf3 = os.path.join(baseDir, 'Maize_(corn)_WC-Malawi-HARVESTAT_config12345_SfAsForecast.json')
-rn3 = 'MW_SfAsSF'
+cf3 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json')
+rn3 = 'ZA_SfAsSF'
 short_name3 = 'SF'
 
 # Months to consider
-months_inSeas = [2, 3, 4, 5, 6]
-# months_inSeas = [1, 2, 3, 4, 5, 6]
+# months_inSeas = [2, 3, 4, 5, 6]
+months_inSeas = [1, 2, 3, 4, 5]
 # months_inSeas = [2, 3, 4, 5, 6, 7]
 # test type
 test_type = 'tw' #'w' 'tw'

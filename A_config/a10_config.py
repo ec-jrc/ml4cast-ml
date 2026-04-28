@@ -147,7 +147,7 @@ class mlSettings:
 
     # Feature engineering types (all ML model will be tested using default monthly values and these ft eng settings)
     # ft settings must start with @
-    self.ft_eng = ['@PeakFPARAndLast3'] # @PeakFPARAndLast3 change features groups in c100 (changes rs and does not apply to met)
+    self.ft_eng = ['@PeakFPARAndLast3'] # @PeakFPARAndLast3 change features groups in c100 (changes rs and does not apply to met), see if '@' in algo:
 
     # feature groups to be considered
     rad_var = 'rad' #sometimes is 'Rad'
@@ -337,7 +337,7 @@ def config_reducer(modelSettings, run_name):
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
         want_keys = ['rs_met_sm_reduced', 'rs_sm_reduced', 'rs_reduced', 'met_sm_reduced']
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
-        modelSettings.ft_eng = None
+        # modelSettings.ft_eng = None
     else: #some default
         # want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         # Remove GPR to slow, and RandomForest, never selected
