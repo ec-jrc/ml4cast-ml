@@ -141,7 +141,8 @@ class mlSettings:
     # includind Tab)
     # self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend']
     # Tab change 2025
-    self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend', 'Tab']
+    # self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend', 'Tab']
+    self.benchmarks = ['Null_model', 'PeakNDVI', 'Trend']
     # debug
     # self.benchmarks = ['Tab']
 
@@ -331,13 +332,16 @@ def config_reducer(modelSettings, run_name):
         modelSettings.addYieldTrend = [True]
         modelSettings.dataReduction = ['none']
     elif "SF" in run_name: # some default for SF runs
-        # want_keys = ['XGBoost']
-        # modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        want_keys = ['Lasso', 'SVR_linear', 'SVR_rbf']#, 'GPR']
+        # debug
+        want_keys = ['Lasso']
         modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
-        want_keys = ['rs_met_sm_reduced', 'rs_sm_reduced', 'rs_reduced', 'met_sm_reduced']
+        want_keys = ['rs_reduced',]
         modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
-        # modelSettings.ft_eng = None
+
+        # want_keys = ['Lasso', 'SVR_linear', 'SVR_rbf']#, 'GPR']
+        # modelSettings.hyperGrid = dict(filter(lambda x: x[0] in want_keys, modelSettings.hyperGrid.items()))
+        # want_keys = ['rs_met_sm_reduced', 'rs_sm_reduced', 'rs_reduced', 'met_sm_reduced']
+        # modelSettings.feature_groups = dict(filter(lambda x: x[0] in want_keys, modelSettings.feature_groups.items()))
     else: #some default
         # want_keys = ['Lasso', 'GPR', 'XGBoost', 'SVR_linear', 'SVR_rbf']
         # Remove GPR to slow, and RandomForest, never selected

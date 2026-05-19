@@ -105,8 +105,8 @@ Compare two results (e.g. without SF vs with SF)
 # rn3 = 'MW_SfAsSF'
 # short_name3 = 'SF'
 
-# SF6 est, 90 % instead of 99
-baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF6_90'
+# SF7 test maxFPAR and start earlier
+baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF7'
 cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345.json')
 rn1 = 'ZA_NoSF'
 short_name1 = 'noSF'
@@ -121,7 +121,7 @@ short_name3 = 'SF'
 
 # Months to consider
 # months_inSeas = [2, 3, 4, 5, 6]
-months_inSeas = [1, 2, 3, 4, 5]
+months_inSeas = [1, 2, 3, 4, 5, 6]
 # months_inSeas = [2, 3, 4, 5, 6, 7]
 # test type
 test_type = 'tw' #'w' 'tw'

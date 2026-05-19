@@ -99,7 +99,15 @@ else:
 # run_name = 'ZA_NoSF'
 # path_fromBaseDir = r'ZA\summer2025data\SF7\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json'
 # run_name = 'ZA_ObsAsSF'
-path_fromBaseDir = r'ZA\summer2025data\SF7\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
+# path_fromBaseDir = r'ZA\summer2025data\SF7\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json'
+# run_name = 'ZA_SfAsSF'
+
+# ZA SF8 (starting Nov, as SF7 but corrected %
+# path_fromBaseDir = r'ZA\summer2025data\SF8\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456.json'
+# run_name = 'ZA_NoSF'
+# path_fromBaseDir = r'ZA\summer2025data\SF8\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456_ObsAsForecast.json'
+# run_name = 'ZA_ObsAsSF'
+path_fromBaseDir = r'ZA\summer2025data\SF8\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456_SfAsForecast_test.json'
 run_name = 'ZA_SfAsSF'
 
 ############################################################################################
