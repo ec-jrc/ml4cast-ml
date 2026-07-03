@@ -20,11 +20,10 @@ pd.set_option('display.max_columns', None)
 # runType = 'fast_tuning' #'fast_tuning'
 # run_name = 'MZ_20250527'
 
-config_fn = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF8\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456_SfAsForecast_test.json'
-run_name = 'ZA_SfAsSF'
-fn = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF8\RUN_Maize_(corn)_WC-South_Africa-ASAP_SfAsForecast\TUNE_ZA_SfAsSF\Specs\000121_Maize_total_Lasso.json'
-# 000041_Ble_tendre_Lasso.json
-runType = 'fast_tuning' # 'tuning'
+config_fn = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF7\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456_ObsAsForecast.json'
+run_name = 'ZA_ObsAsSF'
+fn = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF7\RUN_Maize_(corn)_WC-South_Africa-ASAP_ObsAsForecast\TUNE_ZA_ObsAsSF\Specs\014587_Soybeans_SVR_rbf@PeakFPARAndLast3.json'
+runType = 'tuning' # 'tuning'
 
 # fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\RUN_Maize_(corn)_WC-South_Africa-ASAP\TUNE_ZA_20250410\Specs\000147_Sunflower_SVR_linear.json'
 # config_fn = r'V:\foodsec\Projects\SNYF\stable_input_data\ZA\summer2024data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config.json'
@@ -33,5 +32,5 @@ runType = 'fast_tuning' # 'tuning'
 
 config = a10_config.read(config_fn, run_name, run_type=runType)
 config.nJobsForGridSearchCv = 8
-d090_model_wrapper.fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False)
+d090_model_wrapper.fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False, debug=True)
 # d090_model_wrapper.fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False)

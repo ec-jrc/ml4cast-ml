@@ -107,15 +107,15 @@ Compare two results (e.g. without SF vs with SF)
 
 # SF7 test maxFPAR and start earlier
 baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF7'
-cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345.json')
+cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456.json')
 rn1 = 'ZA_NoSF'
 short_name1 = 'noSF'
 
-cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json')
+cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456_ObsAsForecast.json')
 rn2 = 'ZA_ObsAsSF'
 short_name2 = 'ObsAsSF'
 
-cf3 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json')
+cf3 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456_SfAsForecast.json')
 rn3 = 'ZA_SfAsSF'
 short_name3 = 'SF'
 

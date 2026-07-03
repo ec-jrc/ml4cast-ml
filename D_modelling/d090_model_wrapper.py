@@ -10,7 +10,7 @@ from D_modelling import d100_modeller
 os.environ["PYTHONWARNINGS"] = "ignore::UserWarning"
 
 
-def fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False):
+def fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False, debug=False):
     # when called with run2get_mres_only = True it just returns mres (for plotting)
     # and does not write anything
     tic = time.time()
@@ -31,6 +31,8 @@ def fit_and_validate_single_model(fn, config, runType, run2get_mres_only=False):
             mRes = pd.read_csv(fn_mRes_out)
             return mRes
     exists = os.path.exists(fn_out)
+    if debug == True:
+        exists = False
     if not exists or run2get_mres_only:
         hindcaster = d100_modeller.YieldModeller(uset)
         # preprocess

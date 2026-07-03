@@ -4,8 +4,8 @@ Given sos and eos, it computes % to use in congig file for each predictions (eve
 '''
 ### USER PART
 # SOS and EOS in dek
-sos = 28
-eos = 15
+sos = 7
+eos = 21
 ### END OF USER PART
 
 # The following is copied from a10

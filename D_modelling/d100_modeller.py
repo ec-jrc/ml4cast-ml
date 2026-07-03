@@ -149,17 +149,23 @@ class DataMixin:
             yxData_adm_id = yxData['adm_id'].copy()
             yxData = yxData.filter(regex='|'.join(list2keep))
             if self.uset['useSF'] == True:
+                string_forecast_time = str(self.uset['forecast_time'])
                 if self.uset['aggregationSF'] == 'seasonalPT': #sesonal aggreg requested
-                    yxData['SFrSeasM1'] = yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').mean(axis=1)
-                    yxData['SFtSeasM1'] = yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').mean(axis=1)
+                    yxData['SFrSeasM' + string_forecast_time] = yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').mean(axis=1)
+                    yxData['SFrSeasM' + string_forecast_time] = yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').mean(axis=1)
+                    # yxData['SFrSeasM1'] = yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').mean(axis=1)
+                    # yxData['SFtSeasM1'] = yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').mean(axis=1)
                 elif self.uset['aggregationSF'] == 'seasonalP':
-                    yxData['SFrSeasM1'] = yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').mean(axis=1)
+                    yxData['SFrSeasM' + string_forecast_time] = yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').mean(axis=1)
+                    # yxData['SFrSeasM1'] = yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').mean(axis=1)
                 elif self.uset['aggregationSF'] == 'seasonalT':
-                    yxData['SFtSeasM1'] = yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').mean(axis=1)
+                    yxData['SFrSeasM' + string_forecast_time] = yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').mean(axis=1)
+                    # yxData['SFtSeasM1'] = yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').mean(axis=1)
                 else:
                     print('d100: unknown aggregation, the program will stop')
                     print(self.uset['aggregationSF'])
                     sys.exit()
+                # remove single month after aggregation
                 yxData = yxData.drop(columns=yxData.filter(regex=r'^SFt\d{1,2}M\d{1,2}$').columns)
                 yxData = yxData.drop(columns=yxData.filter(regex=r'^SFr\d{1,2}M\d{1,2}$').columns)
             if self.uset['algorithm'] == 'PeakNDVI':
@@ -239,6 +245,13 @@ class DataMixin:
                     # Only on NDVI, RAD, Temp (precipitation, sm are excluded)
                     if self.uset['data_reduction'] == 'PCA':
                         X, feature_names = d105_PCA_on_features.getPCA(self, feature_names, X)
+                        feature2PCA = [s for s in self.uset['feature_groups'] if
+                                       s not in ['RainSum', 'SM']]  # 2025 09 22
+                        # if peakFPAR is requested, there is no FPmax anymore, so remove
+                        if 'peakFPAR' in feature_names:
+                            feature2PCA.remove('FPmax')
+                        if len(feature2PCA) == 0:
+                            self.uset['data_reduction'] = 'noPCA (there is no NDVI, RAD, Temp'
                 # Perform One-Hot Encoding for AU if requested
                 if self.uset['doOHE'] == 'AU_level':
                     # Tab change 2025
