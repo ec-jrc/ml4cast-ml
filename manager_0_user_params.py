@@ -31,8 +31,8 @@ else:
 # run_name = 'MA_test'
 
 # ZA Intercomp
-# path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1257.json'
-# run_name = 'ZA'
+path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1257.json'
+run_name = 'ZA'
 # path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config346.json'
 # run_name = 'ZA346'
 
@@ -41,8 +41,8 @@ else:
 # run_name = 'MWInt'
 
 # ZW
-path_fromBaseDir = r'ZW\main\Maize_(corn)_WC-Zimbabwe-HARVESTAT.json'
-run_name = 'ZWInt'
+# path_fromBaseDir = r'ZW\main\Maize_(corn)_WC-Zimbabwe-HARVESTAT.json'
+# run_name = 'ZWInt'
 
 
 
@@ -109,8 +109,8 @@ run_name = 'ZWInt'
 # run_name = 'ZA_NoSF'
 # path_fromBaseDir = r'ZA\summer2025data\SF7\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456_ObsAsForecast.json'
 # run_name = 'ZA_ObsAsSF'
-path_fromBaseDir = r'ZA\summer2025data\SF7\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456_SfAsForecast.json'
-run_name = 'ZA_SfAsSF'
+# path_fromBaseDir = r'ZA\summer2025data\SF7\SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456_SfAsForecast.json'
+# run_name = 'ZA_SfAsSF'
 
 # UA
 # path_fromBaseDir = r'UAwinter\UAwinter_a4c_config.json'

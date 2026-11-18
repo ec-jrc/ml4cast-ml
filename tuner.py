@@ -221,8 +221,8 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
             if len(spec_files_list) > nMaxTask:
                 # the task was big there is another task to run, but we need to wait an hour
                 # time.sleep(60 * 60)
-                print('Waiting an hour to submit the rest')
-                time.sleep(60 * 60)
+                print('Waiting 15 to submit the rest')
+                time.sleep(15 * 60)
 
                 if len(spec_files_list2) > 0:
                     if os.path.exists(condor_task_list_fn2):

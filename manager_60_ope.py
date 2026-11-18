@@ -95,7 +95,10 @@ if __name__ == '__main__':
             with open(fn_spec, 'r') as fp:
                 uset = json.load(fp)
             print(uset)
-            forecast_fn = os.path.join(config.ope_run_out_dir, datetime.datetime.today().strftime('%Y%m%d') + '_' +
+            dateString = datetime.datetime.today().strftime('%Y%m%d')
+            # print('BE CARE DEBUG SE DATE TO LAST RUN 20251223')
+            # dateString = '20251223'
+            forecast_fn = os.path.join(config.ope_run_out_dir, dateString + '_' +
                                        uset['crop'] + '_forecast_mInSeas' + str(uset['forecast_time'])
                                        + '_early_' + str(forecast_issue_calendar_month) + '_' + uset[
                                            'algorithm'] +

@@ -101,7 +101,7 @@ def plot_by_adm_and_time(df, fn):
     plt.tight_layout()
     plt.savefig(fn, dpi=300, bbox_inches='tight')
 
-def plot_by_adm_and_time_subplots(df, fn):
+def plot_by_adm_and_time_subplots(df, fn, norm=''):
     """
     Plot sfMean_season and obsMean_season time series,
     one subplot per adm_id.
@@ -129,7 +129,9 @@ def plot_by_adm_and_time_subplots(df, fn):
 
     for ax, adm_id in zip(axes, adm_ids):
         g = df[df['adm_id'] == adm_id].sort_values('date')
-
+        if norm == 'z':
+            g['obs'] = (g['obs'] - g['obs'].mean()) / g['obs'].std()
+            g['sf'] = (g['sf'] - g['sf'].mean()) / g['sf'].std()
         # Single color per subplot
         color = 'tab:blue'
 
@@ -239,25 +241,15 @@ if __name__ == '__main__':
     pd.set_option('display.max_columns', None)
 
     # configuration files and run names
-    # TN
-    # baseDir = r'V:\foodsec\Projects\SNYF\SIDv\TN\SF'
-    # cf1 = os.path.join(baseDir, 'ObsAsSF\TNMultiple_WC-Tunisia-ASAP_config_ObsAsForecast.json')
-    # cf2 = os.path.join(baseDir, 'SF\TNMultiple_WC-Tunisia-ASAP_config_SfAsForecast.json')
-    # # seasonal cumulation goes from .. to .. (in calendar month)
-    # startMonth = 12 #10
-
-    # # remember that forecast in month 10 with horizon 1 is that of 11,
-    # # so in month 10 up to 5 I have to take horizon 1 (11) to 7 (5)
-    # lastHorizon = 1 #7
-    # ZA
-    # baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF'
-    # cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_ObsAsForecast.json')
-    # cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1235_SfAsForecast.json')
-    baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF2'
-    cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json')
-    cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json')
+    # baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF2'
+    # cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_ObsAsForecast.json')
+    # cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config12345_SfAsForecast.json')
+    baseDir = r'V:\foodsec\Projects\SNYF\SIDvs\ZA\summer2025data\SF7'
+    # suffix = 'SF7'
+    cf1 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456_ObsAsForecast.json')
+    cf2 = os.path.join(baseDir, 'SF_test_ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config123456_SfAsForecast.json')
     # seasonal cumulation goes from .. to .. (in calendar month)
-    forecast_calendar_month = 12 #ZA example sos in calendar month 11 (Nov) and eos 5 (May)
+    forecast_calendar_month = 1 #11 #ZA example sos in calendar month 11 (Nov) and eos 5 (May)
     eos_calendar_Month = 5
     last_calendar_month_for_SF = eos_calendar_Month - 1
     # we are using raw data, convention:
@@ -273,7 +265,7 @@ if __name__ == '__main__':
         lastHorizon = last_calendar_month_for_SF + (12 - forecast_calendar_month + 1)
     print('Forecast month: ' + str(forecast_calendar_month))
     print('EOS month: ' + str(eos_calendar_Month))
-    print('Last month fo SF: ' + str(last_calendar_month_for_SF))
+    print('Last month for SF: ' + str(last_calendar_month_for_SF))
     print('Computed horizon: ' + str(lastHorizon))
     prefix = 'StartCalendarM' + str(forecast_calendar_month) + '_EndCalendarM' + str(last_calendar_month_for_SF)
     ########################################################
@@ -290,6 +282,7 @@ if __name__ == '__main__':
     plot(agg[agg["var"] == 'r'][["obs", "sf", "adm_id"]], os.path.join(dir_out, prefix + '_z_rain_corr_merge_adm_id.png'), option='z', colorby='adm_id')
     plot(agg[agg["var"] == 't'][["obs", "sf", "adm_id"]], os.path.join(dir_out, prefix + '_z_temp_corr_merge_adm_id.png'), option='z', colorby='adm_id')
     plot_by_adm_and_time(agg[agg["var"] == 'r'], os.path.join(dir_out, prefix + '_rain_time_series.png'))
-    plot_by_adm_and_time_subplots(agg[agg["var"] == 'r'], os.path.join(dir_out, prefix + '_rain_time_series_subplots.png'))
+    plot_by_adm_and_time_subplots(agg[agg["var"] == 'r'], os.path.join(dir_out, prefix + '_rain_time_series_subplots.png'), norm='')
+    plot_by_adm_and_time_subplots(agg[agg["var"] == 'r'], os.path.join(dir_out, prefix + '_z_rain_time_series_subplots.png'), norm='z')
 
 
