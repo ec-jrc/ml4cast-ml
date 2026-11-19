@@ -261,7 +261,8 @@ class mlSettings:
                                      'C':[0.001, 0.01, 0.1, 1, 10, 100, 300]}, # change in 27/6/2024
                             #GPR1={'alpha': [1e-10, 1e-5, 1e-1]},
                        #GPR2={'alpha': [1e-10, 1e-5, 1e-1, 0.05]})
-                       GPR = {'alpha': [1e-10, 1e-7, 1e-4, 0.01, 0.1, 0.5]},
+                       # GPR = {'alpha': [1e-10, 1e-7, 1e-4, 0.01, 0.1, 0.5]},
+                       GPR={'alpha': [1e-10, 1e-5, 0.1, 0.5]},
                        GBR={'learning_rate': [0.01, 0.05, 0.1],
                            # Empirical evidence suggests that small values of learning_rate favor better test error.
                             # [HTF] recommend to set the learning rate to a small constant (e.g. learning_rate <= 0.1)

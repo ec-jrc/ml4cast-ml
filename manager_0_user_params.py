@@ -11,10 +11,10 @@ metric = 'RMSE_val'
 n = 20
 if 'win' in sys.platform:
     tune_on_condor = False
-    baseDir = os.path.normpath(r'V:\foodsec\Projects\SNYF\SIDvs')
+    baseDir = os.path.normpath(r'V:\foodsec\Projects\SNYF\SID9')
 else:
     tune_on_condor = True
-    baseDir = os.path.normpath('/eos/jeodpp/data/projects/ML4CAST/SIDvs')
+    baseDir = os.path.normpath('/eos/jeodpp/data/projects/ML4CAST/SID9')
 ############################################################################################
 # TN NoSF
 # path_fromBaseDir = r'\TN\SF\NO_SF_baseline\TNMultiple_WC-Tunisia-ASAP_config.json'
@@ -31,7 +31,7 @@ else:
 # run_name = 'MA_test'
 
 # ZA Intercomp
-path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config1257.json'
+path_fromBaseDir = r'ZA\Summer_crops\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_234.json'
 run_name = 'ZA'
 # path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config346.json'
 # run_name = 'ZA346'
