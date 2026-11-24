@@ -26,8 +26,12 @@ def monitor_condor_q(time_step_minutes, submitter, config, run_name):
     # Output - 7: Suspended
     # sudo -u ml4castproc condor_q submitter ml4castproc -format '%s ' JobBatchName -format '%-3d ' ProcId -format '%-3d\n' JobStatus
     # check_cmd = ['sudo', '-u', submitter, 'condor_q', 'submitter', submitter, '-format', "'%s '", 'JobBatchName', '-format', "'%-3d '", 'ProcId', '-format', r"'%-3d\n'", 'JobStatus']
-    check_cmd = ['sudo', '-u', submitter, 'condor_q', 'submitter', submitter, '-format', "%s ", 'JobBatchName',
-                 '-format', "%-3d ", 'ProcId', '-format', "%s ", 'GlobalJobId','-format', r"%-3d\n", 'JobStatus']
+    # check_cmd = ['sudo', '-u', submitter, 'condor_q', 'submitter', submitter, '-format', "%s ", 'JobBatchName',
+    #              '-format', "%-3d ", 'ProcId', '-format', "%s ", 'GlobalJobId','-format', r"%-3d\n", 'JobStatus']
+    check_cmd = ['condor_q', '-format', "%s ", 'JobBatchName',
+                 '-format', "%-3d ", 'ProcId',
+                 '-format', "%s ", 'GlobalJobId',
+                 '-format', r"%-3d\n", 'JobStatus']
     # Write output to a file
     with open(fn_output, 'a') as f:
         f.write(" ".join(check_cmd) + '\n')
@@ -189,7 +193,7 @@ if __name__ == '__main__':
 
     config = a10_config.read(config_fn, run_name, run_type=runType)
     if tune_on_condor:
-        # dowload the checkpoint for Tab to be later copied to Condor scratch2
+        # dowload the checkpoint for Tab to be later copied to Condor tmp
         downloadTabCheck(config)
     spec_files_list = tuner.tuneA(run_name, config_fn, tune_on_condor, runType)
     tuner.tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list)

@@ -210,7 +210,8 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
             remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'err'))
             remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'log'))
             # Launch condor (sudo -u ml4castproc condor_submit condor.submit)
-            run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath1]
+            # run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath1] 20226 11 19 change for new condor
+            run_cmd = ['condor_submit', condSubPath1]
             p = subprocess.run(run_cmd, shell=False, input='\n', capture_output=True, text=True)
             if p.returncode != 0:
                 print('ERR', p.stderr)
@@ -255,7 +256,8 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                         remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc',base_log_dir_name, 'err'))
                         remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'log'))
                     # Launch condor (sudo -u ml4castproc condor_submit condor.submit)
-                    run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath2]
+                    # run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath2]
+                    run_cmd = ['condor_submit', condSubPath2]
                     p = subprocess.run(run_cmd, shell=False, input='\n', capture_output=True, text=True)
                     if p.returncode != 0:
                         print('ERR', p.stderr)
@@ -295,7 +297,8 @@ def tuneB(run_name, config_fn, tune_on_condor, runType, spec_files_list):
                 remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'err'))
                 remove_files(os.path.join('/mnt/jeoproc/log/ml4castproc', base_log_dir_name, 'log'))
                 # Launch condor (sudo -u ml4castproc condor_submit condor.submit)
-                run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath2]
+                # run_cmd = ['sudo', '-u', 'ml4castproc', 'condor_submit', condSubPath2]
+                run_cmd = ['condor_submit', condSubPath2]
                 p = subprocess.run(run_cmd, shell=False, input='\n', capture_output=True, text=True)
                 if p.returncode != 0:
                     print('ERR', p.stderr)

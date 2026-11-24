@@ -31,10 +31,10 @@ else:
 # run_name = 'MA_test'
 
 # ZA Intercomp
-path_fromBaseDir = r'ZA\Summer_crops\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_234.json'
-run_name = 'ZA'
-# path_fromBaseDir = r'ZA\summer2025data\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config346.json'
-# run_name = 'ZA346'
+# path_fromBaseDir = r'ZA\Summer_crops\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_234.json'
+# run_name = 'ZA'
+path_fromBaseDir = r'ZA\Summer_crops\ZAsummer_Maize_(corn)_WC-South_Africa-ASAP_config_567.json'
+run_name = 'ZA567'
 
 # MW
 # path_fromBaseDir = r'MW\main\Maize_(corn)_WC-Malawi-HARVESTAT.json'
